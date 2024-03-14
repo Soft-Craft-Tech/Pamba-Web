@@ -2,6 +2,7 @@ from flask import request, jsonify
 import os
 from functools import wraps
 import jwt
+from API.models import Client
 
 
 def verify_api_key(func):
@@ -41,3 +42,19 @@ def generate_token(expiry, email):
         algorithm="HS256"
     )
     return token
+
+
+def decode_client_token(token):
+    """
+        Decode the clients JWT tokens.
+        :param token: Generated token.
+        :return: Decoded data or None.
+    """
+    try:
+        data = jwt.decode(token, os.environ.get('SECRET'), algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+    else:
+        return data

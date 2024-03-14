@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from API.models import Client
 from API.utilities.data_serializer import serialize_client
-from API.utilities.auth import verify_api_key, generate_token
+from API.utilities.auth import verify_api_key, generate_token, decode_client_token
 from flask import Blueprint
 from API import bcrypt, db
 from API.utilities.OTP import generate_otp
@@ -103,14 +103,13 @@ def client_login():
     client = Client.query.filter_by(email=auth.username.strip().lower()).first()
 
     if not client:
-        return jsonify({"message": "Email doesn't exist"}), 404
+        return jsonify({"message": "Incorrect Email/Password"}), 404
 
     if not bcrypt.check_password_hash(client.password, auth.password.strip()):
-        return jsonify({"message": "Incorrect Password"}), 401
+        return jsonify({"message": "Incorrect Email/Password"}), 401
 
     token_expiry_time = datetime.utcnow() + timedelta(days=30)
-    token_expiry_timestamp = token_expiry_time.timestamp()
-    token = generate_token(token_expiry_timestamp, client.email)
+    token = generate_token(token_expiry_time, client.email)
 
     return jsonify({"message": "Login Successful", "client": serialize_client(client), "authToken": token}), 200
 
@@ -128,12 +127,34 @@ def request_password_reset():
     email = payload["email"].strip().lower()
     client = Client.query.filter_by(email=email).first()
     if not client:
-        return jsonify({"message": "Email doesn't exist"}), 404
+        return jsonify({"message": "Password reset failed"}), 404
 
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
-    token_expiry_timestamp = token_expiry_time.timestamp()
 
-    token = generate_token(token_expiry_timestamp, client.email)
+    token = generate_token(token_expiry_time, client.email)
     send_reset_email(recipient=client.email, token=token, name=client.name)
 
     return jsonify({"message": "Token sent to your email"}), 200
+
+
+@clients_blueprint.route("/reset-password/<string:token>", methods=["POST"])
+@verify_api_key
+def reset_password(token):
+    """
+        Reset the password given the jwt token sent to the user.
+        :param token: JWT token sent upon requesting password reset
+        :return: 200, 401
+    """
+    payload = request.get_json()
+    decoded_info = decode_client_token(token)
+
+    if not decoded_info:
+        return jsonify({"message": "Token invalid/expired"}), 400
+
+    client = Client.query.filter_by(email=decoded_info["email"]).first()
+    new_password = payload["password"]
+    new_password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+    client.password = new_password_hash
+    db.session.commit()
+
+    return jsonify({"message": "Reset Successful"}), 200

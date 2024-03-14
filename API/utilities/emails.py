@@ -10,7 +10,7 @@ def send_otp(recipient, otp, name):
         :param otp: OTP value
         :return: None
     """
-    message = Message("Your OTP", sender="communication@mykinyozi.com", recipients=[recipient])
+    message = Message("Verify Account - PAMBA", sender="communication@mykinyozi.com", recipients=[recipient])
     message.body = f"{name}, \n OTP: {otp}"
     mail.send(message)
 
@@ -23,6 +23,6 @@ def send_reset_email(recipient, token, name):
         :param name: User's name
         :return:
     """
-    message = Message("Your OTP", sender="communication@mykinyozi.com", recipients=[recipient])
+    message = Message("Reset Password - PAMBA", sender="communication@mykinyozi.com", recipients=[recipient])
     message.body = f"{name}, \n TOKEN: {token}"
     mail.send(message)
