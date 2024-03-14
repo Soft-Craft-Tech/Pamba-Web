@@ -163,6 +163,11 @@ def reset_password(token):
 @clients_blueprint.route("/change-password", methods=["POST"])
 @client_login_required
 def change_password(client):
+    """
+        Allow clients to change password at will.
+        :param client: Client currently logged in
+        :return: 200, 401
+    """
     payload = request.get_json()
     old_password = payload["oldPassword"]
     new_password = payload["newPassword"]
@@ -174,3 +179,31 @@ def change_password(client):
         return jsonify({"message": "Password changed"}), 200
     else:
         return jsonify({"message": "Old Password Incorrect"}), 401
+
+
+@clients_blueprint.route("/update-profile", methods=["POST"])
+@client_login_required
+def update_profile(client):
+    """
+        Allow clients to update their profile
+        :param client: Client currently logged in
+        :return: 409, 200
+    """
+    payload = request.get_json()
+    email = payload["email"].strip().lower()
+    phone = payload["phone"].strip()
+
+    email_taken = Client.query.filter_by(email=email).first()
+    phone_taken = Client.query.filter_by(phone=phone).first()
+
+    if email_taken and email_taken.id != client.id:
+        return jsonify({"message": "Email already exists"}), 409
+    if phone_taken and phone_taken.id != client.id:
+        return jsonify({"message": "Phone already taken"}), 409
+
+    client.email = email
+    client.phone = phone
+    db.session.commit()
+
+    return jsonify({"message": "Update Successful", "client": serialize_client(client)}), 200
+
