@@ -182,7 +182,7 @@ class Client(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     phone = db.Column(db.String(15), nullable=False, unique=True)
     password = db.Column(db.String(300), nullable=False)
-    status = db.Column(db.String, default="unverified")
+    verified = db.Column(db.Boolean, default=False)
     otp = db.Column(db.String(200), nullable=True)
     otp_expiration = db.Column(db.DateTime, nullable=True)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)

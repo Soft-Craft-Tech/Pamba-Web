@@ -7,6 +7,8 @@ from API import bcrypt, db
 from API.utilities.OTP import generate_otp
 from API.utilities.emails import send_otp
 from datetime import datetime, timedelta
+import jwt
+import os
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
 
@@ -76,9 +78,14 @@ def verify_client_otp():
     if not bcrypt.check_password_hash(client.otp, received_otp):
         return jsonify({"message": "Invalid OTP"}), 400
 
-    client.status = "verified"
+    client.status = True
     client.otp = None
     client.otp_expiration = None
     db.session.commit()
 
     return jsonify({"message": "Account activated", "client": serialize_client(client)}), 200
+
+
+
+
+
