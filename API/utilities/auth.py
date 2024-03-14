@@ -58,3 +58,37 @@ def decode_client_token(token):
         return None
     else:
         return data
+
+
+def client_login_required(f):
+    """
+        Checks whether client is logged in.
+        :param f: route function.
+        :return: 401, route function.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        api_key = None
+        if "X-API-KEY" in request.headers:
+            api_key = request.headers["X-API-KEY"]
+
+        if not api_key:
+            return jsonify({"message": "API KEY is missing"}), 400
+
+        if api_key != os.environ.get("API_KEY"):
+            return jsonify({"message": "Invalid API KEY"}), 400
+
+        if "x-access-token" in request.headers:
+            token = request.headers["x-access-token"]
+        if not token:
+            return jsonify({"message": "Token is missing"}), 401
+        try:
+            data = jwt.decode(token, os.environ.get('SECRET'), algorithms=["HS256"])
+            current_user = Client.query.filter_by(email=data["email"]).first()
+        except jwt.ExpiredSignatureError:
+            return jsonify({"message": "Expired Session! Login Again"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"message": "Invalid Token. Please Login Again"}), 401
+        return f(current_user, *args, **kwargs)
+    return decorated

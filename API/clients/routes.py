@@ -1,11 +1,11 @@
 from flask import jsonify, request
 from API.models import Client
 from API.utilities.data_serializer import serialize_client
-from API.utilities.auth import verify_api_key, generate_token, decode_client_token
+from API.utilities.auth import verify_api_key, generate_token, decode_client_token, client_login_required
 from flask import Blueprint
 from API import bcrypt, db
 from API.utilities.OTP import generate_otp
-from API.utilities.emails import send_otp, send_reset_email
+from API.utilities.send_mail import send_otp, send_reset_email
 from datetime import datetime, timedelta
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
@@ -103,10 +103,10 @@ def client_login():
     client = Client.query.filter_by(email=auth.username.strip().lower()).first()
 
     if not client:
-        return jsonify({"message": "Incorrect Email/Password"}), 404
+        return jsonify({"message": "Incorrect Email or Password"}), 404
 
     if not bcrypt.check_password_hash(client.password, auth.password.strip()):
-        return jsonify({"message": "Incorrect Email/Password"}), 401
+        return jsonify({"message": "Incorrect Email or Password"}), 401
 
     token_expiry_time = datetime.utcnow() + timedelta(days=30)
     token = generate_token(token_expiry_time, client.email)
@@ -149,7 +149,7 @@ def reset_password(token):
     decoded_info = decode_client_token(token)
 
     if not decoded_info:
-        return jsonify({"message": "Token invalid/expired"}), 400
+        return jsonify({"message": "Token invalid or expired"}), 400
 
     client = Client.query.filter_by(email=decoded_info["email"]).first()
     new_password = payload["password"]
@@ -158,3 +158,19 @@ def reset_password(token):
     db.session.commit()
 
     return jsonify({"message": "Reset Successful"}), 200
+
+
+@clients_blueprint.route("/change-password", methods=["POST"])
+@client_login_required
+def change_password(client):
+    payload = request.get_json()
+    old_password = payload["oldPassword"]
+    new_password = payload["newPassword"]
+
+    if bcrypt.check_password_hash(client.password, old_password):
+        new_password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        client.password = new_password_hash
+        db.session.commit()
+        return jsonify({"message": "Password changed"}), 200
+    else:
+        return jsonify({"message": "Old Password Incorrect"}), 401
