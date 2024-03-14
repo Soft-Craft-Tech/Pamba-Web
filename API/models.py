@@ -15,7 +15,8 @@ class Business(db.Model):
     location = db.Column(db.Text, nullable=False)
     password = db.Column(db.String(250), nullable=False)
     google_map = db.Column(db.String(300), nullable=False)
-    status = db.Column(db.String(10), default="unverified")
+    status = db.Column(db.String(10), default="inactive")
+    verified = db.Column(db.Boolean, default=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime)
     services = db.relationship("Service", backref="business", lazy="dynamic", cascade='all, delete-orphan')
@@ -80,7 +81,7 @@ class Sale(db.Model):
         return f"Sales({self.amount}, {self.payment_method})"
 
 
-class ExpenseAccounts(db.Model):
+class ExpenseAccount(db.Model):
     """Business Expense accounts"""
     __tablename__ = "expenseaccounts"
 
@@ -88,10 +89,10 @@ class ExpenseAccounts(db.Model):
     account_name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
-    expense = db.relationship("Expenses", backref="account", lazy="dynamic")
+    expense = db.relationship("Expense", backref="account", lazy="dynamic")
 
     def __repr__(self):
-        return f"ExpenseAccounts({self.account_name})"
+        return f"ExpenseAccount({self.account_name})"
 
 
 class Expense(db.Model):
@@ -119,7 +120,7 @@ class BusinessNotification(db.Model):
     message = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, default=False)
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
-    business_id = db.Column(db.Integer, db.ForeignKey("businesses"))
+    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
 
     def __repr__(self):
         return f"Notification({self.title})"
@@ -178,10 +179,12 @@ class Client(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(100), nullable=False, unique=True)
     phone = db.Column(db.String(15), nullable=False, unique=True)
     password = db.Column(db.String(300), nullable=False)
     status = db.Column(db.String, default="unverified")
-    otp = db.Column(db.String(300))
+    otp = db.Column(db.String(200), nullable=True)
+    otp_expiration = db.Column(db.DateTime, nullable=True)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     notifications = db.relationship("ClientNotification", backref="client", lazy="dynamic", cascade="all, "
                                                                                                     "delete-orphan")

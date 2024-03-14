@@ -24,4 +24,8 @@ def create_app():
     migrate.init_app(app, db)
     cors.init_app(app, supports_credentials=True)
 
+    from API.clients.routes import clients_blueprint
+
+    app.register_blueprint(clients_blueprint)
+
     return app
