@@ -1,6 +1,7 @@
 from flask import request, jsonify
 import os
 from functools import wraps
+import jwt
 
 
 def verify_api_key(func):
@@ -24,4 +25,19 @@ def verify_api_key(func):
     return decorated
 
 
-
+def generate_token(expiry, email):
+    """
+        Generate JWT tokens
+        :param expiry: Token expiry
+        :param email: User email to be encoded
+        :return: JWT token
+    """
+    token = jwt.encode(
+        {
+            "email": email,
+            "exp": expiry
+        },
+        os.environ.get('SECRET'),
+        algorithm="HS256"
+    )
+    return token

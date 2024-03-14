@@ -1,14 +1,12 @@
 from flask import jsonify, request
 from API.models import Client
 from API.utilities.data_serializer import serialize_client
-from API.utilities.auth import verify_api_key
+from API.utilities.auth import verify_api_key, generate_token
 from flask import Blueprint
 from API import bcrypt, db
 from API.utilities.OTP import generate_otp
-from API.utilities.emails import send_otp
+from API.utilities.emails import send_otp, send_reset_email
 from datetime import datetime, timedelta
-import jwt
-import os
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
 
@@ -23,6 +21,7 @@ def client_signup():
     payload = request.get_json()
     email = payload["email"].strip().lower()
     phone = payload["phone"].strip()
+    name = payload["name"].strip().title()
 
     # Check for existence of user with same email or phone number
     email_exists = Client.query.filter_by(email=email).first()
@@ -38,7 +37,7 @@ def client_signup():
 
     otp, otp_hash = generate_otp()
     client = Client(
-        name=payload["name"].strip().title(),
+        name=name,
         email=email,
         phone=phone,
         password=password_hash,
@@ -49,7 +48,7 @@ def client_signup():
     db.session.commit()
 
     # Send Email
-    send_otp(recipient=email, otp=otp)
+    send_otp(recipient=email, otp=otp, name=name)
 
     return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email, "otp": otp}), 200
 
@@ -111,16 +110,30 @@ def client_login():
 
     token_expiry_time = datetime.utcnow() + timedelta(days=30)
     token_expiry_timestamp = token_expiry_time.timestamp()
-    token = jwt.encode(
-        {
-            "email": client.email,
-            "exp": token_expiry_timestamp
-        },
-        os.environ.get('SECRET'),
-        algorithm="HS256"
-    )
+    token = generate_token(token_expiry_timestamp, client.email)
 
     return jsonify({"message": "Login Successful", "client": serialize_client(client), "authToken": token}), 200
 
 
+@clients_blueprint.route("/request-password-reset", methods=["POST"])
+@verify_api_key
+def request_password_reset():
+    """
+        Handle forgot password logic.
+        Generate token for password reset, send to user.
+        Token valid: 30min
+        :return: 200, 404
+    """
+    payload = request.get_json()
+    email = payload["email"].strip().lower()
+    client = Client.query.filter_by(email=email).first()
+    if not client:
+        return jsonify({"message": "Email doesn't exist"}), 404
 
+    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+    token_expiry_timestamp = token_expiry_time.timestamp()
+
+    token = generate_token(token_expiry_timestamp, client.email)
+    send_reset_email(recipient=client.email, token=token, name=client.name)
+
+    return jsonify({"message": "Token sent to your email"}), 200
