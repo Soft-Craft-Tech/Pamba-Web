@@ -13,7 +13,7 @@ def serialize_client(client):
         "name": fields.String,
         "email": fields.String,
         "phone": fields.String,
-        "status": fields.String
+        "verified": fields.Boolean
     }
 
     return marshal(client, client_fields)

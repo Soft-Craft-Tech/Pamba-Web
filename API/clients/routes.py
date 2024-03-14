@@ -69,16 +69,19 @@ def verify_client_otp():
     if not client:
         return jsonify({"message": "User not found"}), 404
 
+    if not client.otp and client.verified:
+        return jsonify({"message": "Your account is verified"}), 400
+
     if not received_otp:
         return jsonify({"message": "OTP not provided"}), 400
 
     if datetime.now() > client.otp_expiration:
-        return jsonify({"message": "OTP Expired"})
+        return jsonify({"message": "OTP Expired"}), 400
 
     if not bcrypt.check_password_hash(client.otp, received_otp):
         return jsonify({"message": "Invalid OTP"}), 400
 
-    client.status = True
+    client.verified = True
     client.otp = None
     client.otp_expiration = None
     db.session.commit()
@@ -86,6 +89,38 @@ def verify_client_otp():
     return jsonify({"message": "Account activated", "client": serialize_client(client)}), 200
 
 
+@clients_blueprint.route("/login", methods=["POST"])
+@verify_api_key
+def client_login():
+    """
+        Client login
+        :return: 404, 401, 200
+    """
+    auth = request.authorization
+
+    if not auth or not auth.username or not auth.password:
+        return jsonify({"message": "Login Required"}), 401
+
+    client = Client.query.filter_by(email=auth.username.strip().lower()).first()
+
+    if not client:
+        return jsonify({"message": "Email doesn't exist"}), 404
+
+    if not bcrypt.check_password_hash(client.password, auth.password.strip()):
+        return jsonify({"message": "Incorrect Password"}), 401
+
+    token_expiry_time = datetime.utcnow() + timedelta(days=30)
+    token_expiry_timestamp = token_expiry_time.timestamp()
+    token = jwt.encode(
+        {
+            "email": client.email,
+            "exp": token_expiry_timestamp
+        },
+        os.environ.get('SECRET'),
+        algorithm="HS256"
+    )
+
+    return jsonify({"message": "Login Successful", "client": serialize_client(client), "authToken": token}), 200
 
 
 
