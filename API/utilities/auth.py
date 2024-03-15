@@ -44,10 +44,10 @@ def generate_token(expiry, email):
     return token
 
 
-def decode_client_token(token):
+def decode_token(token):
     """
-        Decode the clients JWT tokens.
-        :param token: Generated token.
+        Decode the JWT tokens.
+        :param token: JWT token.
         :return: Decoded data or None.
     """
     try:

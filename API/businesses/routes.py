@@ -1,7 +1,7 @@
 from API.models import Business
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
-from API.utilities.auth import business_login_required, verify_api_key, generate_token
+from API.utilities.auth import business_login_required, verify_api_key, generate_token, decode_token
 from API.utilities.slugify import slugify
 from API.utilities.send_mail import business_account_activation_email
 from API.utilities.data_serializer import serialize_business
@@ -65,3 +65,24 @@ def business_signup():
             "business": serialize_business(business),
         }
     ), 200
+
+
+@business_blueprint.route("/activate-account/<string:token>", methods=["POST"])
+@verify_api_key
+def activate_account(token):
+    """
+        Activate businesses accounts
+        :return: 200
+    """
+    decoded_data = decode_token(token)
+
+    if not decoded_data:
+        return jsonify({"message": "Token Invalid or Expired"}), 400
+
+    business = Business.query.filter_by(email=decoded_data["email"]).first()
+    if not business:
+        return jsonify({"message": "Not Found"}), 404
+    business.active = True
+    db.session.commit()
+
+    return jsonify({"message": "Success"}), 200

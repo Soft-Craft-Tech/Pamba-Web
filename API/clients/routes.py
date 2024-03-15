@@ -1,7 +1,7 @@
 from flask import jsonify, request, Blueprint
 from API.models import Client
 from API.utilities.data_serializer import serialize_client
-from API.utilities.auth import verify_api_key, generate_token, decode_client_token, client_login_required
+from API.utilities.auth import verify_api_key, generate_token, decode_token, client_login_required
 from API import bcrypt, db
 from API.utilities.OTP import generate_otp
 from API.utilities.send_mail import send_otp, send_reset_email
@@ -145,12 +145,14 @@ def reset_password(token):
         :return: 200, 401
     """
     payload = request.get_json()
-    decoded_info = decode_client_token(token)
+    decoded_info = decode_token(token)
 
     if not decoded_info:
         return jsonify({"message": "Token invalid or expired"}), 400
 
     client = Client.query.filter_by(email=decoded_info["email"]).first()
+    if not client:
+        return jsonify({"message": "Not Found"}), 404
     new_password = payload["password"]
     new_password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
     client.password = new_password_hash
