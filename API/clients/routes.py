@@ -1,8 +1,7 @@
-from flask import jsonify, request
+from flask import jsonify, request, Blueprint
 from API.models import Client
 from API.utilities.data_serializer import serialize_client
 from API.utilities.auth import verify_api_key, generate_token, decode_client_token, client_login_required
-from flask import Blueprint
 from API import bcrypt, db
 from API.utilities.OTP import generate_otp
 from API.utilities.send_mail import send_otp, send_reset_email

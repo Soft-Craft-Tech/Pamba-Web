@@ -64,7 +64,7 @@ def client_login_required(f):
     """
         Checks whether client is logged in.
         :param f: route function.
-        :return: 401, route function.
+        :return: 400, 401, route function.
     """
     @wraps(f)
     def decorated(*args, **kwargs):

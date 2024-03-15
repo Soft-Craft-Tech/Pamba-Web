@@ -2,6 +2,14 @@ from API import db
 from datetime import datetime
 
 
+# Junction table for many-to-many relationship between Service and appointment
+businesses_clients_association = db.Table(
+    'businesses_clients_association',
+    db.Column('business_id', db.Integer, db.ForeignKey('businesses.id')),
+    db.Column('client_id', db.Integer, db.ForeignKey('clients.id'))
+)
+
+
 class Business(db.Model):
     """Businesses/Service providers table"""
     __tablename__ = "businesses"
@@ -32,14 +40,6 @@ class Business(db.Model):
 
     def __repr__(self):
         return f"Business({self.business_name}, {self.slug})"
-
-
-# Junction table for many-to-many relationship between Service and appointment
-businesses_clients_association = db.Table(
-    'businesses_clients_association',
-    db.Column('business_id', db.Integer, db.ForeignKey('businesses.id')),
-    db.Column('client_id', db.Integer, db.ForeignKey('clients.id'))
-)
 
 
 class Service(db.Model):
