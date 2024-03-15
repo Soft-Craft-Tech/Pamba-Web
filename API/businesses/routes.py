@@ -88,3 +88,29 @@ def activate_account(token):
     db.session.commit()
 
     return jsonify({"message": "Success"}), 200
+
+
+@business_blueprint.route("/login", methods=["POST"])
+@verify_api_key
+def login():
+    """
+        Businesses login
+        :return: 404, 401, 200
+    """
+    auth = request.authorization
+
+    if not auth or not auth.username or not auth.password:
+        return jsonify({"message": "Login Required"}), 401
+
+    business = Business.query.filter_by(email=auth.username.strip().lower()).first()
+
+    if not business:
+        return jsonify({"message": "Incorrect Email or Password"}), 404
+
+    if not bcrypt.check_password_hash(business.password, auth.password.strip()):
+        return jsonify({"message": "Incorrect Email or Password"}), 401
+
+    token_expiry_time = datetime.utcnow() + timedelta(days=30)
+    token = generate_token(token_expiry_time, business.email)
+
+    return jsonify({"message": "Login Successful", "client": serialize_business(business), "authToken": token}), 200
