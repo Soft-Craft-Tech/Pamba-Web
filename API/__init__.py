@@ -26,8 +26,10 @@ def create_app():
 
     from API.clients.routes import clients_blueprint
     from API.appointments.routes import appointment_blueprint
+    from API.businesses.routes import business_blueprint
 
     app.register_blueprint(clients_blueprint)
     app.register_blueprint(appointment_blueprint)
+    app.register_blueprint(business_blueprint)
 
     return app
