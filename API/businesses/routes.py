@@ -1,9 +1,11 @@
 from API.models import Business
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
-from API.utilities.auth import business_login_required, verify_api_key
+from API.utilities.auth import business_login_required, verify_api_key, generate_token
 from API.utilities.slugify import slugify
+from API.utilities.send_mail import business_account_activation_email
 from API.utilities.data_serializer import serialize_business
+from datetime import datetime, timedelta
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")
 
@@ -50,4 +52,16 @@ def business_signup():
     db.session.add(business)
     db.session.commit()
 
-    return jsonify({"message": "Sign Up successful.", "business": serialize_business(business)}), 200
+    # Activation Token
+    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+    token = generate_token(token_expiry_time, business.email)
+
+    # Send mail
+    business_account_activation_email(recipient=business.email, token=token, name=business.business_name)
+
+    return jsonify(
+        {
+            "message": "Successful! Account activation link set to you email",
+            "business": serialize_business(business),
+        }
+    ), 200

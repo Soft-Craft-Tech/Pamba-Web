@@ -35,7 +35,7 @@ def serialize_business(business):
         "city": fields.String,
         "location": fields.String,
         "google_map": fields.String,
-        "status": fields.String,
+        "active": fields.Boolean,
         "verified": fields.Boolean,
         "join_date": fields.DateTime
     }

@@ -24,7 +24,7 @@ class Business(db.Model):
     location = db.Column(db.Text, nullable=False)
     password = db.Column(db.String(250), nullable=False)
     google_map = db.Column(db.String(300), nullable=True)
-    status = db.Column(db.String(10), default="inactive")
+    active = db.Column(db.Boolean, default=False)
     verified = db.Column(db.Boolean, default=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime)
