@@ -10,7 +10,7 @@ def send_otp(recipient, otp, name):
         :param otp: OTP value
         :return: None
     """
-    message = Message("Verify Account - PAMBA", sender="communication@mykinyozi.com", recipients=[recipient])
+    message = Message("[Action Required]: Verify Account - PAMBA", sender="communication@mykinyozi.com", recipients=[recipient])
     message.body = f"{name}, \n OTP: {otp}"
     mail.send(message)
 

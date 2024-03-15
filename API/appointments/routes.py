@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from API.utilities.auth import client_login_required
 from API import db
 
-appointment_blueprint = Blueprint("clients", __name__, url_prefix="/API/appointment")
+appointment_blueprint = Blueprint("appointments", __name__, url_prefix="/API/appointments")
 
 
 @appointment_blueprint.route("/book", methods=["POST"])

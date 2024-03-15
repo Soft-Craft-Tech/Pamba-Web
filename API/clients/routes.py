@@ -206,3 +206,29 @@ def update_profile(client):
 
     return jsonify({"message": "Update Successful", "client": serialize_client(client)}), 200
 
+
+@clients_blueprint.route("/resend-otp", methods=["POST"])
+@verify_api_key
+def resend_verification_otp():
+    """
+        Resend Verification OTP incase the users did verify their account at signup
+        :return: 404
+    """
+    payload = request.get_json()
+    email = payload["email"].strip().lower()
+    client = Client.query.filter_by(email=email).first()
+    if not client:
+        return jsonify({"message": "Client not found"}), 404
+
+    if client.verified:
+        return jsonify({"message": "Your account is already verified"}), 400
+
+    otp, otp_hash = generate_otp()
+    client.otp = otp_hash,
+    client.otp_expiration = datetime.now() + timedelta(minutes=5)
+    db.session.commit()
+
+    # Send Email
+    send_otp(recipient=email, otp=otp, name=client.name)
+    masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
+    return jsonify({"message": f"OTP sent to: {masked_email}"})
