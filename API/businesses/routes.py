@@ -119,6 +119,11 @@ def login():
 @business_blueprint.route("/request-password-reset", methods=["POST"])
 @verify_api_key
 def request_password_reset():
+    """
+        Request for a password reset link.
+        Link sent to business email
+        :return: 404, 200
+    """
     payload = request.get_json()
     email = payload["email"].strip().lower()
 
@@ -131,3 +136,26 @@ def request_password_reset():
     send_reset_email(recipient=business.email, token=token, name=business.business_name)
 
     return jsonify({"message": "Reset link has been sent to your email"}), 200
+
+
+@business_blueprint.route("/reset-password/<string:reset_token>", methods=["PUT"])
+@verify_api_key
+def reset_password(reset_token):
+    """
+        Reset the business's password
+        :param reset_token: Reset token give ti the user upon requesting password reset
+        :return: 200, 400
+    """
+    payload = request.get_json()
+    new_password = payload["password"]
+    decoded_data = decode_token(reset_token)
+
+    if not decoded_data:
+        return jsonify({"message": "Reset Token is Invalid or Expired "}), 400
+
+    email = decoded_data["email"]
+    business = Business.query.filter_by(email=email).first()
+    business.password = new_password
+    db.session.commit()
+
+    return jsonify({"message": "Password Reset Successful"}), 200
