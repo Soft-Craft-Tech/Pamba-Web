@@ -9,6 +9,13 @@ businesses_clients_association = db.Table(
     db.Column('client_id', db.Integer, db.ForeignKey('clients.id'))
 )
 
+# Business services Junction Table
+services_businesses_association = db.Table(
+    "services_businesses_association",
+    db.Column('business_id', db.Integer, db.ForeignKey('businesses.id')),
+    db.Column('service_id', db.Integer, db.ForeignKey('services.id'))
+)
+
 
 class Business(db.Model):
     """Businesses/Service providers table"""
@@ -28,7 +35,9 @@ class Business(db.Model):
     verified = db.Column(db.Boolean, default=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime)
-    services = db.relationship("Service", backref="business", lazy="dynamic", cascade='all, delete-orphan')
+    services = db.relationship("Service", secondary='services_businesses_association',  backref="businesses",
+                               lazy="dynamic", cascade='all, delete-orphan'
+                               )
     inventory = db.relationship("Inventory", backref="business", lazy="dynamic", cascade='all, delete-orphan')
     expense_accounts = db.relationship("ExpenseAccount", backref="business", lazy="dynamic", cascade='all, '
                                                                                                      'delete-orphan')
