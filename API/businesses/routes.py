@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from API import db, bcrypt
 from API.utilities.auth import business_login_required, verify_api_key, generate_token, decode_token
 from API.utilities.slugify import slugify
-from API.utilities.send_mail import business_account_activation_email
+from API.utilities.send_mail import business_account_activation_email, send_reset_email
 from API.utilities.data_serializer import serialize_business
 from datetime import datetime, timedelta
 
@@ -114,3 +114,20 @@ def login():
     token = generate_token(token_expiry_time, business.email)
 
     return jsonify({"message": "Login Successful", "client": serialize_business(business), "authToken": token}), 200
+
+
+@business_blueprint.route("/request-password-reset", methods=["POST"])
+@verify_api_key
+def request_password_reset():
+    payload = request.get_json()
+    email = payload["email"].strip().lower()
+
+    business = Business.query.filter_by(email=email).first()
+    if not business:
+        return jsonify({"message": "Email doesn't exist"}), 404
+
+    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+    token = generate_token(expiry=token_expiry_time, email=business.email)
+    send_reset_email(recipient=business.email, token=token, name=business.business_name)
+
+    return jsonify({"message": "Reset link has been sent to your email"}), 200
