@@ -85,7 +85,7 @@ def client_login_required(f):
             return jsonify({"message": "Token is missing"}), 401
         try:
             data = jwt.decode(token, os.environ.get('SECRET'), algorithms=["HS256"])
-            current_user = Client.query.filter_by(email=data["email"]).first()
+            current_user = Client.query.filter_by(email=data["username"]).first()
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Expired Session! Login Again"}), 401
         except jwt.InvalidTokenError:
@@ -119,7 +119,7 @@ def business_login_required(f):
             return jsonify({"message": "Token is missing"}), 401
         try:
             data = jwt.decode(token, os.environ.get('SECRET'), algorithms=["HS256"])
-            current_user = Business.query.filter_by(email=data["email"]).first()
+            current_user = Business.query.filter_by(slug=data["username"]).first()
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Expired Session! Login Again"}), 401
         except jwt.InvalidTokenError:

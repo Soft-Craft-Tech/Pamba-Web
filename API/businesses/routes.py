@@ -148,6 +148,7 @@ def reset_password(reset_token):
     """
     payload = request.get_json()
     new_password = payload["password"]
+    password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
     decoded_data = decode_token(reset_token)
 
     if not decoded_data:
@@ -155,13 +156,13 @@ def reset_password(reset_token):
 
     username = decoded_data["username"]
     business = Business.query.filter_by(slug=username).first()
-    business.password = new_password
+    business.password = password_hash
     db.session.commit()
 
     return jsonify({"message": "Password Reset Successful"}), 200
 
 
-@business_blueprint.route("/resend-activation-token", methods=[""])
+@business_blueprint.route("/resend-activation-token", methods=["POST"])
 @business_login_required
 def resend_account_activation_token(business):
     """
@@ -169,11 +170,12 @@ def resend_account_activation_token(business):
         When the token sent at signup is expired or lost
         :return: 200
     """
-    email = business.email
+    username = business.slug
     name = business.business_name
+    email = business.email
 
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
-    token = generate_token(expiry=token_expiry_time, username=email)
+    token = generate_token(expiry=token_expiry_time, username=username)
     business_account_activation_email(token=token, recipient=email, name=name)
 
     return jsonify({"message": "Account activation token has been sent to your email."}), 200
