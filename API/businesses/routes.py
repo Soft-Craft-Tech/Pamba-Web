@@ -224,3 +224,25 @@ def update_profile(business):
     db.session.commit()
 
     return jsonify({"message": "Update Successful"}), 200
+
+
+@business_blueprint.route("/change-password", methods=["PUT"])
+@business_login_required
+def change_password(business):
+    """
+        Allow the business owner to change their password
+        :param business: logged in business
+        :return: 401, 200
+    """
+    payload = request.get_json()
+    new_password = payload["newPassword"]
+    old_password = payload["oldPassword"]
+    password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+
+    if not bcrypt.check_password_hash(business.password, old_password):
+        return jsonify({"message": "Old password is incorrect"}), 401
+
+    business.password = password_hash
+    db.session.commit()
+
+    return jsonify({"message": "Success! Password has been changed"}), 200
