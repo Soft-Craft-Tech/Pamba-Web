@@ -36,7 +36,7 @@ class Business(db.Model):
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime)
     services = db.relationship("Service", secondary='services_businesses_association',  backref="businesses",
-                               lazy="dynamic", cascade='all, delete-orphan'
+                               lazy="dynamic"
                                )
     inventory = db.relationship("Inventory", backref="business", lazy="dynamic", cascade='all, delete-orphan')
     expense_accounts = db.relationship("ExpenseAccount", backref="business", lazy="dynamic", cascade='all, '
@@ -61,7 +61,6 @@ class Service(db.Model):
     description = db.Column(db.Text, nullable=True)
     charges = db.Column(db.Integer, nullable=False)
     updated_at = db.Column(db.DateTime)
-    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     sales = db.relationship("Sale", backref="service", lazy="dynamic")
 
     def __str__(self):

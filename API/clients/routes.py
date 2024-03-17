@@ -108,7 +108,7 @@ def client_login():
         return jsonify({"message": "Incorrect Email or Password"}), 401
 
     token_expiry_time = datetime.utcnow() + timedelta(days=30)
-    token = generate_token(token_expiry_time, client.email)
+    token = generate_token(expiry=token_expiry_time, username=client.email)
 
     return jsonify({"message": "Login Successful", "client": serialize_client(client), "authToken": token}), 200
 
@@ -130,7 +130,7 @@ def request_password_reset():
 
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
 
-    token = generate_token(token_expiry_time, client.email)
+    token = generate_token(expiry=token_expiry_time, username=client.email)
     send_reset_email(recipient=client.email, token=token, name=client.name)
 
     return jsonify({"message": "Token sent to your email"}), 200
@@ -150,7 +150,7 @@ def reset_password(token):
     if not decoded_info:
         return jsonify({"message": "Token invalid or expired"}), 400
 
-    client = Client.query.filter_by(email=decoded_info["email"]).first()
+    client = Client.query.filter_by(email=decoded_info["username"]).first()
     if not client:
         return jsonify({"message": "Not Found"}), 404
     new_password = payload["password"]

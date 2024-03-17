@@ -26,16 +26,16 @@ def verify_api_key(func):
     return decorated
 
 
-def generate_token(expiry, email):
+def generate_token(expiry, username):
     """
         Generate JWT tokens
         :param expiry: Token expiry
-        :param email: User email to be encoded
+        :param username: Username to be encoded :We'll use email as username for clients and slug for businesses
         :return: JWT token
     """
     token = jwt.encode(
         {
-            "email": email,
+            "username": username,
             "exp": expiry
         },
         os.environ.get('SECRET'),

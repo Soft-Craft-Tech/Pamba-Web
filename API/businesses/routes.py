@@ -54,14 +54,14 @@ def business_signup():
 
     # Activation Token
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
-    token = generate_token(token_expiry_time, business.email)
+    token = generate_token(expiry=token_expiry_time, username=business.slug)
 
     # Send mail
     business_account_activation_email(recipient=business.email, token=token, name=business.business_name)
 
     return jsonify(
         {
-            "message": "Successful! Account activation link set to you email",
+            "message": "Successful! Account activation link set to your email",
             "business": serialize_business(business),
         }
     ), 200
@@ -79,7 +79,7 @@ def activate_account(token):
     if not decoded_data:
         return jsonify({"message": "Token Invalid or Expired"}), 400
 
-    business = Business.query.filter_by(email=decoded_data["email"]).first()
+    business = Business.query.filter_by(slug=decoded_data["username"]).first()
     if not business:
         return jsonify({"message": "Not Found"}), 404
     if business.active:
@@ -111,7 +111,7 @@ def login():
         return jsonify({"message": "Incorrect Email or Password"}), 401
 
     token_expiry_time = datetime.utcnow() + timedelta(days=30)
-    token = generate_token(token_expiry_time, business.email)
+    token = generate_token(expiry=token_expiry_time, username=business.slug)
 
     return jsonify({"message": "Login Successful", "client": serialize_business(business), "authToken": token}), 200
 
@@ -132,7 +132,7 @@ def request_password_reset():
         return jsonify({"message": "Email doesn't exist"}), 404
 
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
-    token = generate_token(expiry=token_expiry_time, email=business.email)
+    token = generate_token(expiry=token_expiry_time, username=business.slug)
     send_reset_email(recipient=business.email, token=token, name=business.business_name)
 
     return jsonify({"message": "Reset link has been sent to your email"}), 200
@@ -153,9 +153,27 @@ def reset_password(reset_token):
     if not decoded_data:
         return jsonify({"message": "Reset Token is Invalid or Expired "}), 400
 
-    email = decoded_data["email"]
-    business = Business.query.filter_by(email=email).first()
+    username = decoded_data["username"]
+    business = Business.query.filter_by(slug=username).first()
     business.password = new_password
     db.session.commit()
 
     return jsonify({"message": "Password Reset Successful"}), 200
+
+
+@business_blueprint.route("/resend-activation-token", methods=[""])
+@business_login_required
+def resend_account_activation_token(business):
+    """
+        Resend account activation token.
+        When the token sent at signup is expired or lost
+        :return: 200
+    """
+    email = business.email
+    name = business.business_name
+
+    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+    token = generate_token(expiry=token_expiry_time, username=email)
+    business_account_activation_email(token=token, recipient=email, name=name)
+
+    return jsonify({"message": "Account activation token has been sent to your email."}), 200
