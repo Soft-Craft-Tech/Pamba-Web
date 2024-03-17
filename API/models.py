@@ -9,12 +9,18 @@ businesses_clients_association = db.Table(
     db.Column('client_id', db.Integer, db.ForeignKey('clients.id'))
 )
 
+
 # Business services Junction Table
-services_businesses_association = db.Table(
-    "services_businesses_association",
-    db.Column('business_id', db.Integer, db.ForeignKey('businesses.id')),
-    db.Column('service_id', db.Integer, db.ForeignKey('services.id'))
-)
+class ServicesBusinessesAssociation(db.Model):
+    """
+        Junction Table
+    """
+    __tablename__ = "services_businesses_association"
+
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'))
+    service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
+    price = db.Column(db.Integer)
 
 
 class Business(db.Model):
@@ -59,8 +65,6 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     service = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    charges = db.Column(db.Integer, nullable=False)
-    updated_at = db.Column(db.DateTime)
     sales = db.relationship("Sale", backref="service", lazy="dynamic")
 
     def __str__(self):

@@ -1,4 +1,4 @@
-from API.models import Business
+from API.models import Business, ServicesBusinessesAssociation, Service
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
 from API.utilities.auth import business_login_required, verify_api_key, generate_token, decode_token
@@ -110,7 +110,7 @@ def login():
     if not bcrypt.check_password_hash(business.password, auth.password.strip()):
         return jsonify({"message": "Incorrect Email or Password"}), 401
 
-    token_expiry_time = datetime.utcnow() + timedelta(days=30)
+    token_expiry_time = datetime.utcnow() + timedelta(days=1)
     token = generate_token(expiry=token_expiry_time, username=business.slug)
 
     return jsonify({"message": "Login Successful", "client": serialize_business(business), "authToken": token}), 200
@@ -246,3 +246,35 @@ def change_password(business):
     db.session.commit()
 
     return jsonify({"message": "Success! Password has been changed"}), 200
+
+
+@business_blueprint.route("/assign-services", methods=["POST"])
+@business_login_required
+def assign_services(business):
+    """
+        Assign services being offered by business logged in.
+        :param business: Logged in business or owner.
+        :return: 200
+    """
+    payload = request.get_json()
+    password = payload["password"].strip()
+    services = payload["services"]
+    service_ids = {service["id"]: service["price"] for service in services}
+    services_to_associate = Service.query.filter(Service.id.in_(service_ids.keys())).all()
+
+    if not bcrypt.check_password_hash(business.password, password):
+        return jsonify({"message": "Incorrect password"}), 401
+
+    try:
+        for service in services_to_associate:
+            business_service_association = ServicesBusinessesAssociation(
+                business_id=business.id,
+                service_id=service.id,
+                price=service_ids[service.id]
+            )
+            db.session.add(business_service_association)
+            db.session.commit()
+    except:
+        return jsonify({"message": "An error occurred please try again"}), 500
+
+    return jsonify({"message": "Services have been Added"}), 200
