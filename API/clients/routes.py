@@ -1,5 +1,5 @@
 from flask import jsonify, request, Blueprint
-from API.models import Client
+from API.models import Client, Business
 from API.utilities.data_serializer import serialize_client
 from API.utilities.auth import verify_api_key, generate_token, decode_token, client_login_required
 from API import bcrypt, db
@@ -234,3 +234,27 @@ def resend_verification_otp():
     send_otp(recipient=email, otp=otp, name=client.name)
     masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
     return jsonify({"message": f"OTP sent to: {masked_email}"})
+
+
+@clients_blueprint.route("/all-businesses", methods=["GET"])
+@verify_api_key
+def fetch_all_businesses():
+    """
+        Fetch all businesses
+        :return: 200
+    """
+    businesses = Business.query.filter_by(active=True).all()
+    all_businesses = []
+    for business in businesses:
+        business_data = dict(
+            name=business.business_name,
+            phone=business.phone,
+            location=business.location,
+            google_map=business.google_map,
+            city=business.city,
+            category=business.category,
+            verified=business.verified,
+            identifier=business.slug
+        )
+        all_businesses.append(business_data)
+    return jsonify({"message": "Success", "businesses": all_businesses}), 200
