@@ -179,3 +179,48 @@ def resend_account_activation_token(business):
     business_account_activation_email(token=token, recipient=email, name=name)
 
     return jsonify({"message": "Account activation token has been sent to your email."}), 200
+
+
+@business_blueprint.route("/update", methods=["PUT"])
+@business_login_required
+def update_profile(business):
+    """
+        Update business profile
+        :param business: Logged in business
+        :return: 200
+    """
+    payload = request.get_json()
+    name = payload["name"].strip().title()
+    category = payload["category"].title()
+    email = payload["email"].strip().lower()
+    phone = payload["phone"].strip()
+    city = payload["city"].strip().title()
+    location = payload["location"].strip().title()
+    google_map = payload["mapUrl"].strip()
+    password = payload["password"].strip()
+    slug = slugify(name)
+
+    if not bcrypt.check_password_hash(business.password, password):
+        return jsonify({"message": "Incorrect password"}), 401
+
+    # Check if email and phone number already exists
+    existing_email = Business.query.filter_by(email=email).first()
+    existing_phone = Business.query.filter_by(phone=phone).first()
+
+    if existing_email and existing_email.email != business.email:
+        return jsonify({"message": "Email already exists"}), 409
+
+    if existing_phone and existing_phone.phone != business.phone:
+        return jsonify({"message": "Phone number already exists"}), 409
+
+    business.business_name = name
+    business.email = email
+    business.phone = phone
+    business.city = city
+    business.location = location
+    business.google_map = google_map
+    business.slug = slug
+    business.category = category
+    db.session.commit()
+
+    return jsonify({"message": "Update Successful"}), 200
