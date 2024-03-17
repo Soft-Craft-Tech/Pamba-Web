@@ -24,11 +24,17 @@ def slugify(business_name):
         :return: Slugified business name
     """
     slug = clean_string(business_name)
+    same_business = Business.query.filter_by(slug=slug).first()
+
+    if not same_business:
+        return slug
+
+    # Return the same slug if the business name hasn't changed.
+    if same_business.business_name == business_name:
+        return same_business.slug
+
     all_businesses = Business.query.all()
     number_of_businesses = len(all_businesses)
-    same_business_name = Business.query.filter_by(business_name=business_name).all()
-    if not same_business_name:
-        return slug
     slug = f"{slug}-{number_of_businesses}"
     return slug
 
