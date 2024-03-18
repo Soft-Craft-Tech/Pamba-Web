@@ -265,8 +265,13 @@ def assign_services(business):
     if not bcrypt.check_password_hash(business.password, password):
         return jsonify({"message": "Incorrect password"}), 401
 
+    # Find services already offered by the business so that a service is not listed twice for the same business
+    this_business_services = ServicesBusinessesAssociation.query.filter_by(business_id=business.id).all()
+    this_business_services_ids = [item.service_id for item in this_business_services]
     try:
         for service in services_to_associate:
+            if service.id in this_business_services_ids:
+                continue
             business_service_association = ServicesBusinessesAssociation(
                 business_id=business.id,
                 service_id=service.id,

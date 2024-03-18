@@ -18,7 +18,7 @@ def book_appointment(client):
     new_appointment = Appointment(
         data=payload["date"],
         time=payload["time"],
-        comment=payload["comment"],
+        comment=payload["comment"].strip(),
         business_id=payload["provider"],
         client_id=client.id
     )
