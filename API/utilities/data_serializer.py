@@ -1,22 +1,4 @@
 from flask_restful import fields, marshal
-from datetime import datetime
-
-
-class DateFormatter(fields.Raw):
-    """
-        Creates a date formatter
-    """
-
-    def format(self, value):
-        return datetime.strptime(value, '%d-%m-%Y')
-
-
-class TimeFormatter(fields.Raw):
-    """
-        Time formatter
-    """
-    def format(self, value):
-        return datetime.strptime(value, '%H:%M').time()
 
 
 def serialize_client(client):
@@ -69,11 +51,12 @@ def serialize_appointment(appointment):
     """
     appointment_fields = {
         "id": fields.Integer,
-        "date": DateFormatter,
-        "time": TimeFormatter,
+        "date": fields.String,
+        "time": fields.String,
         "cancelled": fields.Boolean,
         "comment": fields.String,
-        "create_at": fields.DateTime
+        "create_at": fields.DateTime,
+        "completed": fields.Boolean
     }
 
     return marshal(appointment, appointment_fields)
