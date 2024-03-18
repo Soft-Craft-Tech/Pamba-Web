@@ -60,11 +60,15 @@ def reschedule_appointment(client, appointment_id):
     time = datetime.strptime(payload["time"], '%H:%M').time()
     appointment = Appointment.query.get(appointment_id)
 
+    if appointment.client_id != client.id:
+        return jsonify({"message": "Not allowed"}), 401
+
     if not appointment:
         return jsonify({"message": "Appoint doesn't exist"}), 404
 
     # Avoid Booking multiple appointments scheduled at the same time
-    appointments_booked_same_time = Appointment.query.filter_by(date=date, time=time, client_id=client.id, cancelled=False).first()
+    appointments_booked_same_time = Appointment.query\
+        .filter_by(date=date, time=time, client_id=client.id, cancelled=False).first()
     if appointments_booked_same_time:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
@@ -73,3 +77,27 @@ def reschedule_appointment(client, appointment_id):
     db.session.commit()
 
     return jsonify({"message": "Appointment has been rescheduled"}), 200
+
+
+@appointment_blueprint.route("/cancel/<int:appointment_id>", methods=["PUT"])
+@client_login_required
+def cancel_appointment(client, appointment_id):
+    """
+        Cancel appointment
+        :param client: Logged in client
+        :param appointment_id: ID of the appointment being cancelled
+        :return: 200, 401
+    """
+    payload = request.get_json()
+    comment = payload["comment"]
+    appointment = Appointment.query.get(appointment_id)
+
+    if appointment.client_id != client.id:
+        return jsonify({"message": "Not allowed"}), 401
+
+    appointment.cancelled = True
+    if comment:
+        appointment.comment = comment
+    db.session.commit()
+
+    return jsonify({"message": "Cancellation Successful"}), 200
