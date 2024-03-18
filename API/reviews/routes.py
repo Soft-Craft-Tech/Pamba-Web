@@ -1,5 +1,5 @@
 from flask import jsonify, request, Blueprint
-from API.models import Review
+from API.models import Review, Business
 from API import db
 from API.utilities.auth import client_login_required
 
@@ -18,6 +18,10 @@ def create_review(client):
     payload = request.get_json()
     message = payload["message"].strip()
     business_id = payload["businessID"]
+
+    business = Business.query.get(business_id)
+    if not business:
+        return jsonify({"message": "Business doesn't exist"}), 404
 
     review = Review(
         message=message,
