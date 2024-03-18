@@ -278,3 +278,25 @@ def assign_services(business):
         return jsonify({"message": "An error occurred please try again"}), 500
 
     return jsonify({"message": "Services have been Added"}), 200
+
+
+@business_blueprint.route("/remove-service", methods=["POST"])
+@business_login_required
+def remove_service(business):
+    """
+        Remove a services from the business
+        :param business: Logged  in business
+        :return: 404, 200
+    """
+    payload = request.get_json()
+    service_id = payload["serviceId"]
+
+    service = ServicesBusinessesAssociation.query.filter_by(service_id=service_id, business_id=business.id).first()
+
+    if not service:
+        return jsonify({"message": "Service not found"}), 404
+
+    db.session.delete(service)
+    db.session.commit()
+
+    return jsonify({"message": "Service removed"}), 200
