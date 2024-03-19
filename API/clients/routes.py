@@ -1,10 +1,10 @@
 from flask import jsonify, request, Blueprint
 from API.models import Client, Business
-from API.utilities.data_serializer import serialize_client
-from API.utilities.auth import verify_api_key, generate_token, decode_token, client_login_required
+from API.lib.data_serializer import serialize_client
+from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
 from API import bcrypt, db
-from API.utilities.OTP import generate_otp
-from API.utilities.send_mail import send_otp, send_reset_email
+from API.lib.OTP import generate_otp
+from API.lib.send_mail import send_otp, send_reset_email
 from datetime import datetime, timedelta
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")

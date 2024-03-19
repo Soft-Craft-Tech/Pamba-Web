@@ -1,10 +1,10 @@
 from API.models import Business, ServicesBusinessesAssociation, Service
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
-from API.utilities.auth import business_login_required, verify_api_key, generate_token, decode_token
-from API.utilities.slugify import slugify
-from API.utilities.send_mail import business_account_activation_email, send_reset_email
-from API.utilities.data_serializer import serialize_business
+from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token
+from API.lib.slugify import slugify
+from API.lib.send_mail import business_account_activation_email, send_reset_email
+from API.lib.data_serializer import serialize_business
 from datetime import datetime, timedelta
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")

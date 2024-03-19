@@ -1,7 +1,7 @@
 from flask import jsonify, request, Blueprint
 from API.models import Review, Business
 from API import db
-from API.utilities.auth import client_login_required
+from API.lib.auth import client_login_required
 
 reviews_blueprint = Blueprint("reviews", __name__, url_prefix="/API/reviews")
 

@@ -1,7 +1,7 @@
 from flask import jsonify, request, Blueprint
 from API.models import Rating, Business
 from API import db
-from API.utilities.auth import verify_api_key
+from API.lib.auth import verify_api_key
 
 ratings_blueprint = Blueprint("rating", __name__, url_prefix="/API/ratings")
 
@@ -29,4 +29,3 @@ def add_rating():
     db.session.commit()
 
     return jsonify({"message": "Rating has been posted"}), 200
-

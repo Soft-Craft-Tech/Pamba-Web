@@ -1,7 +1,7 @@
 from API.models import Appointment, Service
 from flask import Blueprint, request, jsonify
-from API.utilities.auth import client_login_required
-from API.utilities.data_serializer import serialize_appointment
+from API.lib.auth import client_login_required
+from API.lib.data_serializer import serialize_appointment
 from API import db
 from datetime import datetime
 
