@@ -49,7 +49,33 @@ def read_notification(client, notification_id):
     if notification.client_id != client.id:
         return jsonify({"message": "Not allowed"}), 400
 
+    if notification.read:
+        return jsonify({"message": "Notification is already Read"}), 400
+
     notification.read = True
     db.session.commit()
 
     return jsonify({"message": "Notification Read", "notification": serialize_notification(notification)}), 200
+
+
+@notifications_blueprint.route("/client/delete/<int:notification_id>", methods=["DELETE"])
+@client_login_required
+def delete_notification(client, notification_id):
+    """
+        Delete Notification.
+        :param client:
+        :param notification_id:
+        :return:
+    """
+
+    notification = ClientNotification.query.get(notification_id)
+    if not notification:
+        return jsonify({"message": "Not Found"}), 400
+
+    if notification.client_id != client.id:
+        return jsonify({"message": "Not Allowed"}), 400
+
+    db.session.delete(notification)
+    db.session.commit()
+
+    return jsonify({"message": "Notification deleted", "notification": serialize_notification(notification)}), 200

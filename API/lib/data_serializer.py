@@ -73,7 +73,8 @@ def serialize_notification(notification):
         "id": fields.Integer,
         "message": fields.String,
         "title": fields.String,
-        "sent_at": fields.DateTime
+        "sent_at": fields.DateTime,
+        "read": fields.Boolean
     }
     return marshal(notification, notification_fields)
 
