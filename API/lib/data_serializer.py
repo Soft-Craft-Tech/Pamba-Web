@@ -60,3 +60,20 @@ def serialize_appointment(appointment):
     }
 
     return marshal(appointment, appointment_fields)
+
+
+def serialize_notification(notification):
+    """
+        Serialize notification
+        :param notification:
+        :return: JSON serialized notification
+    """
+
+    notification_fields = {
+        "id": fields.Integer,
+        "message": fields.String,
+        "title": fields.String,
+        "sent_at": fields.DateTime
+    }
+    return marshal(notification, notification_fields)
+
