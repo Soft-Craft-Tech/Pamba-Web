@@ -87,7 +87,7 @@ def activate_account(token):
     business.active = True
     db.session.commit()
 
-    return jsonify({"message": "Success"}), 200
+    return jsonify({"message": "Success", "business": serialize_business(business)}), 200
 
 
 @business_blueprint.route("/login", methods=["POST"])

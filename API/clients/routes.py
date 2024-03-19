@@ -4,7 +4,7 @@ from API.lib.data_serializer import serialize_client
 from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
-from API.lib.send_mail import send_otp, send_reset_email
+from API.lib.send_mail import send_otp, sent_client_reset_token
 from datetime import datetime, timedelta
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
@@ -131,7 +131,7 @@ def request_password_reset():
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
 
     token = generate_token(expiry=token_expiry_time, username=client.email)
-    send_reset_email(recipient=client.email, token=token, name=client.name)
+    sent_client_reset_token(recipient=client.email, token=token, name=client.name)
 
     return jsonify({"message": "Token sent to your email"}), 200
 

@@ -1,5 +1,6 @@
 from flask_mail import Message
 from API import mail
+from flask import render_template
 
 
 def send_otp(recipient, otp, name):
@@ -11,20 +12,34 @@ def send_otp(recipient, otp, name):
         :return: None
     """
     message = Message("[Action Required]: Verify Account - PAMBA", sender="pamba.africa", recipients=[recipient])
-    message.body = f"{name}, \n OTP: {otp}"
+    message.html = render_template("otp.html", name=name, code=otp)
     mail.send(message)
 
 
 def send_reset_email(recipient, token, name):
     """
-        Send password reset token
+        Send password reset token for businesses
+        :param recipient: User Email
+        :param token: JWT Token
+        :param name: User's name
+        :return:
+    """
+    reset_url = f"https://www.pamba.africa/reset/{token}"
+    message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template("reset.html", url=reset_url, name=name)
+    mail.send(message)
+
+
+def sent_client_reset_token(recipient, token, name):
+    """
+        Send password reset token for clients
         :param recipient: User Email
         :param token: JWT Token
         :param name: User's name
         :return:
     """
     message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
-    message.body = f"{name}, \n TOKEN: {token}"
+    message.html = render_template("clientReset.html", token=token, name=name)
     mail.send(message)
 
 
@@ -36,6 +51,7 @@ def business_account_activation_email(recipient, token, name):
         :param name: Business Name.
         :return:
     """
+    url = f"https://pamba.africa/activate/{token}"
     message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
-    message.body = f"{name}, \nTOKEN: {token}"
+    message.html = render_template("activatebusiness.html", name=name, url=url)
     mail.send(message)
