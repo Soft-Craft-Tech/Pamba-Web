@@ -79,3 +79,20 @@ def delete_notification(client, notification_id):
     db.session.commit()
 
     return jsonify({"message": "Notification deleted", "notification": serialize_notification(notification)}), 200
+
+
+@notifications_blueprint.route("/client/all", methods=["GET"])
+@client_login_required
+def fetch_all(client):
+    """
+        Fetch all notifications
+        :param client:
+        :return: 200
+    """
+    notifications = ClientNotification.query.filter_by(client_id=client.id).all()
+    all_notifications = []
+
+    for notification in notifications:
+        all_notifications.append(serialize_notification(notification))
+
+    return jsonify({"notifications": all_notifications}), 200
