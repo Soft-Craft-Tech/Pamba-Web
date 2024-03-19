@@ -28,8 +28,8 @@ def send_reset_email(recipient, token, name):
     reset_url = f"https://www.pamba.africa/reset/{token}"
     message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
     app = create_app()
-    with app.open_resource("static/assets/logo.svg") as logo_file:
-        message.attach("logo.svg", "image/svg", logo_file.read())
+    with app.open_resource("static/assets/logo.svg", "rb") as logo_file:
+        message.attach("logo.svg", "image/svg", logo_file.read(),"inline", headers={'Content-ID': '<logo>'})
 
     message.html = render_template("reset.html", url=reset_url, name=name)
     mail.send(message)
