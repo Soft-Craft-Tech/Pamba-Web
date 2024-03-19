@@ -1,6 +1,7 @@
 from flask_mail import Message
 from API import mail
 from flask import render_template
+from API import create_app
 
 
 def send_otp(recipient, otp, name):
@@ -26,6 +27,10 @@ def send_reset_email(recipient, token, name):
     """
     reset_url = f"https://www.pamba.africa/reset/{token}"
     message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
+    app = create_app()
+    with app.open_resource("static/assets/logo.svg") as logo_file:
+        message.attach("logo.svg", "image/svg", logo_file.read())
+
     message.html = render_template("reset.html", url=reset_url, name=name)
     mail.send(message)
 
@@ -39,6 +44,10 @@ def sent_client_reset_token(recipient, token, name):
         :return:
     """
     message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
+    app = create_app()
+    with app.open_resource("static/assets/logo.svg") as logo_file:
+        message.attach("logo.svg", "image/svg", logo_file.read())
+
     message.html = render_template("clientReset.html", token=token, name=name)
     mail.send(message)
 
@@ -53,5 +62,9 @@ def business_account_activation_email(recipient, token, name):
     """
     url = f"https://pamba.africa/activate/{token}"
     message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
+    app = create_app()
+    with app.open_resource("static/assets/logo.svg") as logo_file:
+        message.attach("logo.svg", "image/svg", logo_file.read())
+
     message.html = render_template("activatebusiness.html", name=name, url=url)
     mail.send(message)
