@@ -102,7 +102,7 @@ def serialize_account(account):
     account_fields = {
         "account_name": fields.String,
         "description": fields.String,
-        "is": fields.Integer,
+        "id": fields.Integer,
         "business_id": fields.Integer
     }
 

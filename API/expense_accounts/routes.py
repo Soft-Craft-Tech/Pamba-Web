@@ -17,10 +17,10 @@ def create_expense_account(business):
     """
     payload = request.get_json()
     name = payload["accountName"].strip().title()
-    description = payload["description"].strip().captialize()
+    description = payload["description"].strip().capitalize()
 
     # Check if the business has another business with the same name.
-    existing_account = ExpenseAccount.query.filter_by(account_name=name, business_id=business.id).firs()
+    existing_account = ExpenseAccount.query.filter_by(account_name=name, business_id=business.id).first()
     if existing_account:
         return jsonify({"message": "This account already exists"}), 409
 
@@ -35,7 +35,7 @@ def create_expense_account(business):
     return jsonify({"message": "Account has been created"}), 200
 
 
-@accounts_blueprint.route("/delete/<int:account_id>")
+@accounts_blueprint.route("/delete/<int:account_id>", methods=["DELETE"])
 @business_login_required
 def delete_account(business, account_id):
     """
@@ -70,11 +70,15 @@ def update_account(business, account_id):
         Update Expense account
         :param business:
         :param account_id:
-        :return: 404, 401, 400
+        :return: 404, 401, 409, 200
     """
     payload = request.get_json()
     name = payload["accountName"].strip().title()
     description = payload["description"].strip().capitalize()
+    password = payload["password"].strip()
+
+    if not bcrypt.check_password_hash(business.password, password):
+        return jsonify({"message": "Incorrect password"}), 401
 
     account = ExpenseAccount.query.get(account_id)
     if not account:
@@ -83,7 +87,7 @@ def update_account(business, account_id):
     # Check if an account exists with the same name for the same business
     same_name = ExpenseAccount.query.filter_by(account_name=name, business_id=business.id).first()
     if same_name and same_name.id != account.id:
-        return jsonify({"message": "This account already exists"}), 409
+        return jsonify({"message": "This account name already exists"}), 409
 
     if account.business_id != business.id:
         return jsonify({"message": "Not allowed"}), 401
