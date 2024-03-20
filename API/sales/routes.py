@@ -1,6 +1,6 @@
 from API.models import Sale
 from flask import Blueprint, jsonify, request
-from API import db
+from API import db, bcrypt
 from API.lib.auth import business_login_required
 from API.lib.data_serializer import serialize_sale
 
@@ -58,3 +58,32 @@ def fetch_all_business_sales(business):
         all_sales.append(sale_info)
 
     return jsonify({"message": "Sales", "sales": all_sales})
+
+
+@sales_blueprint.route("/delete/<int:sale_id>", methods=["DELETE"])
+@business_login_required
+def delete_sale(business, sale_id):
+    """
+        Delete a sale
+        :param business:
+        :param sale_id:
+        :return: 404, 400, 200
+    """
+    payload = request.get_json()
+    password = payload["password"].strip()
+
+    if not bcrypt.check_password_hash(business.password, password):
+        return jsonify({"message": "Incorrect password"}), 401
+
+    sale = Sale.query.get(sale_id)
+
+    if not sale:
+        return jsonify({"message": "Not found"}), 404
+
+    if business.id != sale.business_id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    db.session.delete(sale)
+    db.session.commit()
+
+    return jsonify({"message": "Sale deleted"})
