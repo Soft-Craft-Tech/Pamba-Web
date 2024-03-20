@@ -78,3 +78,16 @@ def serialize_notification(notification):
     }
     return marshal(notification, notification_fields)
 
+
+def serialize_sale(sale):
+    """
+        Serialize sales records
+        :param sale:
+        :return: JSON serialized sale record
+    """
+    sales_fields = {
+        "payment_method": fields.String,
+        "description": fields.String,
+        "date_created": fields.DateTime
+    }
+    return marshal(sale, sales_fields)

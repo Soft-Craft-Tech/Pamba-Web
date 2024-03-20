@@ -215,7 +215,6 @@ class ClientNotification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    read = db.Column(db.Boolean, default=False)
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id"))
 
