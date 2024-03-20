@@ -91,3 +91,19 @@ def serialize_sale(sale):
         "date_created": fields.DateTime
     }
     return marshal(sale, sales_fields)
+
+
+def serialize_account(account):
+    """
+        Serialize expense accounts
+        :param account:
+        :return: JSON serialized account data
+    """
+    account_fields = {
+        "account_name": fields.String,
+        "description": fields.String,
+        "is": fields.Integer,
+        "business_id": fields.Integer
+    }
+
+    return marshal(account, account_fields)

@@ -31,6 +31,7 @@ def create_app():
     from API.ratings.routes import ratings_blueprint
     from API.notifications.routes import notifications_blueprint
     from API.sales.routes import sales_blueprint
+    from API.expense_accounts.routes import accounts_blueprint
 
     app.register_blueprint(clients_blueprint)
     app.register_blueprint(appointment_blueprint)
@@ -39,5 +40,6 @@ def create_app():
     app.register_blueprint(ratings_blueprint)
     app.register_blueprint(notifications_blueprint)
     app.register_blueprint(sales_blueprint)
+    app.register_blueprint(accounts_blueprint)
 
     return app
