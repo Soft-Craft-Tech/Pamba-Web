@@ -114,7 +114,7 @@ Reset your password with token sent via email
 Client's change password
 
 ```javascript
-    endpoint: POST /API/clients/reset-password/{token}
+    endpoint: POST /API/clients/change-password
     method: POST
     Content Type: "Application/Json"
 
