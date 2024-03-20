@@ -22,6 +22,9 @@ def book_appointment(client):
     comment = payload["comment"].strip()
     business_id = payload["provider"]
 
+    if not client.verified:
+        return jsonify({"message": "Please, verify your account."}), 401
+
     new_appointment = Appointment(
         date=date,
         time=time,

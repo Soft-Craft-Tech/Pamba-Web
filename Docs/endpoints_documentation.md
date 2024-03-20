@@ -260,3 +260,95 @@ Fetch notifications for a client
         
     }
 ```
+
+## 4. Appointments
+
+* ### Book Appointment
+Client's appointment Booking
+
+```javascript
+    endpoint: POST /API/appointments/book
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Booking Successful.
+        "400 Bad Request": Double Booking. Another Appointment scheduled at the same time.
+        "401 Unauthorized": Account not verified.
+        "404 Not Found": The shop/business does not exist.
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "date": "***",
+        "time": "***",
+        "comment": "***",
+        "provider": "***" // Refers to the ID if the business/shop.
+    }
+```
+
+* ### Reschedule Appointment
+Reschedule client's appointments.
+
+```javascript
+    endpoint: POST /API/appointments/reschedule/{appointment_id}
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Resheduling Successful.
+        "400 Bad Request": Appointment is already completed.
+        "401 Unauthorized": Not allowed
+        "404 Not Found": The shop/business does not exist.
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "date": "***",
+        "time": "***"
+    }
+```
+
+* ### Cancel Appointment
+Cancel Appointment
+
+```javascript
+    endpoint: POST /API/appointments/cancel/{appointment_id}
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Cancellation Successful.
+        "400 Bad Request": Appointment is already completed.
+        "401 Unauthorized": Not allowed
+        "404 Not Found": The shop/business does not exist.
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "comment": "***" //Reason for cancellation
+    }
+```
+
+* ### Client's Appointments
+All appointments for a certain client.
+
+```javascript
+    endpoint: GET /API/appointments/my-appointments
+    method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Appointments.
+        "404 Not Found": No appointment booked yet.
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        
+    }
+```
