@@ -1,6 +1,6 @@
 from flask import jsonify, request, Blueprint
-from API.models import Client, Business
-from API.lib.data_serializer import serialize_client
+from API.models import Client, Business, ServicesBusinessesAssociation
+from API.lib.data_serializer import serialize_client, serialize_business, serialize_service
 from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
@@ -233,7 +233,7 @@ def resend_verification_otp():
     # Send Email
     send_otp(recipient=email, otp=otp, name=client.name)
     masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
-    return jsonify({"message": f"OTP sent to: {masked_email}"})
+    return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
 
 
 @clients_blueprint.route("/all-businesses", methods=["GET"])
@@ -246,15 +246,43 @@ def fetch_all_businesses():
     businesses = Business.query.filter_by(active=True).all()
     all_businesses = []
     for business in businesses:
-        business_data = dict(
-            name=business.business_name,
-            phone=business.phone,
-            location=business.location,
-            google_map=business.google_map,
-            city=business.city,
-            category=business.category,
-            verified=business.verified,
-            identifier=business.slug
-        )
+        business_data = serialize_business(business)
         all_businesses.append(business_data)
     return jsonify({"message": "Success", "businesses": all_businesses}), 200
+
+
+@clients_blueprint.route("/business/<int:business_id>", methods=["GET"])
+@client_login_required
+def fetch_business(client, business_id):
+    """
+        Fetch business by a give ID
+        :param client:
+        :param business_id:
+        :return: 404, 200
+    """
+
+    business = Business.query.get(business_id)
+
+    if not business:
+        return jsonify({"message": "Business doesn't exist"}), 404
+
+    if not business.active:
+        return jsonify({"message": "Business not verified"}), 400
+
+    business_data = dict(
+        name=business.business_name,
+        category=business.category,
+        id=business.id,
+        location=business.location,
+        phone=business.phone,
+        google_map=business.google_map
+    )
+    all_services = []
+    for service in business.services.all():
+        service_price = ServicesBusinessesAssociation.query\
+            .filter_by(business_id=business.id, service_id=service.id).first()
+        service_info = serialize_service(service)
+        service_info["price"] = service_price.price
+        all_services.append(service_info)
+
+    return jsonify({"business": business_data, "services": all_services}), 200

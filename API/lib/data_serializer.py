@@ -107,3 +107,18 @@ def serialize_account(account):
     }
 
     return marshal(account, account_fields)
+
+
+def serialize_service(service):
+    """
+        Serialize services
+        :param service:
+        :return: Serialized service object
+    """
+    service_fields = {
+        "id": fields.Integer,
+        "service": fields.String,
+        "description": fields.String
+    }
+
+    return marshal(service, service_fields)
