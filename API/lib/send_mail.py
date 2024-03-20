@@ -1,7 +1,6 @@
 from flask_mail import Message
 from API import mail
 from flask import render_template
-from API import create_app
 
 
 def send_otp(recipient, otp, name):

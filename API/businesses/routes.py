@@ -198,7 +198,7 @@ def update_profile(business):
     location = payload["location"].strip().title()
     google_map = payload["mapUrl"].strip()
     password = payload["password"].strip()
-    slug = slugify(name)
+    slug = business.slug if business.business_name == name else slugify(name)
 
     if not bcrypt.check_password_hash(business.password, password):
         return jsonify({"message": "Incorrect password"}), 401

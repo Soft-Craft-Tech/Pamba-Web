@@ -49,7 +49,7 @@ def client_signup():
     # Send Email
     send_otp(recipient=email, otp=otp, name=name)
 
-    return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email, "otp": otp}), 200
+    return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email}), 200
 
 
 @clients_blueprint.route("/verify-otp", methods=["POST"])

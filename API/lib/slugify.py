@@ -29,10 +29,6 @@ def slugify(business_name):
     if not same_business:
         return slug
 
-    # Return the same slug if the business name hasn't changed.
-    if same_business.business_name == business_name:
-        return same_business.slug
-
     all_businesses = Business.query.all()
     number_of_businesses = len(all_businesses)
     slug = f"{slug}-{number_of_businesses}"
