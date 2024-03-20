@@ -2,6 +2,7 @@ from flask import jsonify, request, Blueprint
 from API import db, bcrypt
 from API.lib.auth import business_login_required
 from API.models import ExpenseAccount
+from API.lib.data_serializer import serialize_account
 
 accounts_blueprint = Blueprint("accounts", __name__, url_prefix="/API/accounts")
 
@@ -93,3 +94,20 @@ def update_account(business, account_id):
 
     return jsonify({"message": "Account Updated"}), 200
 
+
+@accounts_blueprint.route("/all", methods=["GET"])
+@business_login_required
+def fetch_all_business_account(business):
+    """
+        Fetch all accounts for the logged in business
+        :param business:
+        :return: 200
+    """
+
+    accounts = ExpenseAccount.query.filter_by(business_id=business.id).all()
+    my_accounts = []
+
+    for account in accounts:
+        my_accounts.append(serialize_account(account))
+
+    return jsonify({"account": my_accounts}), 200
