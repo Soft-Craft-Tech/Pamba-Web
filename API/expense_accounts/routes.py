@@ -33,3 +33,31 @@ def create_expense_account(business):
 
     return jsonify({"message": "Account has been created"}), 200
 
+
+@accounts_blueprint.route("/delete/<int:account_id>")
+@business_login_required
+def delete_account(business, account_id):
+    """
+        Delete business's expense account
+        :param business:
+        :param account_id:
+        :return:
+    """
+    payload = request.get_json()
+    password = payload["password"].strip()
+
+    if not bcrypt.check_password_hash(business.password, password):
+        return jsonify({"message": "Incorrect password"}), 401
+
+    account = ExpenseAccount.query.get(account_id)
+    if not account:
+        return jsonify({"message": "Account Not Found"}), 404
+
+    if account.business_id != business.id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    db.session.delete(account)
+    db.session.commit()
+
+    return jsonify({"message": "Account Deleted"}), 200
+
