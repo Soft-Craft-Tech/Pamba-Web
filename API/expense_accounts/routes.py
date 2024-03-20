@@ -61,3 +61,35 @@ def delete_account(business, account_id):
 
     return jsonify({"message": "Account Deleted"}), 200
 
+
+@accounts_blueprint.route("/update/<int:account_id>", methods=["PUT"])
+@business_login_required
+def update_account(business, account_id):
+    """
+        Update Expense account
+        :param business:
+        :param account_id:
+        :return: 404, 401, 400
+    """
+    payload = request.get_json()
+    name = payload["accountName"].strip().title()
+    description = payload["description"].strip().capitalize()
+
+    account = ExpenseAccount.query.get(account_id)
+    if not account:
+        return jsonify({"message": "Account doesn't exist"}), 404
+
+    # Check if an account exists with the same name for the same business
+    same_name = ExpenseAccount.query.filter_by(account_name=name, business_id=business.id).first()
+    if same_name and same_name.id != account.id:
+        return jsonify({"message": "This account already exists"}), 409
+
+    if account.business_id != business.id:
+        return jsonify({"message": "Not allowed"}), 401
+
+    account.account_name = name
+    account.description = description
+    db.session.commit()
+
+    return jsonify({"message": "Account Updated"}), 200
+
