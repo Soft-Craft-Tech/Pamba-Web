@@ -1,5 +1,5 @@
 from flask import jsonify, request, Blueprint
-from API.models import Client, Business, ServicesBusinessesAssociation, Service
+from API.models import Client, Business, ServicesBusinessesAssociation
 from API.lib.data_serializer import serialize_client, serialize_business, serialize_service
 from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
 from API import bcrypt, db

@@ -1,6 +1,6 @@
 # Pamba Mobile Endpoint Docs
 
-## 1. Auth
+# 1. Auth
 
 * ### Signup
 Client signup endpoint
@@ -175,7 +175,7 @@ Resend the client's verification token incase the one sent on signup is expired.
     }
 ```
 
-## 2. Businesses
+# 2. Businesses
 
 * ### Fetch all Businesses
 Fetch all Businesses listed.
@@ -218,7 +218,7 @@ Fetch a single business given Business id
     }
 ```
 
-## 3. Client Notifications
+# 3. Client Notifications
 
 * ### Read Notification
 Mark notification as read
@@ -261,7 +261,7 @@ Fetch notifications for a client
     }
 ```
 
-## 4. Appointments
+# 4. Appointments
 
 * ### Book Appointment
 Client's appointment Booking
@@ -353,7 +353,7 @@ All appointments for a certain client.
     }
 ```
 
-## 4. Expenses
+# 5. Expenses
 
 * ### New Expense Record
 Create new expense.
@@ -376,4 +376,84 @@ Create new expense.
         "description": ""
         "accountID": int
     }
+```
+
+* ### Delete Expense
+Delete Business's expense given ID
+
+```javascript
+    endpoint: DELETE /API/expenses/delete-expense/{expense_id}
+    method: DELETE
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": message, deleted.
+        "400 Bad Request": message: Incorrect password
+        "404 Not Found": message: Expense Not found
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "password": "xxxx"
+    }
+```
+
+* ### Update Business Expense
+
+```javascript
+    endpoint: PUT /API/expenses/update-expense/{expense_id}
+    method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": message, updated //Updated expense.
+        "400 Bad Request": message: Incorrect password
+        "404 Not Found": message: Expense Not found
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "expenseTitle": "xxx"
+        "expenseAmount": "xxx"
+        "description": "xxx"
+        "accountID": "xxx"
+        "password": "xxxx"
+    }
+```
+
+* ### Fetch Business Expense
+Fetch all Expenses associated with the business.
+
+```javascript
+    endpoint: GET /API/expenses/my-expenses
+    method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": expenses //empty array if null
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {}
+```
+
+* ### Fetch a single Expense
+
+```javascript
+    endpoint: GET /API/expenses/expense/{expense_id}
+    method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": expenses //empty array if null
+        "400 Bad Request": message: Not Allowed //If expense doen't belong to business requesting.
+        "404 Not Found": message: Expense Not found
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {}
 ```
