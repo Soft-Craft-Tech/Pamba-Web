@@ -122,3 +122,22 @@ def serialize_service(service):
     }
 
     return marshal(service, service_fields)
+
+
+def serialize_expenses(expense):
+    """
+        Serialize business expenses
+        :param expense:
+        :return: Serialized Expense
+    """
+
+    expense_fields = {
+        "id": fields.Integer,
+        "expense": fields.String,
+        "amount": fields.Integer,
+        "description": fields.String,
+        "created_at": fields.DateTime,
+        "expense_account": fields.Integer
+    }
+
+    return marshal(expense, expense_fields)

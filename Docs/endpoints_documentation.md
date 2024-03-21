@@ -352,3 +352,28 @@ All appointments for a certain client.
         
     }
 ```
+
+## 4. Expenses
+
+* ### New Expense Record
+Create new expense.
+
+```javascript
+    endpoint: POST /API/expenses/record-expense
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "201 Created": message, expense.
+        "400 Bad Request": message: Not allowed, Account doesn't exist
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "expenseTitle": ""
+        "expenseAmount": int
+        "description": ""
+        "accountID": int
+    }
+```
