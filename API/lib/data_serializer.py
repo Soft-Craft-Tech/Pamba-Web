@@ -141,3 +141,20 @@ def serialize_expenses(expense):
     }
 
     return marshal(expense, expense_fields)
+
+
+def serialize_inventory(inventory):
+    """
+        Serialize Business Inventory
+        :param inventory:
+        :return:
+    """
+
+    inventory_fields = {
+        "id": fields.Integer,
+        "product": fields.String,
+        "status": fields.String,
+        "updated_at": fields.DateTime
+     }
+
+    return marshal(inventory, inventory_fields)

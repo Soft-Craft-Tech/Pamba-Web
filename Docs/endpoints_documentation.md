@@ -423,7 +423,7 @@ Delete Business's expense given ID
     }
 ```
 
-* ### Fetch Business Expense
+* ### Fetch Business Expenses
 Fetch all Expenses associated with the business.
 
 ```javascript
