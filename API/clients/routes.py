@@ -1,7 +1,8 @@
 from flask import jsonify, request, Blueprint
-from API.models import Client, Business, ServicesBusinessesAssociation
-from API.lib.data_serializer import serialize_client, serialize_business, serialize_service
+from API.models import Client, Business, ServicesBusinessesAssociation, Service, Rating, Review
+from API.lib.data_serializer import serialize_client, serialize_business, serialize_service, serialize_review
 from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
+from API.lib.rating_calculator import calculate_ratings
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
@@ -269,6 +270,9 @@ def fetch_business(client, business_id):
     if not business.active:
         return jsonify({"message": "Business not verified"}), 400
 
+    ratings = Rating.query.filter_by(business_id=business.id).all()
+    rating_score, breakdown = calculate_ratings(ratings=ratings, breakdown=True)
+    reviews = Review.query.filter_by(business_id=business.id)
     business_data = dict(
         name=business.business_name,
         category=business.category,
@@ -277,6 +281,7 @@ def fetch_business(client, business_id):
         phone=business.phone,
         google_map=business.google_map
     )
+
     all_services = []
     for service in business.services.all():
         service_price = ServicesBusinessesAssociation.query\
@@ -285,4 +290,49 @@ def fetch_business(client, business_id):
         service_info["price"] = service_price.price
         all_services.append(service_info)
 
-    return jsonify({"business": business_data, "services": all_services}), 200
+    all_reviews = []
+    for review in reviews:
+        all_reviews.append(serialize_review(review))
+
+    return jsonify(
+        {
+            "business": business_data,
+            "services": all_services,
+            "ratingsAverage": rating_score,
+            "ratingsBreakdown": breakdown,
+            "reviews": all_reviews
+        }
+    ), 200
+
+
+@clients_blueprint.route("/service-businesses/<int:service_id>", methods=["GET"])
+@client_login_required
+def service_businesses(client, service_id):
+    """
+        Get business by service. Businesses offering a certain service
+        :param client:
+        :param service_id: ID of the service
+        :return: 404, 200
+    """
+    service = Service.query.get(service_id)
+    if not service:
+        return jsonify({"message": "Service doesn't exist"}), 404
+
+    all_businesses = []
+    for business in service.businesses:
+        ratings = Rating.query.filter_by(business_id=business.id).all()
+        rating_score = calculate_ratings(ratings=ratings, breakdown=False)
+        business_info = dict(
+            name=business.business_name,
+            category=business.category,
+            city=business.city,
+            google_map=business.google_map,
+            id=business.id,
+            phone=business.phone,
+            location=business.location,
+            ratingsAverage=rating_score
+        )
+        all_businesses.append(business_info)
+
+    return jsonify({"businesses": all_businesses}), 200
+

@@ -158,3 +158,18 @@ def serialize_inventory(inventory):
      }
 
     return marshal(inventory, inventory_fields)
+
+
+def serialize_review(review):
+    """
+        Serialize the business review.
+        :param review: Review
+        :return: Serialized object
+    """
+    review_fields = {
+        "id": fields.Integer,
+        "message": fields.String,
+        "reviewed_at": fields.DateTime
+    }
+
+    return marshal(review, review_fields)
