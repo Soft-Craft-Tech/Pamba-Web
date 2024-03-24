@@ -20,7 +20,7 @@ def client_signup():
     """
     payload = request.get_json()
     email = payload["email"].strip().lower()
-    phone = payload["phone"].strip()
+    phone = payload["phone"]
     name = payload["name"].strip().title()
 
     # Check for existence of user with same email or phone number

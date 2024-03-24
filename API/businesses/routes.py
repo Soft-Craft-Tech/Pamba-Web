@@ -21,7 +21,7 @@ def business_signup():
     name = payload["name"].strip().title()
     category = payload["category"].title()
     email = payload["email"].strip().lower()
-    phone = payload["phone"].strip()
+    phone = payload["phone"]
     city = payload["city"].strip().title()
     location = payload["location"].strip().title()
     google_map = payload["mapUrl"].strip()

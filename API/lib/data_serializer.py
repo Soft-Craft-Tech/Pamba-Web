@@ -173,3 +173,21 @@ def serialize_review(review):
     }
 
     return marshal(review, review_fields)
+
+
+def serialize_staff(staff):
+    """
+        Serialize the staff query object
+        :param staff: Staff Object
+        :return: JSON Serialized object
+    """
+    staff_fields = {
+        "id": fields.Integer,
+        "f_name": fields.String,
+        "l_name": fields.String,
+        "phone": fields.String,
+        "created_at": fields.DateTime,
+        "role": fields.String,
+        "public_id": fields.String
+    }
+    return marshal(staff, staff_fields)
