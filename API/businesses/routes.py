@@ -22,6 +22,7 @@ def business_signup():
     category = payload["category"].title()
     email = payload["email"].strip().lower()
     phone = payload["phone"]
+
     city = payload["city"].strip().title()
     location = payload["location"].strip().title()
     google_map = payload["mapUrl"].strip()
@@ -305,3 +306,21 @@ def remove_service(business):
     db.session.commit()
 
     return jsonify({"message": "Service removed"}), 200
+
+
+# --------------------- UNTESTED -------------------------------- #
+@business_blueprint.route("/upload-profile-img", methods=["PUT"])
+@business_login_required
+def upload_profile_img(business):
+    """
+        Allow businesses to upload the profile image
+        :param business: Business logged-in
+        :return: 200
+    """
+    payload = request.get_json()
+    image_url = payload("imageURL")
+
+    business.profile_img = image_url
+    db.session.commit()
+
+    return jsonify({"message": "Success"}), 200

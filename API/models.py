@@ -42,6 +42,7 @@ class Business(db.Model):
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_on = db.Column(db.DateTime)
     # profile Image link with cloudinary.
+    profile_img = db.Column(db.String, nullable=True)
     services = db.relationship("Service", secondary='services_businesses_association',  backref="businesses",
                                lazy="dynamic"
                                )

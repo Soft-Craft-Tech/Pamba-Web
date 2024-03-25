@@ -1,8 +1,8 @@
-from API.models import Appointment, Service
+from API.models import Appointment, Service, Staff
 from flask import Blueprint, request, jsonify
-from API.lib.auth import client_login_required
+from API.lib.auth import client_login_required, business_login_required
 from API.lib.data_serializer import serialize_appointment
-from API import db
+from API import db, bcrypt
 from datetime import datetime
 
 appointment_blueprint = Blueprint("appointments", __name__, url_prefix="/API/appointments")
