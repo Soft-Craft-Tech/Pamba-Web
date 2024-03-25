@@ -153,3 +153,57 @@ def my_appointments(client):
             "last": sorted_previous[-1]
         }
     ), 200
+
+
+@appointment_blueprint.route("/assign-appointment/<int:appointment_id>", methods=["PUT"])
+@business_login_required
+def assign_appointment(business, appointment_id):
+    """
+        Assign an appointment to a member of staff to handle
+        :param business: Logged-in business/owner
+        :param appointment_id: Appointment being assigned
+        :return: 404, 401, 400, 200
+    """
+    payload = request.get_json()
+    staff_id = payload["staffID"]
+    password = payload["password"]
+
+    appointment = Appointment.query.get(appointment_id)
+    if not appointment:
+        return jsonify({"message": "Not Found"}), 404
+
+    if not bcrypt.check_password_hash(business.password, password):
+        return jsonify({"message": "Incorrect Password"}), 401
+
+    if appointment.business_id != business.id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    if appointment.cancelled:
+        return jsonify({"message": "This appointment was cancelled"}), 400
+
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        return jsonify({"message": "Staff not found"}), 404
+
+    if staff.employer_id != business.id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    appointment.staff_id = staff.id
+    return jsonify({"message": "Successful", "appointment": serialize_appointment(appointment)}), 200
+
+
+@appointment_blueprint.route("/business-appointments", methods=["GET"])
+@business_login_required
+def fetch_business_appointments(business):
+    """
+        Fetch all appointments booked with the logged-in business
+        :param business: Logged-in
+        :return: 200
+    """
+    appointments = Appointment.query.filter_by(business_id=business.id).all()
+    all_appointments = []
+
+    for appointment in appointments:
+        all_appointments.append(serialize_appointment(appointment))
+
+    return jsonify({"appointment": all_appointments}), 200
