@@ -1,10 +1,11 @@
-from API.models import Business, ServicesBusinessesAssociation, Service
+from API.models import Business, ServicesBusinessesAssociation, Service, Rating, Review
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
-from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token
+from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token, client_login_required
 from API.lib.slugify import slugify
 from API.lib.send_mail import business_account_activation_email, send_reset_email
-from API.lib.data_serializer import serialize_business
+from API.lib.data_serializer import serialize_business, serialize_service, serialize_review
+from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")
@@ -308,7 +309,106 @@ def remove_service(business):
     return jsonify({"message": "Service removed"}), 200
 
 
-# --------------------- UNTESTED -------------------------------- #
+@business_blueprint.route("/all-businesses", methods=["GET"])
+@verify_api_key
+def fetch_all_businesses():
+    """
+        Fetch all businesses
+        :return: 200
+    """
+    businesses = Business.query.filter_by(active=True).all()
+    all_businesses = []
+    for business in businesses:
+        business_data = serialize_business(business)
+        all_businesses.append(business_data)
+    return jsonify({"message": "Success", "businesses": all_businesses}), 200
+
+
+@business_blueprint.route("/<int:business_id>", methods=["GET"])
+@client_login_required
+def fetch_business(client, business_id):
+    """
+        Fetch business by a give ID
+        :param client:
+        :param business_id:
+        :return: 404, 200
+    """
+
+    business = Business.query.get(business_id)
+
+    if not business:
+        return jsonify({"message": "Business doesn't exist"}), 404
+
+    if not business.active:
+        return jsonify({"message": "Business not verified"}), 400
+
+    ratings = Rating.query.filter_by(business_id=business.id).all()
+    rating_score, breakdown = calculate_ratings(ratings=ratings, breakdown=True)
+    reviews = Review.query.filter_by(business_id=business.id)
+    business_data = dict(
+        name=business.business_name,
+        category=business.category,
+        id=business.id,
+        location=business.location,
+        phone=business.phone,
+        google_map=business.google_map
+    )
+
+    all_services = []
+    for service in business.services.all():
+        service_price = ServicesBusinessesAssociation.query\
+            .filter_by(business_id=business.id, service_id=service.id).first()
+        service_info = serialize_service(service)
+        service_info["price"] = service_price.price
+        all_services.append(service_info)
+
+    all_reviews = []
+    for review in reviews:
+        all_reviews.append(serialize_review(review))
+
+    return jsonify(
+        {
+            "business": business_data,
+            "services": all_services,
+            "ratingsAverage": rating_score,
+            "ratingsBreakdown": breakdown,
+            "reviews": all_reviews
+        }
+    ), 200
+
+
+@business_blueprint.route("/service-businesses/<int:service_id>", methods=["GET"])
+@client_login_required
+def service_businesses(client, service_id):
+    """
+        Get business by service. Businesses offering a certain service
+        :param client:
+        :param service_id: ID of the service
+        :return: 404, 200
+    """
+    service = Service.query.get(service_id)
+    if not service:
+        return jsonify({"message": "Service doesn't exist"}), 404
+
+    all_businesses = []
+    for business in service.businesses:
+        ratings = Rating.query.filter_by(business_id=business.id).all()
+        rating_score = calculate_ratings(ratings=ratings, breakdown=False)
+        business_info = dict(
+            name=business.business_name,
+            category=business.category,
+            city=business.city,
+            google_map=business.google_map,
+            id=business.id,
+            phone=business.phone,
+            location=business.location,
+            ratingsAverage=rating_score
+        )
+        all_businesses.append(business_info)
+
+    return jsonify({"businesses": all_businesses}), 200
+
+
 @business_blueprint.route("/upload-profile-img", methods=["PUT"])
 @business_login_required
 def upload_profile_img(business):

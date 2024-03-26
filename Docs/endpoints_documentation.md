@@ -178,10 +178,10 @@ Resend the client's verification token incase the one sent on signup is expired.
 # 2. Businesses
 
 * ### Fetch all Businesses
-Fetch all Businesses listed.
+Fetch all activated Businesses.
 
 ```javascript
-    endpoint: GET /API/clients/resend-otp
+    endpoint: GET /API/businesses/all-businesses
     method: GET
     Content Type: "Application/Json"
 
@@ -200,7 +200,7 @@ Fetch all Businesses listed.
 Fetch a single business given Business id
 
 ```javascript
-    endpoint: GET /API/clients/business/{business_id}
+    endpoint: GET /API/businesses/{business_id}
     method: GET
     Content Type: "Application/Json"
 
@@ -208,6 +208,27 @@ Fetch a single business given Business id
         "200 OK": Success, business, services
         "400 Bad Request": Business not verified
         "404 Not Found": Business Not found
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN-TOKEN>
+
+    body: {
+        
+    }
+```
+
+* ### Fetch Service Businesses
+Fetch Businesses associated with a certain service
+
+```javascript
+    endpoint: GET /API/businesses/service-businesses/{service_id}
+    method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Businesses
+        "404 Not Found": Service Not found
 
     headers:
         X-API-KEY: <API_KEY>
