@@ -323,17 +323,17 @@ def fetch_all_businesses():
     return jsonify({"message": "Success", "businesses": all_businesses}), 200
 
 
-@business_blueprint.route("/<int:business_id>", methods=["GET"])
+@business_blueprint.route("/<string:slug>", methods=["GET"])
 @client_login_required
-def fetch_business(client, business_id):
+def fetch_business(client, slug):
     """
         Fetch business by a give ID
         :param client:
-        :param business_id:
+        :param slug:
         :return: 404, 200
     """
 
-    business = Business.query.get(business_id)
+    business = Business.query.filter_by(slug=slug).first()
 
     if not business:
         return jsonify({"message": "Business doesn't exist"}), 404
