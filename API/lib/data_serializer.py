@@ -37,7 +37,7 @@ def serialize_business(business):
         "google_map": fields.Url,
         "active": fields.Boolean,
         "verified": fields.Boolean,
-        "join_date": fields.DateTime,
+        "join_date": fields.DateTime(dt_format='iso8601'),
         "profile_img": fields.String
     }
 
@@ -56,7 +56,7 @@ def serialize_appointment(appointment):
         "time": fields.String,
         "cancelled": fields.Boolean,
         "comment": fields.String,
-        "create_at": fields.DateTime,
+        "create_at": fields.DateTime(dt_format='iso8601'),
         "completed": fields.Boolean
     }
 
@@ -74,7 +74,7 @@ def serialize_notification(notification):
         "id": fields.Integer,
         "message": fields.String,
         "title": fields.String,
-        "sent_at": fields.DateTime,
+        "sent_at": fields.DateTime(dt_format='iso8601'),
         "read": fields.Boolean
     }
     return marshal(notification, notification_fields)
