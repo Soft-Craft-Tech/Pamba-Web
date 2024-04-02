@@ -47,7 +47,7 @@ def delete_inventory(business, inventory_id):
         return jsonify({"message": "Record not found"}), 404
 
     if inventory.business_id != business.id:
-        return jsonify({"message": "Not Allowed"}), 401
+        return jsonify({"message": "Not Allowed"}), 403
 
     db.session.delete(inventory)
     db.session.commit()
@@ -76,7 +76,7 @@ def update_inventory_status(business, inventory_id):
         return jsonify({"message": "Record not found"}), 404
 
     if inventory.business_id != business.id:
-        return jsonify({"message": "Not allowed"}), 401
+        return jsonify({"message": "Not allowed"}), 403
 
     inventory.status = status
     inventory.updated_at = datetime.utcnow()

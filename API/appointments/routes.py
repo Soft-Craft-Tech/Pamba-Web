@@ -23,7 +23,7 @@ def book_appointment(client):
     business_id = payload["provider"]
 
     if not client.verified:
-        return jsonify({"message": "Please, verify your account."}), 401
+        return jsonify({"message": "Please, verify your account."}), 403
 
     new_appointment = Appointment(
         date=date,
@@ -68,7 +68,7 @@ def reschedule_appointment(client, appointment_id):
         return jsonify({"message": "Appointment doesn't exist"}), 404
 
     if appointment.client_id != client.id:
-        return jsonify({"message": "Not allowed"}), 401
+        return jsonify({"message": "Not allowed"}), 403
 
     if appointment.completed:
         return jsonify({"message": "Appointment already completed."}), 400
@@ -103,7 +103,7 @@ def cancel_appointment(client, appointment_id):
         return jsonify({"message": "Appointment not Found"}), 404
 
     if appointment.client_id != client.id:
-        return jsonify({"message": "Not allowed"}), 401
+        return jsonify({"message": "Not allowed"}), 403
 
     if appointment.completed:
         return jsonify({"message": "Appointment already completed."}), 400
@@ -176,7 +176,7 @@ def assign_appointment(business, appointment_id):
         return jsonify({"message": "Incorrect Password"}), 401
 
     if appointment.business_id != business.id:
-        return jsonify({"message": "Not allowed"}), 400
+        return jsonify({"message": "Not allowed"}), 403
 
     if appointment.cancelled:
         return jsonify({"message": "This appointment was cancelled"}), 400
@@ -186,7 +186,7 @@ def assign_appointment(business, appointment_id):
         return jsonify({"message": "Staff not found"}), 404
 
     if staff.employer_id != business.id:
-        return jsonify({"message": "Not allowed"}), 400
+        return jsonify({"message": "Not allowed"}), 403
 
     appointment.staff_id = staff.id
     return jsonify({"message": "Successful", "appointment": serialize_appointment(appointment)}), 200

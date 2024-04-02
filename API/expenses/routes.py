@@ -27,7 +27,7 @@ def record_expenses(business):
         return jsonify({"message": "Expense account does not exist"}), 400
 
     if account.business.id != business.id:
-        return jsonify({"message": "Not Allowed"}), 400
+        return jsonify({"message": "Not Allowed"}), 403
 
     new_expense = Expense(
         expense=expense,
@@ -134,6 +134,6 @@ def fetch_single_expense(business, expense_id):
 
     account_ids = [account.id for account in business.expense_accounts.all()]
     if expense.expense_account not in account_ids:
-        return jsonify({"message": "Not Allowed"}), 400
+        return jsonify({"message": "Not Allowed"}), 403
 
     return jsonify({"expense": serialize_expenses(expense)}), 200

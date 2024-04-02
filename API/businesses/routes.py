@@ -66,7 +66,7 @@ def business_signup():
             "message": "Successful! Account activation link set to your email",
             "business": serialize_business(business),
         }
-    ), 200
+    ), 201
 
 
 @business_blueprint.route("/activate-account/<string:token>", methods=["POST"])
@@ -88,8 +88,7 @@ def activate_account(token):
         return jsonify({"message": "Account already active"}), 400
     business.active = True
     db.session.commit()
-
-    return jsonify({"message": "Success", "business": serialize_business(business)}), 200
+    return jsonify({"message": "Success", "username": business.slug}), 200
 
 
 @business_blueprint.route("/login", methods=["POST"])

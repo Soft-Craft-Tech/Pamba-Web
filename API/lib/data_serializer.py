@@ -37,7 +37,8 @@ def serialize_business(business):
         "google_map": fields.Url,
         "active": fields.Boolean,
         "verified": fields.Boolean,
-        "join_date": fields.DateTime
+        "join_date": fields.DateTime,
+        "profile_img": fields.String
     }
 
     return marshal(business, business_fields)

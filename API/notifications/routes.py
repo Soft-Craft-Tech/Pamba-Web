@@ -46,7 +46,7 @@ def read_notification(client, notification_id):
         return jsonify({"message": "Notification Not Found"}), 404
 
     if notification.client_id != client.id:
-        return jsonify({"message": "Not allowed"}), 400
+        return jsonify({"message": "Not allowed"}), 403
 
     if notification.read:
         return jsonify({"message": "Notification is already Read"}), 400
@@ -72,7 +72,7 @@ def delete_notification(client, notification_id):
         return jsonify({"message": "Not Found"}), 400
 
     if notification.client_id != client.id:
-        return jsonify({"message": "Not Allowed"}), 400
+        return jsonify({"message": "Not Allowed"}), 403
 
     db.session.delete(notification)
     db.session.commit()
@@ -136,7 +136,10 @@ def read_business_notification(business, notification_id):
         return jsonify({"message": "Not found"}), 404
 
     if notification.business_id != business.id:
-        return jsonify({"message": "Not Allowed"}), 401
+        return jsonify({"message": "Not Allowed"}), 403
+
+    if notification.read:
+        return jsonify({"message": "Notification is already Read"}), 400
 
     notification.read = True
     db.session.commit()
@@ -158,7 +161,7 @@ def delete_business_notification(business, notification_id):
         return jsonify({"message": "Not found"}), 404
 
     if notification.business_id != business.id:
-        return jsonify({"message": "Not Allowed"}), 401
+        return jsonify({"message": "Not Allowed"}), 403
 
     db.session.delete(notification)
     db.session.commit()

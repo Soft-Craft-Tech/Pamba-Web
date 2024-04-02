@@ -55,7 +55,7 @@ def delete_account(business, account_id):
         return jsonify({"message": "Account Not Found"}), 404
 
     if account.business_id != business.id:
-        return jsonify({"message": "Not allowed"}), 400
+        return jsonify({"message": "Not allowed"}), 403
 
     db.session.delete(account)
     db.session.commit()
@@ -90,7 +90,7 @@ def update_account(business, account_id):
         return jsonify({"message": "This account name already exists"}), 409
 
     if account.business_id != business.id:
-        return jsonify({"message": "Not allowed"}), 401
+        return jsonify({"message": "Not allowed"}), 403
 
     account.account_name = name
     account.description = description
