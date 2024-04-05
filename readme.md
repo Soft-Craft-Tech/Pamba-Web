@@ -21,16 +21,14 @@ Welcome to the Pamba-Web backend repository! This project powers the backend of 
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Configuration](#configuration)
-4. [Project Structure](#project-structure)
-5. [Dependencies](#dependencies)
-6. [Usage](#usage)
-7. [Endpoint Documentation](#endpoint-documentation)
-8. [Testing](#testing)
-9. [Deployment](#deployment)
-10. [Contribution Guidelines](#contribution-guidelines)
-11. [License](#license)
+2. [Configuration](#configuration)
+3. [Project Structure](#project-structure)
+4. [Dependencies](#dependencies)
+5. [Endpoint Documentation](#endpoint-documentation)
+5. [Testing](#testing)
+6. [Deployment](#deployment)
+7. [Contribution Guidelines](#contribution-guidelines)
+8. [License](#license)
 
 ---
 
@@ -40,45 +38,6 @@ Pamba-Web backend is crafted with Python and Flask, leveraging industry-standard
 
 ---
 
-## Installation
-
-Get started with Pamba-Web backend by following these simple installation steps:
-
-- **Clone the repository:**
-  ```bash
-  git clone https://github.com/ZakariaMoha/Pamba-Web.git
-
-    Navigate to the project directory:
-
-    bash
-
-cd Pamba-Web
-
-Set up a virtual environment:
-
-bash
-
-python -m venv venv
-
-Activate the virtual environment:
-
-    Windows:
-
-    bash
-
-venv\Scripts\activate
-
-Unix/Mac:
-
-bash
-
-    source venv/bin/activate
-
-Install dependencies:
-
-bash
-
-    pip install -r requirements.txt
 
 ## Configuration
 
@@ -108,23 +67,7 @@ Pamba-Web/
 Pamba-Web backend relies on a set of essential Python packages, including Flask, Flask-RESTful, SQLAlchemy, and PyJWT. Check out the requirements.txt file for a comprehensive list of dependencies and their versions.
 Usage
 
-Launch the Pamba-Web backend effortlessly with a single command:
 
-bash
-
-python run.py
-
-The backend will be up and running at http://localhost:5000 by default.
-## API Documentation
-* [Endpoints Documentation](https://documenter.getpostman.com/view/16329331/2sA2r9WNg8)
-Explore the detailed API documentation provided by Flask-RESTful to discover all available endpoints, request methods, and required parameters.
-Testing
-
-Ensure the reliability and integrity of the codebase by running the suite of unit tests:
-
-bash
-
-python -m unittest discover -s tests
 
 ## Deployment
 

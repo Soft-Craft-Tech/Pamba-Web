@@ -478,3 +478,388 @@ Fetch all Expenses associated with the business.
         x-access-token: <LOGIN_TOKEN>
     body: {}
 ```
+# 6. Inventory
+*  ### fetch all Inventory records for the business
+```javascript
+    Endpoint: GET /API/inventory/business-inventory
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Ok": Inventory
+
+    Headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### Record new inventory
+```javascript
+      Endpoint: POST /API/inventory/record-inventory
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "201 Created": Message, Inventory.
+    
+    Headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### Delete Inventory
+Delete Inventory with id
+```javascript
+      Endpoint: DELETE /API/inventory/delete-inventory/{inventory_id}
+    Method: DELETE
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": Message, Deleted.
+        "401 Unauthorized": Message: Incorrect password
+        "404 Not Found": Message: Record Not found
+
+    Headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "password": "xxxx"
+    }
+```
+* #### Update Inventory status
+```javascript
+     Endpoint: PUT /API/inventory/update-status/{inventory_id}
+    Method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": Message, Updated //Updated inventory.
+        "400 Bad Request": Message: Status not recognized
+        "401 Unauthorized": Message: Not allowed
+        "404 Not Found": Message: Record Not found
+
+    Headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "status": "New Status"
+    }
+```
+# 7. Ratings
+* ### Add rating to a business
+```javascript
+         Endpoint: POST /API/ratings/new
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": Message, Rating has been posted.
+        "404 Not Found": Message: Business doesn't exist
+
+    Headers:
+        X-API-KEY: <API_KEY>
+    Body: {
+        "rating": <int>,
+        "businessID": <int>
+    }
+```
+# 8. Review
+* ### Create Review 
+```javascript
+      Endpoint: POST /API/reviews/create
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 Created": Message, Review has been posted.
+        "404 Not Found": Message: Business doesn't exist
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "message": "Review Message",
+        "businessID": <int>
+    }
+```
+# 9. Sales
+* ### fetch a single sale 
+```javascript
+     Endpoint: GET /API/sales/{sale_id}
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Sale details.
+        "401 Unauthorized": Message: Not allowed
+        "404 Not Found": Message: Sale not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### fetch all sales
+```javascript
+    Endpoint: GET /API/sales/all
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Sales.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### Record New sale 
+```javascript
+    Endpoint: POST /API/sales/add-sale
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message, Sale Added.
+        "400 Bad Request": Message: You need to activate your account first. Or We are not offering this service at the moment.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "paymentMethod": "Payment Method",
+        "description": "Description",
+        "serviceId": <int>
+    }
+```
+* ### Update sale
+``` javascript
+      Endpoint: PUT /API/sales/update/{sale_id}
+    Method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Sale updated.
+        "400 Bad Request": Message: Incorrect password or Invalid sale ID
+        "401 Unauthorized": Message: Not allowed
+        "404 Not Found": Message: Sale not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "paymentMethod": "New Payment Method",
+        "description": "New Description",
+        "password": "xxxx"
+    }
+```
+* ### Delete a sale
+```javascript
+    Endpoint: DELETE /API/sales/delete/{sale_id}
+    Method: DELETE
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Sale deleted.
+        "400 Bad Request": Message: Incorrect password
+        "404 Not Found": Message: Not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "password": "xxxx"
+    }
+```
+# 10. staff
+* ### fetch single staff
+```javascript
+    Endpoint: GET /API/staff/single/{staff_id}
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Staff details.
+        "401 Unauthorized": Message: Not allowed
+        "404 Not Found": Message: Staff not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### fetch all staffs
+```javascript
+   Endpoint: GET /API/staff/all
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": All staff records.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### update staff info
+```javascript
+      Endpoint: PUT /API/staff/update-staff/{staff_id}
+    Method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Updated.
+        "401 Unauthorized": Message: Incorrect password
+        "404 Not Found": Message: Staff not found
+        "409 Conflict": Message: Phone number already exists
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "password": "xxxx",
+        "phone": "New Phone Number",
+        "role": "New Role"
+    }
+```
+* ### delete a staff member
+```javascript
+    Endpoint: DELETE /API/staff/delete-staff/{staff_id}
+    Method: DELETE
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Staff deleted.
+        "401 Unauthorized": Message: Incorrect password
+        "404 Not Found": Message: Staff not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "password": "xxxx"
+    }
+```
+# 12. Business-Notifications
+* ### create Business notification
+```javascript
+      Endpoint: POST /API/notifications/businesses/create
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "201 Created": Message: Notification sent.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "title": "Notification Title",
+        "message": "Notification Message",
+        "businessID": <int>
+    }
+```
+* ### mark Business Notifications as Read
+```javascript
+      Endpoint: PUT /API/notifications/business/read/{notification_id}
+    Method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Notification Read.
+        "401 Unauthorized": Message: Not Allowed
+        "404 Not Found": Message: Not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### Delete Business Notifications
+```javascript
+        Endpoint: DELETE /API/notifications/business/delete/{notification_id}
+    Method: DELETE
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Deleted.
+        "401 Unauthorized": Message: Not Allowed
+        "404 Not Found": Message: Not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+# 13. Expense_accounts
+* ### fetch single expense_account for the business
+```javascript
+        Endpoint: GET /API/accounts/single/{account_id}
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Single account details.
+        "401 Unauthorized": Message: Not allowed
+        "404 Not Found": Message: Account not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### Fetch all expense accounts for the business
+```javascript
+        Endpoint: GET /API/accounts/all
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": All accounts records.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+* ### create expense account for the business
+```javascript
+        Endpoint: POST /API/accounts/create-account
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Account has been created.
+        "409 Conflict": Message: This account already exists.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "accountName": "Account Name",
+        "description": "Description"
+    }
+```
+* ### update expense account
+```javascript
+        Endpoint: PUT /API/accounts/update/{account_id}
+    Method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Account Updated.
+        "401 Unauthorized": Message: Incorrect password
+        "404 Not Found": Message: Account doesn't exist
+        "409 Conflict": Message: This account name already exists
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "accountName": "New Account Name",
+        "description": "New Description",
+        "password": "xxxx"
+    }
+```
+* ### Delete expense_accounts for the business
+```javascript
+        Endpoint: DELETE /API/accounts/delete/{account_id}
+    Method: DELETE
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Account Deleted.
+        "401 Unauthorized": Message: Incorrect password
+        "404 Not Found": Message: Account Not Found
+        "400 Bad Request": Message: Not allowed
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "password": "xxxx"
+    }
+```
