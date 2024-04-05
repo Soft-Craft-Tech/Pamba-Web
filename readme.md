@@ -10,5 +10,135 @@ serving the [pamba.africa](https://pamba.africa).
 All libraries and packages used in this project can be found in the
 [requirements.txt](https://github.com/Soft-Craft-Tech/Pamba-Web/blob/main/requirements.txt)
 
-## Documentation:
+## Pamba-Web Backend Documentation:
 * [Endpoints Documentation](https://documenter.getpostman.com/view/16329331/2sA2r9WNg8)
+# Pamba-Web Backend
+
+Welcome to the Pamba-Web backend repository! This project powers the backend of Pamba-Web, an innovative e-commerce platform aimed at delivering exceptional user experiences and robust functionality.
+
+---
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Installation](#installation)
+3. [Configuration](#configuration)
+4. [Project Structure](#project-structure)
+5. [Dependencies](#dependencies)
+6. [Usage](#usage)
+7. [Endpoint Documentation](#endpoint-documentation)
+8. [Testing](#testing)
+9. [Deployment](#deployment)
+10. [Contribution Guidelines](#contribution-guidelines)
+11. [License](#license)
+
+---
+
+## Introduction
+
+Pamba-Web backend is crafted with Python and Flask, leveraging industry-standard practices and cutting-edge technologies to ensure reliability, scalability, and security. Dive into our documentation to explore our backend architecture and unleash the potential of Pamba-Web.
+
+---
+
+## Installation
+
+Get started with Pamba-Web backend by following these simple installation steps:
+
+- **Clone the repository:**
+  ```bash
+  git clone https://github.com/ZakariaMoha/Pamba-Web.git
+
+    Navigate to the project directory:
+
+    bash
+
+cd Pamba-Web
+
+Set up a virtual environment:
+
+bash
+
+python -m venv venv
+
+Activate the virtual environment:
+
+    Windows:
+
+    bash
+
+venv\Scripts\activate
+
+Unix/Mac:
+
+bash
+
+    source venv/bin/activate
+
+Install dependencies:
+
+bash
+
+    pip install -r requirements.txt
+
+## Configuration
+
+Before launching the project, ensure proper configuration settings are in place. Explore the config.py file to configure database connections, secret keys, and other environment variables. Remember to create a .env file to manage sensitive information securely.
+## Project Structure
+The project follows a well-organized Flask project structure for seamless development and maintenance:
+
+Pamba-Web/
+├── API/
+│   ├── static/
+│   ├── templates/
+│   ├── __init__.py
+│   ├── routes.py
+│   ├── models.py
+│   └── ...
+│
+├── migrations/
+│
+├── tests/
+│
+├── config.py
+├── requirements.txt
+└── run.py
+
+## Dependencies
+
+Pamba-Web backend relies on a set of essential Python packages, including Flask, Flask-RESTful, SQLAlchemy, and PyJWT. Check out the requirements.txt file for a comprehensive list of dependencies and their versions.
+Usage
+
+Launch the Pamba-Web backend effortlessly with a single command:
+
+bash
+
+python run.py
+
+The backend will be up and running at http://localhost:5000 by default.
+## API Documentation
+* [Endpoints Documentation](https://documenter.getpostman.com/view/16329331/2sA2r9WNg8)
+Explore the detailed API documentation provided by Flask-RESTful to discover all available endpoints, request methods, and required parameters.
+Testing
+
+Ensure the reliability and integrity of the codebase by running the suite of unit tests:
+
+bash
+
+python -m unittest discover -s tests
+
+## Deployment
+
+Prepare Pamba-Web backend for deployment to production environments following these guidelines:
+
+    Set up a robust production server infrastructure (e.g., AWS, Heroku).
+    Configure environment variables to tailor settings for production.
+    Utilize a WSGI server (e.g., Gunicorn) to serve the Flask application.
+    Implement SSL/TLS to ensure secure communication.
+    Monitor server performance and logs proactively to detect and resolve issues.
+
+## Contribution Guidelines
+
+Join the community of contributors and make a meaningful impact on Pamba-Web backend! Review our contribution guidelines for insights into coding standards, pull request procedures, and more.
+## License
+
+Pamba-Web backend is licensed under the GNU General Public License v3.0 (GPL-3.0)
