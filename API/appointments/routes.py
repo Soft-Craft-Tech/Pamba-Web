@@ -21,6 +21,7 @@ def book_appointment(client):
     time = datetime.strptime(payload["time"], '%H:%M').time()
     comment = payload["comment"].strip()
     business_id = payload["provider"]
+    service = payload["service"]
 
     if not client.verified:
         return jsonify({"message": "Please, verify your account."}), 403
@@ -37,11 +38,10 @@ def book_appointment(client):
     if appointment:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
-    for service_id in payload["services"]:
-        service = Service.query.filter_by(id=service_id).first()
-        if not service:
-            return jsonify({"message": "Service not found"}), 404
-        new_appointment.services.append(service)
+    service = Service.query.filter_by(id=service).first()
+    if not service:
+        return jsonify({"message": "Service not found"}), 404
+    new_appointment.services.append(service)
     db.session.add(new_appointment)
     db.session.commit()
     # Send email or notification when a new appointment is scheduled
