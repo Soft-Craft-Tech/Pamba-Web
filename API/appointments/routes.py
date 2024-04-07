@@ -150,7 +150,7 @@ def my_appointments(client):
             "cancelled": cancelled_appointments,
             "upcoming": upcoming_appointments,
             "previous": previous_appointments,
-            "last": sorted_previous[-1]
+            "last": sorted_previous[-1] if len(sorted_previous) > 0 else None
         }
     ), 200
 
