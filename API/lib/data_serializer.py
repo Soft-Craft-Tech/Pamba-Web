@@ -89,7 +89,7 @@ def serialize_sale(sale):
     sales_fields = {
         "payment_method": fields.String,
         "description": fields.String,
-        "date_created": fields.DateTime
+        "date_created": fields.DateTime(dt_format='iso8601')
     }
     return marshal(sale, sales_fields)
 
@@ -137,7 +137,7 @@ def serialize_expenses(expense):
         "expense": fields.String,
         "amount": fields.Integer,
         "description": fields.String,
-        "created_at": fields.DateTime,
+        "created_at": fields.DateTime(dt_format='iso8601'),
         "expense_account": fields.Integer
     }
 
@@ -155,7 +155,7 @@ def serialize_inventory(inventory):
         "id": fields.Integer,
         "product": fields.String,
         "status": fields.String,
-        "updated_at": fields.DateTime
+        "updated_at": fields.DateTime(dt_format='iso8601')
      }
 
     return marshal(inventory, inventory_fields)
@@ -170,7 +170,7 @@ def serialize_review(review):
     review_fields = {
         "id": fields.Integer,
         "message": fields.String,
-        "reviewed_at": fields.DateTime
+        "reviewed_at": fields.DateTime(dt_format='iso8601')
     }
 
     return marshal(review, review_fields)
@@ -187,7 +187,7 @@ def serialize_staff(staff):
         "f_name": fields.String,
         "l_name": fields.String,
         "phone": fields.String,
-        "created_at": fields.DateTime,
+        "created_at": fields.DateTime(dt_format='iso8601'),
         "role": fields.String,
         "public_id": fields.String
     }
