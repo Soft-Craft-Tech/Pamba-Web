@@ -134,6 +134,7 @@ def my_appointments(client):
 
     for appointment in appointments:
         serialized_appointment = serialize_appointment(appointment)
+        serialized_appointment["imgUrl"] = appointment.business.profile_img
         if appointment.cancelled:
             cancelled_appointments.append(serialized_appointment)
         if appointment.completed:
