@@ -135,6 +135,10 @@ def my_appointments(client):
     for appointment in appointments:
         serialized_appointment = serialize_appointment(appointment)
         serialized_appointment["imgUrl"] = appointment.business.profile_img
+        serialized_appointment["phone"] = appointment.business.phone
+        serialized_appointment["name"] = appointment.business.business_name
+        serialized_appointment["description"] = appointment.business.location
+        serialized_appointment["mapUrl"] = appointment.google_map
         if appointment.cancelled:
             cancelled_appointments.append(serialized_appointment)
         if appointment.completed:
