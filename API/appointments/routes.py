@@ -138,7 +138,7 @@ def my_appointments(client):
         serialized_appointment["phone"] = appointment.business.phone
         serialized_appointment["name"] = appointment.business.business_name
         serialized_appointment["description"] = appointment.business.location
-        serialized_appointment["mapUrl"] = appointment.google_map
+        serialized_appointment["mapUrl"] = appointment.business.google_map
         if appointment.cancelled:
             cancelled_appointments.append(serialized_appointment)
         if appointment.completed:

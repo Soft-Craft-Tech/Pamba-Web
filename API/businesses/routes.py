@@ -258,13 +258,9 @@ def assign_services(business):
         :return: 200
     """
     payload = request.get_json()
-    password = payload["password"].strip()
     services = payload["services"]
     service_ids = {service["id"]: service["price"] for service in services}
     services_to_associate = Service.query.filter(Service.id.in_(service_ids.keys())).all()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 401
 
     # Find services already offered by the business so that a service is not listed twice for the same business
     this_business_services = ServicesBusinessesAssociation.query.filter_by(business_id=business.id).all()
@@ -417,7 +413,11 @@ def upload_profile_img(business):
         :return: 200
     """
     payload = request.get_json()
-    image_url = payload("imageURL")
+
+    try:
+        image_url = payload["imageURL"]
+    except KeyError:
+        return jsonify({"message": "No Image to be Uploaded"}), 400
 
     business.profile_img = image_url
     db.session.commit()

@@ -35,6 +35,7 @@ def create_app():
     from API.expenses.routes import expenses_blueprint
     from API.inventory.routes import inventory_blueprint
     from API.staff.routes import staff_blueprint
+    from API.services.routes import services_blueprint
 
     app.register_blueprint(clients_blueprint)
     app.register_blueprint(appointment_blueprint)
@@ -47,5 +48,6 @@ def create_app():
     app.register_blueprint(expenses_blueprint)
     app.register_blueprint(inventory_blueprint)
     app.register_blueprint(staff_blueprint)
+    app.register_blueprint(services_blueprint)
 
     return app
