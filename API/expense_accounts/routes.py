@@ -29,7 +29,7 @@ def create_expense_account(business):
             business_id=business.id
         )
         db.session.add(new_account)
-    # db.session.commit()
+    db.session.commit()
 
     return jsonify({"message": "Account has been created"}), 200
 

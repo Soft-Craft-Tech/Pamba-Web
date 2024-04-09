@@ -345,8 +345,8 @@ def fetch_business(client, slug):
     if ratings:
         rating_score, breakdown = calculate_ratings(ratings=ratings, breakdown=True)
     else:
-        breakdown=None
-        rating_score=None
+        breakdown = None
+        rating_score = None
     reviews = Review.query.filter_by(business_id=business.id)
     business_data = dict(
         name=business.business_name,
@@ -375,7 +375,8 @@ def fetch_business(client, slug):
             "services": all_services,
             "ratingsAverage": rating_score,
             "ratingsBreakdown": breakdown,
-            "reviews": all_reviews
+            "reviews": all_reviews,
+            "gallery": []
         }
     ), 200
 
