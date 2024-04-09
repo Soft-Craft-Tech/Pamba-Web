@@ -356,7 +356,7 @@ def fetch_business(client, slug):
         phone=business.phone,
         google_map=business.google_map,
         description=business.description,
-        imageUrl=business.google_map
+        imageUrl=business.profile_img
     )
 
     all_services = []
