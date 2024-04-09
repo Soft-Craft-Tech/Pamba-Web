@@ -16,21 +16,20 @@ def create_expense_account(business):
         :return: 200
     """
     payload = request.get_json()
-    name = payload["accountName"].strip().title()
-    description = payload["description"].strip().capitalize()
+    accounts = payload["accounts"]
 
-    # Check if the business has another business with the same name.
-    existing_account = ExpenseAccount.query.filter_by(account_name=name, business_id=business.id).first()
-    if existing_account:
-        return jsonify({"message": "This account already exists"}), 409
-
-    new_account = ExpenseAccount(
-        account_name=name,
-        description=description,
-        business_id=business.id
-    )
-    db.session.add(new_account)
-    db.session.commit()
+    for acc in accounts:
+        # Check if the business has another business with the same name.
+        existing_account = ExpenseAccount.query.filter_by(account_name=acc["accountName"], business_id=business.id).first()
+        if existing_account:
+            continue
+        new_account = ExpenseAccount(
+            account_name=acc["accountName"],
+            description=acc["description"],
+            business_id=business.id
+        )
+        db.session.add(new_account)
+    # db.session.commit()
 
     return jsonify({"message": "Account has been created"}), 200
 

@@ -259,6 +259,10 @@ def assign_services(business):
     """
     payload = request.get_json()
     services = payload["services"]
+
+    if len(services) == 0:
+        return jsonify({"message": "No service to be added"}), 400
+
     service_ids = {service["id"]: service["price"] for service in services}
     services_to_associate = Service.query.filter(Service.id.in_(service_ids.keys())).all()
 
@@ -275,7 +279,7 @@ def assign_services(business):
                 price=service_ids[service.id]
             )
             db.session.add(business_service_association)
-            db.session.commit()
+            # db.session.commit()
     except:
         return jsonify({"message": "An error occurred please try again"}), 500
 
@@ -338,7 +342,11 @@ def fetch_business(client, slug):
         return jsonify({"message": "Business not verified"}), 400
 
     ratings = Rating.query.filter_by(business_id=business.id).all()
-    rating_score, breakdown = calculate_ratings(ratings=ratings, breakdown=True)
+    if ratings:
+        rating_score, breakdown = calculate_ratings(ratings=ratings, breakdown=True)
+    else:
+        breakdown=None
+        rating_score=None
     reviews = Review.query.filter_by(business_id=business.id)
     business_data = dict(
         name=business.business_name,

@@ -9,10 +9,13 @@ def calculate_ratings(ratings: list, breakdown: bool):
         :return: Average rating, Ratings breakdown
     """
     ratings_list = [rating.rating for rating in ratings]
-    rating_score = round(sum(ratings_list) / len(ratings_list))
-
-    if breakdown:
-        count = Counter(ratings_list)
-        return rating_score, dict(count)
+    try:
+        rating_score = round(sum(ratings_list) / len(ratings_list))
+    except ZeroDivisionError:
+        return None
     else:
-        return rating_score
+        if breakdown:
+            count = Counter(ratings_list)
+            return rating_score, dict(count)
+        else:
+            return rating_score
