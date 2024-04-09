@@ -35,6 +35,7 @@ class Business(db.Model):
     phone = db.Column(db.String(15), nullable=False, unique=True)
     city = db.Column(db.String(30), nullable=False)
     location = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text, nullable=True)
     password = db.Column(db.String(250), nullable=False)
     google_map = db.Column(db.String(300), nullable=True)
     active = db.Column(db.Boolean, default=False)
