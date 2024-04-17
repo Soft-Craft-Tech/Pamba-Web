@@ -1,10 +1,10 @@
-from API.models import Business, ServicesBusinessesAssociation, Service, Rating, Review
+from API.models import Business, Appointment, Sale, ServicesBusinessesAssociation, Service, Rating, Review
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
 from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token, client_login_required
 from API.lib.slugify import slugify
 from API.lib.send_mail import business_account_activation_email, send_reset_email
-from API.lib.data_serializer import serialize_business, serialize_service, serialize_review
+from API.lib.data_serializer import serialize_business, serialize_service, serialize_review, serialize_appointment
 from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta
 
@@ -192,11 +192,11 @@ def update_profile(business):
     """
     payload = request.get_json()
     name = payload["name"].strip().title()
-    category = payload["category"].title()
     email = payload["email"].strip().lower()
     phone = payload["phone"].strip()
     city = payload["city"].strip().title()
     location = payload["location"].strip().title()
+    description = payload["description"]
     google_map = payload["mapUrl"].strip()
     password = payload["password"].strip()
     slug = business.slug if business.business_name == name else slugify(name)
@@ -221,7 +221,7 @@ def update_profile(business):
     business.location = location
     business.google_map = google_map
     business.slug = slug
-    business.category = category
+    business.description = description
     db.session.commit()
 
     return jsonify({"message": "Update Successful"}), 200
@@ -279,7 +279,7 @@ def assign_services(business):
                 price=service_ids[service.id]
             )
             db.session.add(business_service_association)
-            # db.session.commit()
+            db.session.commit()
     except:
         return jsonify({"message": "An error occurred please try again"}), 500
 
@@ -356,7 +356,9 @@ def fetch_business(client, slug):
         phone=business.phone,
         google_map=business.google_map,
         description=business.description,
-        imageUrl=business.profile_img
+        imageUrl=business.profile_img,
+        city=business.city,
+        email=business.email
     )
 
     all_services = []
@@ -379,6 +381,45 @@ def fetch_business(client, slug):
             "ratingsBreakdown": breakdown,
             "reviews": all_reviews,
             "gallery": []
+        }
+    ), 200
+
+
+@business_blueprint.route("/analysis", methods=["GET"])
+@business_login_required
+def get_business_analytics(business):
+    """
+        Business analysis for the Business Dashboard Page
+        :param business: Logged in Business
+        :return: 200
+    """
+    # Today's Appointments
+    today = datetime.today().date()
+    current_month = today.month
+    current_year = today.year
+    appointments = Appointment.query.filter_by(date=today, business_id=business.id).all()
+    today_appointments = []
+    for appointment in appointments:
+        appointment_serialized = serialize_appointment(appointment)
+        appointment_serialized["service"] = appointment.service.service
+        today_appointments.append(appointment_serialized)
+
+    # Today's Revenue
+    sales = Sale.query.filter_by(business_id=business.id).all()
+    sales_sum = 0
+    for sale in sales:
+        if sale.date_created.date() == today:
+            service = ServicesBusinessesAssociation\
+                .query\
+                .filter_by(business_id=business.id, service_id=sale.service_id)\
+                .first()
+            sales_sum += service.price
+
+    return jsonify(
+        {
+            "message": "yes",
+            "today_appointments": today_appointments,
+            "today_revenue": sales_sum
         }
     ), 200
 
@@ -434,3 +475,25 @@ def upload_profile_img(business):
     db.session.commit()
 
     return jsonify({"message": "Success"}), 200
+
+
+@business_blueprint.route("/update-description", methods=["PUT"])
+@business_login_required
+def update_description(business):
+    """
+        Add the Business Description to the Business
+        :param business: Logged in Business
+        :return: 400, 200
+    """
+    payload = request.get_json()
+
+    try:
+        description = payload["description"]
+    except KeyError:
+        return jsonify({"message": "No description added"}), 400
+
+    business.description = description
+    db.session.commit()
+
+    return jsonify({"message": "Update Successful"}), 200
+

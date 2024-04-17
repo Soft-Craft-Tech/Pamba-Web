@@ -69,17 +69,10 @@ class Service(db.Model):
     service = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     sales = db.relationship("Sale", backref="service", lazy="dynamic")
+    appointments = db.relationship("Appointment", backref="service", lazy="dynamic")
 
     def __str__(self):
         return f"Services({self.service})"
-
-
-# Junction table for many-to-many relationship between Service and appointment
-appointment_service_association = db.Table(
-    'appointment_service_association',
-    db.Column('appointment_id', db.Integer, db.ForeignKey('appointments.id')),
-    db.Column('service_id', db.Integer, db.ForeignKey('services.id'))
-)
 
 
 class Sale(db.Model):
@@ -94,7 +87,7 @@ class Sale(db.Model):
     service_id = db.Column(db.Integer, db.ForeignKey("services.id", ondelete='SET NULL'))
 
     def __repr__(self):
-        return f"Sales({self.amount}, {self.payment_method})"
+        return f"Sales({self.date_created}, {self.payment_method})"
 
 
 class ExpenseAccount(db.Model):
@@ -199,6 +192,7 @@ class Client(db.Model):
     phone = db.Column(db.String(15), nullable=False, unique=True)
     password = db.Column(db.String(300), nullable=False)
     verified = db.Column(db.Boolean, default=False)
+    queued_for_deletion = db.Column(db.Boolean, default=False)
     otp = db.Column(db.String(200), nullable=True)
     otp_expiration = db.Column(db.DateTime, nullable=True)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -223,6 +217,22 @@ class ClientNotification(db.Model):
 
     def __repr__(self):
         return f"Notification({self.title})"
+
+
+class ClientDeleted(db.Model):
+    """
+        Clients deleted or queued for deletion
+    """
+    __tablename__ = "clientsdeleted"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(50))
+    phone = db.Column(db.String(20))
+    delete_reason = db.Column(db.Text)
+    request_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"ClientDeleted({self.email}, {self.phone})"
 
 
 # ----------------------------------------------- SHARED --------------------------------------------
@@ -256,7 +266,7 @@ class Appointment(db.Model):
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     staff_id = db.Column(db.Integer, db.ForeignKey("staff.id", ondelete='SET NULL'))
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id", ondelete='SET NULL'))
-    services = db.relationship('Service', secondary='appointment_service_association', backref='appointments')
+    service_id = db.Column(db.Integer, db.ForeignKey("services.id", ondelete='SET NULL'))
 
     def __repr__(self):
         return f"Appointment({self.date}, {self.time}, {self.comment})"

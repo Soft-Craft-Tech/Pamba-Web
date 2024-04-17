@@ -25,7 +25,6 @@ def book_appointment(client):
 
     if not client.verified:
         return jsonify({"message": "Please, verify your account."}), 403
-
     new_appointment = Appointment(
         date=date,
         time=time,
@@ -41,7 +40,7 @@ def book_appointment(client):
     service = Service.query.filter_by(id=service).first()
     if not service:
         return jsonify({"message": "Service not found"}), 404
-    new_appointment.services.append(service)
+    new_appointment.service_id = service.id
     db.session.add(new_appointment)
     db.session.commit()
     # Send email or notification when a new appointment is scheduled

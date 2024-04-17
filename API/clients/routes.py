@@ -1,5 +1,5 @@
 from flask import jsonify, request, Blueprint
-from API.models import Client
+from API.models import Client, ClientDeleted
 from API.lib.data_serializer import serialize_client
 from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
 from API import bcrypt, db
@@ -85,6 +85,35 @@ def verify_client_otp():
     db.session.commit()
 
     return jsonify({"message": "Account activated", "client": serialize_client(client)}), 200
+
+
+@clients_blueprint.route("/delete-account", methods=["DELETE"])
+@verify_api_key
+def request_account_deletion():
+    """
+        Allow app users to request for deletion of their personal data
+        :return: 400, 200
+    """
+    payload = request.get_json()
+    email = payload["email"].strip().lower()
+    reason = payload["reason"].strip()
+
+    client = Client.query.filter_by(email=email).first()
+    if not client:
+        return jsonify({"message": "Email doesn't exist"}), 400
+
+    delete_request = ClientDeleted(
+        email=email,
+        phone=client.phone,
+        delete_reason=reason
+    )
+    db.session.add(delete_request)
+    db.session.commit()
+
+    client.queued_for_deletion = True
+    db.session.commit()
+
+    return jsonify({"message": "We are sorry to see you leave. Your data will be deleted in 30 days"}), 200
 
 
 @clients_blueprint.route("/login", methods=["POST"])
