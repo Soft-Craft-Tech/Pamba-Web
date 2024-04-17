@@ -87,7 +87,7 @@ def verify_client_otp():
     return jsonify({"message": "Account activated", "client": serialize_client(client)}), 200
 
 
-@clients_blueprint.route("/delete-account", methods=["DELETE"])
+@clients_blueprint.route("/delete-account", methods=["POST"])
 @verify_api_key
 def request_account_deletion():
     """
@@ -101,6 +101,15 @@ def request_account_deletion():
     client = Client.query.filter_by(email=email).first()
     if not client:
         return jsonify({"message": "Email doesn't exist"}), 400
+
+    if client.queued_for_deletion:
+        queued_for_delete = ClientDeleted.query.filter_by(email=client.email).first()
+        request_date = queued_for_delete.request_date
+        days = (datetime.utcnow() - request_date).days
+        remaining_days = 30 - days
+        return jsonify(
+            {"message": f"Deletion request was sent on {request_date.date()}. {remaining_days} days remaining."}
+        ), 400
 
     delete_request = ClientDeleted(
         email=email,
