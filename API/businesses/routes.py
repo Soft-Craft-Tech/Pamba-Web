@@ -424,3 +424,31 @@ def upload_profile_img(business):
     db.session.commit()
 
     return jsonify({"message": "Success"}), 200
+@business_blueprint.route("/delete-business/<int:business_id>", methods=["DELETE"])
+@business_login_required
+def delete_business(business_id):
+    """
+    Delete Business
+    :param business_id: ID of the business to delete
+    :return: 200, 404
+    """
+    payload = request.get_json()
+    email = payload.get('email')
+    
+    # Ensure that the logged-in business is the one attempting to delete
+    if business.id != business_id:
+        return jsonify({"message": "Not allowed"}), 401
+
+    business = Business.query.filter_by(id=business_id).first()
+
+    if not business:
+        return jsonify({"message": "Business doesn't exist"}), 404
+
+   
+    db.session.delete(business)
+    db.session.commit()
+
+    return jsonify({
+        "message": f"Business with ID {business_id} found. Personal Information will be deleted in 30 days.",
+        "business_info": serialize_business(business)
+    }), 200
