@@ -505,9 +505,6 @@ def delete_business(business_id):
     :param business_id: ID of the business to delete
     :return: 200, 404
     """
-    payload = request.get_json()
-    email = payload.get('email')
-    
     # Ensure that the logged-in business is the one attempting to delete
     if business.id != business_id:
         return jsonify({"message": "Not allowed"}), 401
