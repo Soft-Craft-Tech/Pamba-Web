@@ -23,13 +23,22 @@ class ServicesBusinessesAssociation(db.Model):
     price = db.Column(db.Integer)
 
 
+class BusinessCategoriesAssociation(db.Model):
+    """
+        Junction Table for Businesses and BusinessCategories
+    """
+    __tablename__ = "business_categories_association"
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
+    category_id = db.Column(db.Integer, db.ForeignKey("businesscategories.id"))
+
+
 class Business(db.Model):
-    """Businesses/Service providers table"""
+    """Businesses table"""
     __tablename__ = "businesses"
 
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(50), nullable=False)
-    category = db.Column(db.String(15), nullable=False)
     slug = db.Column(db.String(100), nullable=False, unique=True)
     email = db.Column(db.String(100), nullable=False, unique=True)
     phone = db.Column(db.String(15), nullable=False, unique=True)
@@ -59,6 +68,18 @@ class Business(db.Model):
 
     def __repr__(self):
         return f"Business({self.business_name}, {self.slug})"
+
+
+class BusinessCategory(db.Model):
+    """Business Categories"""
+    __tablename__ = "businesscategories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    category_name = db.Column(db.String(100), nullable=False)
+    businesses = db.relationship("Business", backref="category", lazy="dynamic", cascade="all, delete-orphan")
+
+    def __str__(self):
+        return f"Category({self.category_name}, {self.description})"
 
 
 class Service(db.Model):

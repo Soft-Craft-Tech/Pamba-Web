@@ -139,6 +139,9 @@ def client_login():
 
     client = Client.query.filter_by(email=auth.username.strip().lower()).first()
 
+    if client.queued_for_deletion:
+        return jsonify({"message": "Can't Log In. You requested account deletion"}), 400
+
     if not client:
         return jsonify({"message": "Incorrect Email or Password"}), 404
 

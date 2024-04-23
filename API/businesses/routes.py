@@ -404,22 +404,24 @@ def get_business_analytics(business):
         appointment_serialized["service"] = appointment.service.service
         today_appointments.append(appointment_serialized)
 
-    # Today's Revenue
+    # Today's Revenue & current month Revenue
     sales = Sale.query.filter_by(business_id=business.id).all()
     sales_sum = 0
+    current_month_sales = 0
     for sale in sales:
-        if sale.date_created.date() == today:
-            service = ServicesBusinessesAssociation\
-                .query\
-                .filter_by(business_id=business.id, service_id=sale.service_id)\
-                .first()
-            sales_sum += service.price
+        service = ServicesBusinessesAssociation.query.filter_by(business_id=business.id, service_id=sale.service_id) \
+            .first()
+        if sale.date_created.date().month == current_month and sale.date_created.date().year == current_year:
+            if sale.date_created.date() == today:
+                sales_sum += service.price
+            current_month_sales += service.price
 
     return jsonify(
         {
             "message": "yes",
             "today_appointments": today_appointments,
-            "today_revenue": sales_sum
+            "today_revenue": sales_sum,
+            "current_month_revenue": current_month_sales
         }
     ), 200
 
@@ -496,4 +498,35 @@ def update_description(business):
     db.session.commit()
 
     return jsonify({"message": "Update Successful"}), 200
+
+
+@business_blueprint.route("/profile-completion-status", methods=["GET"])
+@business_login_required
+def profile_completion_status(business):
+    """
+        Check Profile Update States
+        :param business: Logged in business
+        :return: 200
+    """
+    payload = {
+        "profileImg": False,
+        "description": False,
+        "services": False,
+        "expenseAccounts": False
+    }
+    services = ServicesBusinessesAssociation.query.filter_by(business_id=business.id).all()
+    accounts = business.expense_accounts.all()
+    if business.profile_img:
+        payload["profileImg"] = True
+
+    if business.description:
+        payload["description"] = True
+
+    if len(accounts) != 0:
+        payload["expenseAccounts"] = True
+
+    if len(services) != 0:
+        payload["services"] = True
+
+    return jsonify(payload), 200
 
