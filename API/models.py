@@ -28,6 +28,7 @@ class BusinessCategoriesAssociation(db.Model):
         Junction Table for Businesses and BusinessCategories
     """
     __tablename__ = "business_categories_association"
+
     id = db.Column(db.Integer, primary_key=True)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     category_id = db.Column(db.Integer, db.ForeignKey("businesscategories.id"))
@@ -76,7 +77,8 @@ class BusinessCategory(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     category_name = db.Column(db.String(100), nullable=False)
-    businesses = db.relationship("Business", backref="category", lazy="dynamic", cascade="all, delete-orphan")
+    businesses = db.relationship("Business", secondary="business_categories_association", backref="category",
+                                 lazy="dynamic")
 
     def __str__(self):
         return f"Category({self.category_name}, {self.description})"

@@ -1,10 +1,15 @@
-from API.models import Business, Appointment, Sale, ServicesBusinessesAssociation, Service, Rating, Review
+from API.models import (
+    Business, Appointment, Sale, ServicesBusinessesAssociation,
+    Service, Rating, Review, BusinessCategory, BusinessCategoriesAssociation
+)
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
 from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token, client_login_required
 from API.lib.slugify import slugify
 from API.lib.send_mail import business_account_activation_email, send_reset_email
-from API.lib.data_serializer import serialize_business, serialize_service, serialize_review, serialize_appointment
+from API.lib.data_serializer import (serialize_business,
+                                     serialize_service,
+                                     serialize_review, serialize_appointment, serialize_business_category)
 from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta
 
@@ -20,10 +25,9 @@ def business_signup():
     """
     payload = request.get_json()
     name = payload["name"].strip().title()
-    category = payload["category"].title()
+    category_ids = payload["categories"]
     email = payload["email"].strip().lower()
     phone = payload["phone"]
-
     city = payload["city"].strip().title()
     location = payload["location"].strip().title()
     google_map = payload["mapUrl"].strip()
@@ -42,7 +46,6 @@ def business_signup():
 
     business = Business(
         business_name=name,
-        category=category,
         slug=slug,
         email=email,
         phone=phone,
@@ -52,6 +55,14 @@ def business_signup():
         password=hashed_password
     )
     db.session.add(business)
+
+    # Add Business categories to business.
+    for cat_id in category_ids:
+        business_categories = BusinessCategoriesAssociation(
+            business_id=business.id,
+            category_id=cat_id
+        )
+        db.session.add(business_categories)
     db.session.commit()
 
     # Activation Token
@@ -530,3 +541,17 @@ def profile_completion_status(business):
 
     return jsonify(payload), 200
 
+
+@business_blueprint.route("/fetch-business-categories", methods=["GET"])
+@verify_api_key
+def fetch_business_categories():
+    """
+        Fetch Business Categories
+        :return: 200
+    """
+    all_categories = []
+    categories = BusinessCategory.query.all()
+    for category in categories:
+        all_categories.append(serialize_business_category(category))
+
+    return jsonify({"message": "Successful", "categories": all_categories}), 200

@@ -21,4 +21,4 @@ def add_business_categories():
         db.session.add(business_category)
 
     db.session.commit()
-    return jsonify({"message": "Categories Created"}), 200
+    return jsonify({"message": "Categories have been Created Successfully"}), 201

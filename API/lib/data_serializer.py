@@ -28,7 +28,6 @@ def serialize_business(business):
     business_fields = {
         "id": fields.Integer,
         "business_name": fields.String,
-        "category": fields.String,
         "slug": fields.String,
         "email": fields.String,
         "phone": fields.String,
@@ -193,3 +192,17 @@ def serialize_staff(staff):
         "public_id": fields.String
     }
     return marshal(staff, staff_fields)
+
+
+def serialize_business_category(category):
+    """
+        Serialize Business Category
+        :param category: Category object
+        :return:Json
+    """
+    category_fields = {
+        "id": fields.Integer,
+        "category_name": fields.String
+    }
+
+    return marshal(category, category_fields)
