@@ -13,7 +13,7 @@ business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/business
 
 @business_blueprint.route("/signup", methods=["POST"])
 @verify_api_key
-def business_signup():    git push --set-upstream origin zak
+def business_signup():
     """
         Signup for Businesses/Business Owners
         :return: 200, 409
