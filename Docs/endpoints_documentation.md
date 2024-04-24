@@ -238,6 +238,37 @@ Fetch Businesses associated with a certain service
         
     }
 ```
+### fetch Business categories
+```javascript
+    endpoint: GET /API/business/fetch-business-categories
+    method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": business Categories
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN-TOKEN>
+
+    body: {
+        
+    }
+```
+### profile completion status
+```javascript
+     endpoint : GET /API/business/profile-completion-status
+     method : GET
+     Content type : "Application/Json"
+
+     Status Codes : 
+        "200 OK" : Profile completion status
+     headers : 
+        X-API-KEY : <API_KEY>
+     body : {
+
+     }
+```
 
 # 3. Client Notifications
 
