@@ -238,6 +238,68 @@ Fetch Businesses associated with a certain service
         
     }
 ```
+### upload-profile-img
+```javascript
+    endpoint: GET API/business/upload-profile-img
+    method : PUT
+    Content Type: "Application/Json"
+    Status Codes: 
+        "200 OK": succesfully uploaded profile-img
+    headers:
+        X-API-KEY: <API_KEY>
+        body: {
+        profile_img: <FILE>
+    }
+```
+### update-description
+```javascript
+     endpoint: GET API/business/update-description
+     method: PUT
+     Content Type: "Application/Json"
+     Status Codes: 
+        "200 OK":updated successful
+        " 400 Invalid Request": No description added
+     headers:
+         X-API-KEY: <API_KEY>
+         x-access-token: <LOGIN-TOKEN>
+
+     body: {
+
+     }
+```
+### profile-completion-status
+```javascript
+     endpoint: GET API/business/profile-completion-status
+     method: GET
+     Content Type: "Application/Json"
+     Status Codes: 
+         "200 OK": profile completion status success
+     headers:
+         X-API-KEY: <API_KEY>
+         x-access-token: <LOGIN-TOKEN>
+
+     body: {
+
+     }
+```
+
+### fetch-business-category
+```javascript
+     endpoint: GET /API/business/fetch-business-category
+     method : GET
+     Content Type: "Application/Json"
+     Status Codes: 
+        "200 OK": businesses categories
+        "404 Not Found": category Not found
+
+     headers:
+         X-API-KEY: <API_KEY>
+         x-access-token: <LOGIN-TOKEN>
+
+     body: {
+         
+     }
+```
 
 # 3. Client Notifications
 
@@ -479,7 +541,7 @@ Fetch all Expenses associated with the business.
     body: {}
 ```
 # 6. Inventory
-*  ### fetch all Inventory records for the business
+*  ### fetch all Inventory records for the businessdescription: <DESCRIPTION>
 ```javascript
     Endpoint: GET /API/inventory/business-inventory
     Method: GET
@@ -862,4 +924,19 @@ Delete Inventory with id
     Body: {
         "password": "xxxx"
     }
+```
+# 14. admin
+###  add-categories
+```javascript
+     endpoint: GET API/admin/add-categories
+     method: POST
+     content-type: "application/json"
+     status codes:
+        "200 OK": Message: Category added succesfully
+        
+     headers:
+        x-access-token: <LOGIN_TOKEN>
+     body: {
+        
+     }
 ```
