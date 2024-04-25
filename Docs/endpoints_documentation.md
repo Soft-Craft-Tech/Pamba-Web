@@ -1,6 +1,6 @@
 # Pamba Mobile Endpoint Docs
 
-# 1. Auth
+# 1. Auth Client
 
 * ### Signup
 Client signup endpoint
@@ -175,7 +175,9 @@ Resend the client's verification token incase the one sent on signup is expired.
     }
 ```
 
-# 2. Businesses
+# 2. Business Auth
+
+# 3. Businesses
 
 * ### Fetch all Businesses
 Fetch all activated Businesses.
