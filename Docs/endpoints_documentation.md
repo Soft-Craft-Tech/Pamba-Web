@@ -176,9 +176,187 @@ Resend the client's verification token incase the one sent on signup is expired.
 ```
 
 # 2. Business Auth
+### signup businesses
+signup a business
+```javascript
+    endpoint: GET API/businesses/signup
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Business created
+        "400 Bad Request": Business already exists
+        "409" : Email/Phone already exists
+    headers:
+        X-API-KEY: <API_KEY>
+    body : {
+}
+```
+* ### login into a business account 
+login into a business account
+```javascript
+     endpoint: GET API/businesses/login
+     method: POST
+     Content Type: "Application/Json"
+     Status Codes: 
+        "200 OK": Business logged in successfully
+        " 404" : incorrect Email or password
+    
+    headers : 
+         X-API-KEY: <API_KEY>
+    body : {
+}
+```
+* ### request password reset
+request password reset for the business account
+```javascript
+    endpoint : GET API/businesses/request-password-reset
+    method : POST
+    Content Type : "Application/json"
+    Status Codes:
+      "200": Reset link has been sent to your email
+      " 404": Email does'nt exist
+    headers : 
+      X-API-Key : <API_KEY>
+    body : {
+}
+    
+```
+* ### reset-password
+reset password
+```javascript
+     endpoint : GET API/businesses/reset-password{business_id}
+     method : PUT
+     Content Type : "Application/Json"
+     Status Codes : 
+       "200" : password reset sucessful
+       "400" : reset token is invalid or expired
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+}
+```
+* ### activate account
+activate  business account
+```javascript
+
+     endpoint : GET API/business/activate-account/<token>
+     method : POST
+     Status Code : 
+       "200 " : Success
+       "400" : Token Invalid or Expired
+       "404" : Not Found
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+}
+```
+* ### resend activation token
+resend activation token
+```javascript
+     endpoint : GET API/businesses/resend-activation-token
+     method : POST
+     Content Type : "Application/Json"
+     Status Code : 
+       "200 " : activation token sent to your email
+       "400" : account already activated
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+}
+```
 
 # 3. Businesses
+* ###  update profile
+ update profile
 
+```javascript
+
+     endpoint : GET  API/businesses/update
+     method : PUT
+     Content Type : "Application/Json"
+     Status Code : 
+       "200 " : Update Successful
+       "401" : Incorrect password
+       "409" : Phone number already exists/Email already exists  
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+         "name": "Updated Business Name",
+         "email": "updated@example.com",
+         "phone": "1234567890",
+         "city": "Updated City",
+         "location": "Updated Location",
+         "description": "Updated business description.",
+         "mapUrl": "https://maps.google.com/...",
+         "password": "currentPassword123"
+}
+```
+* ### change password
+Allow the business owner to change their password
+change password
+
+```javascript
+
+     endpoint : GET API/businesses/change-password
+     method : PUT
+     Content Type : "Application/Json"
+     Status Code : 
+       "200 " : Success! Password has been changed
+       "401" : Old password is incorrect
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+         "oldPassword": "currentPassword123",
+         "newPassword": "newPassword456"
+}
+```
+
+
+* ###assign services
+assign services to a business
+
+```javascript
+
+     endpoint : GET API/business/assign-services
+     method : POST
+     Content Type : "Application/Json"
+     Status Code : 
+       "200 " : Services have been Added
+       "400" : No service to be added
+       "500" : An error occurred please try again
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+         "services": [
+             {
+                 "id": "service_id_1",
+                 "price": "service_price_1"
+             },
+             {
+                 "id": "service_id_2",
+                 "price": "service_price_2"
+             }
+         ]
+}
+```
+* ### remove service
+remove service from a business account
+
+```javascript
+
+     endpoint : GET API/business/remove-service
+     method : POST
+     Content Type : "Application/Json"
+     Status Code : 
+       "200 " : Service removed
+       "404" : Service not found
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+         "serviceId": "service_id_to_remove"
+}
+```
 * ### Fetch all Businesses
 Fetch all activated Businesses.
 
@@ -197,7 +375,19 @@ Fetch all activated Businesses.
         
     }
 ```
+* ### get business analytics
+get business analytics
+```javascript
 
+     endpoint : GET /business/analysis
+     method : GET
+     Status Code : 
+       "200 " : Analysis data
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+}
+```
 * ### Fetch Single Business
 Fetch a single business given Business id
 
@@ -303,7 +493,7 @@ Fetch Businesses associated with a certain service
      }
 ```
 
-# 3. Client Notifications
+# 4. Client Notifications
 
 * ### Read Notification
 Mark notification as read
@@ -795,7 +985,7 @@ Delete Inventory with id
         "password": "xxxx"
     }
 ```
-# 12. Business-Notifications
+# 11. Business-Notifications
 * ### create Business notification
 ```javascript
       Endpoint: POST /API/notifications/businesses/create
@@ -843,7 +1033,7 @@ Delete Inventory with id
         x-access-token: <LOGIN_TOKEN>
     Body: {}
 ```
-# 13. Expense_accounts
+# 12. Expense_accounts
 * ### fetch single expense_account for the business
 ```javascript
         Endpoint: GET /API/accounts/single/{account_id}
@@ -859,7 +1049,21 @@ Delete Inventory with id
         x-access-token: <LOGIN_TOKEN>
     Body: {}
 ```
-* ### Fetch all expense accounts for the business
+* ### Fetch all expense accounts for the business* ### activate-account
+activate business account for the business
+```javascript
+    endpoint : GET API/business/activate-account{business_id}
+    method : POST
+    Content Type: "Application/Json"
+    Status Codes:
+      "200": success
+      " 400": account already activate
+      " 404": business not found 
+    headers :
+      X-API-KEY : <API_KEY>
+    body : {
+}
+```
 ```javascript
         Endpoint: GET /API/accounts/all
     Method: GET
@@ -891,7 +1095,7 @@ Delete Inventory with id
 ```
 * ### update expense account
 ```javascript
-        Endpoint: PUT /API/accounts/update/{account_id}
+    Endpoint: PUT /API/accounts/update/{account_id}
     Method: PUT
     Content Type: "Application/Json"
 
@@ -927,7 +1131,7 @@ Delete Inventory with id
         "password": "xxxx"
     }
 ```
-# 14. admin
+# 13. admin
 ###  add-categories
 ```javascript
      endpoint: GET API/admin/add-categories
@@ -941,4 +1145,19 @@ Delete Inventory with id
      body: {
         
      }
+```
+# 14. services
+* ### fetch all services
+ fetch all services
+
+```javascript
+
+     endpoint : GET /API/services/fetch_all
+     method : GET
+     Status Code : 
+       "200 " : Success
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+}
 ```
