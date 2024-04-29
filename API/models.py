@@ -20,6 +20,7 @@ class ServicesBusinessesAssociation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'))
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
+    specific_service = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Integer)
 
 
@@ -46,17 +47,19 @@ class Business(db.Model):
     city = db.Column(db.String(30), nullable=False)
     location = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text, nullable=True)
-    password = db.Column(db.String(250), nullable=False)
+    password = db.Column(db.String(250), nullable=True)
     google_map = db.Column(db.String(300), nullable=True)
     active = db.Column(db.Boolean, default=False)
     verified = db.Column(db.Boolean, default=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    parent_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     updated_on = db.Column(db.DateTime)
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
     services = db.relationship("Service", secondary='services_businesses_association',  backref="businesses",
                                lazy="dynamic"
                                )
+    branches = db.relationship("Business", backref=db.backref("parent", remote_side=[id]))  # Business branch
     inventory = db.relationship("Inventory", backref="business", lazy="dynamic", cascade='all, delete-orphan')
     expense_accounts = db.relationship("ExpenseAccount", backref="business", lazy="dynamic", cascade='all, '
                                                                                                      'delete-orphan')
