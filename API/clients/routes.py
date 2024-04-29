@@ -22,13 +22,13 @@ def client_signup():
     phone = payload["phone"]
     name = payload["name"].strip().title()
 
-    # Check for existence of user with same email or phone number
+    # Check for existence of user with same email or phone number and are not web users who haven't signup
     email_exists = Client.query.filter_by(email=email).first()
-    if email_exists:
+    if email_exists and email_exists.name and email_exists.password:
         return jsonify({"message": "Email already exists!"}), 409
 
     phone_exists = Client.query.filter_by(phone=phone).first()
-    if phone_exists:
+    if phone_exists and phone_exists.name and phone_exists.password:
         return jsonify({"message": "Phone number already exists!"}), 409
 
     # Hash the password

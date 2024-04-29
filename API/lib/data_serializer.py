@@ -38,7 +38,11 @@ def serialize_business(business):
         "active": fields.Boolean,
         "verified": fields.Boolean,
         "join_date": fields.DateTime(dt_format='iso8601'),
-        "profile_img": fields.String
+        "profile_img": fields.String,
+        "weekday_opening": fields.String,
+        "weekday_closing": fields.String,
+        "weekend_opening": fields.String,
+        "weekend_closing": fields.String
     }
 
     return marshal(business, business_fields)
@@ -119,7 +123,10 @@ def serialize_service(service):
     service_fields = {
         "id": fields.Integer,
         "service": fields.String,
-        "description": fields.String
+        "description": fields.String,
+        "business_id": fields.Integer,
+        "service_category": fields.Integer,
+        "price": fields.Integer
     }
 
     return marshal(service, service_fields)

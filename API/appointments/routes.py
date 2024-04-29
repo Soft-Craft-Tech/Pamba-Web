@@ -1,9 +1,10 @@
-from API.models import Appointment, Service, Staff
+from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
-from API.lib.auth import client_login_required, business_login_required
+from API.lib.auth import client_login_required, business_login_required, verify_api_key
 from API.lib.data_serializer import serialize_appointment
 from API import db, bcrypt
 from datetime import datetime
+from API.lib.checkBusinessClosed import check_business_closed
 
 appointment_blueprint = Blueprint("appointments", __name__, url_prefix="/API/appointments")
 
@@ -12,7 +13,7 @@ appointment_blueprint = Blueprint("appointments", __name__, url_prefix="/API/app
 @client_login_required
 def book_appointment(client):
     """
-        Book Appointment
+        Book Appointment from the mobile application
         :param client: Logged in client
         :return: 200
     """
@@ -46,6 +47,69 @@ def book_appointment(client):
     # Send email or notification when a new appointment is scheduled
 
     return jsonify({"message": "Booking Successful"}), 200
+
+
+@appointment_blueprint.route("/book/web-appointments", methods=["POST"])
+@verify_api_key
+def book_appointment_on_web():
+    """
+        Book appointment from the web without Auth
+        :return: 200, 404
+    """
+    payload = request.get_json()
+    date = datetime.strptime(payload["date"], '%d-%m-%Y')
+    time = datetime.strptime(payload["time"], '%H:%M').time()
+    comment = payload["comment"].strip()
+    business_id = payload["business"]
+    service_id = payload["service"]
+    staff_id = payload["staff"]
+    email = payload["email"].strip().lower()
+    phone = payload["phone"].strip()
+
+    service = Service.query.get(service_id)
+    if not service:
+        return jsonify({"message": "The service you are booking is unavailable"}), 404
+
+    business = Business.query.get(business_id)
+    if not business:
+        return jsonify({"message": "Business not found"}), 404
+
+    # Check staff availability.
+    if staff_id:
+        staff = Staff.query.get(staff_id)
+        if not staff:
+            return jsonify({"message": "Staff you booked with doesn't exist"}), 404
+
+
+    # Check whether the business will be closed for the hours booked.
+    open_status = check_business_closed(time, date, business)
+    if not open_status:
+        return jsonify({"message": "Our premises are not open at the picked time and day"}), 400
+
+    client = Client.query.filter_by(email=email).first()
+    # If the client is not a mobile user or hasn't booked an appointment before
+    if not client:
+        client = Client(
+            email=email,
+            phone=phone
+        )
+        db.session.add(client)
+
+    appointment = Appointment(
+        date=date,
+        time=time,
+        comment=comment,
+        business_id=business.id,
+        staff_id=staff_id if staff_id else None,
+        client_id=client.id
+    )
+    db.session.add(appointment)
+    service.appointments.append(appointment)
+    # db.session.commit()
+
+    # Send Confirmation Notification/Email
+
+    return jsonify({"message": "Appointment Booked Successfully"}), 201
 
 
 @appointment_blueprint.route("/reschedule/<int:appointment_id>", methods=["PUT"])

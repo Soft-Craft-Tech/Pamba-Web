@@ -5,7 +5,7 @@ def calculate_ratings(ratings: list, breakdown: bool):
     """
         Calculate the average ratings and breakdown the rating into classes 1-5
         :param ratings: The list of ratings
-        :param breakdown: Whether to breakdown ratings
+        :param breakdown: Whether to breakdown ratings that is count the number of rating for each rating value
         :return: Average rating, Ratings breakdown
     """
     ratings_list = [rating.rating for rating in ratings]

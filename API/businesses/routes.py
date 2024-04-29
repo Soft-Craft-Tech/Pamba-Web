@@ -1,10 +1,10 @@
 from API.models import (
-    Business, Appointment, Sale, ServicesBusinessesAssociation,
-    Service, Rating, Review, BusinessCategory, BusinessCategoriesAssociation
+    Business, Appointment, Sale, Service, Rating, Review, BusinessCategory, BusinessCategoriesAssociation,
+    ServiceCategories
 )
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
-from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token, client_login_required
+from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token
 from API.lib.slugify import slugify
 from API.lib.send_mail import business_account_activation_email, send_reset_email
 from API.lib.data_serializer import (serialize_business,
@@ -274,27 +274,24 @@ def assign_services(business):
     if len(services) == 0:
         return jsonify({"message": "No service to be added"}), 400
 
-    service_ids = {service["id"]: service["price"] for service in services}
-    services_to_associate = Service.query.filter(Service.id.in_(service_ids.keys())).all()
-
-    # Find services already offered by the business so that a service is not listed twice for the same business
-    this_business_services = ServicesBusinessesAssociation.query.filter_by(business_id=business.id).all()
-    this_business_services_ids = [item.service_id for item in this_business_services]
     try:
-        for service in services_to_associate:
-            if service.id in this_business_services_ids:
-                continue
-            business_service_association = ServicesBusinessesAssociation(
-                business_id=business.id,
-                service_id=service.id,
-                price=service_ids[service.id]
+        for service in services:
+            service_to_add = Service(
+                service=service["name"].title().strip(),
+                price=service["price"],
+                description=service["description"].strip(),
+                estimated_service_time=service["estimatedTime"].strip(),
+                service_category=service["category"],
+                business_id=business.id
             )
-            db.session.add(business_service_association)
-            db.session.commit()
+            db.session.add(service_to_add)
+
     except:
         return jsonify({"message": "An error occurred please try again"}), 500
+    else:
+        db.session.commit()
 
-    return jsonify({"message": "Services have been Added"}), 200
+    return jsonify({"message": "Services have been Added"}), 201
 
 
 @business_blueprint.route("/remove-service", methods=["POST"])
@@ -308,7 +305,7 @@ def remove_service(business):
     payload = request.get_json()
     service_id = payload["serviceId"]
 
-    service = ServicesBusinessesAssociation.query.filter_by(service_id=service_id, business_id=business.id).first()
+    service = Service.query.get(service_id)
 
     if not service:
         return jsonify({"message": "Service not found"}), 404
@@ -335,11 +332,10 @@ def fetch_all_businesses():
 
 
 @business_blueprint.route("/<string:slug>", methods=["GET"])
-@client_login_required
-def fetch_business(client, slug):
+@verify_api_key
+def fetch_business(slug):
     """
         Fetch business by a give ID
-        :param client:
         :param slug:
         :return: 404, 200
     """
@@ -374,10 +370,7 @@ def fetch_business(client, slug):
 
     all_services = []
     for service in business.services.all():
-        service_price = ServicesBusinessesAssociation.query\
-            .filter_by(business_id=business.id, service_id=service.id).first()
         service_info = serialize_service(service)
-        service_info["price"] = service_price.price
         all_services.append(service_info)
 
     all_reviews = []
@@ -420,8 +413,7 @@ def get_business_analytics(business):
     sales_sum = 0
     current_month_sales = 0
     for sale in sales:
-        service = ServicesBusinessesAssociation.query.filter_by(business_id=business.id, service_id=sale.service_id) \
-            .first()
+        service = Service.query.filter_by(business_id=business.id, id=sale.service_id).first()
         if sale.date_created.date().month == current_month and sale.date_created.date().year == current_year:
             if sale.date_created.date() == today:
                 sales_sum += service.price
@@ -438,25 +430,25 @@ def get_business_analytics(business):
 
 
 @business_blueprint.route("/service-businesses/<int:service_id>", methods=["GET"])
-@client_login_required
-def service_businesses(client, service_id):
+@verify_api_key
+def service_businesses(service_id):
     """
         Get business by service. Businesses offering a certain service
-        :param client:
         :param service_id: ID of the service
         :return: 404, 200
     """
-    service = Service.query.get(service_id)
-    if not service:
+    service_category = ServiceCategories.query.get(service_id)
+    if not service_category:
         return jsonify({"message": "Service doesn't exist"}), 404
 
     all_businesses = []
-    for business in service.businesses:
+    for service in service_category.services.all():
+        business = service.business
         ratings = Rating.query.filter_by(business_id=business.id).all()
         rating_score = calculate_ratings(ratings=ratings, breakdown=False)
         business_info = dict(
             name=business.business_name,
-            category=business.category,
+            categories=[category.category_name for category in business.category],
             city=business.city,
             google_map=business.google_map,
             id=business.id,
@@ -525,7 +517,7 @@ def profile_completion_status(business):
         "services": False,
         "expenseAccounts": False
     }
-    services = ServicesBusinessesAssociation.query.filter_by(business_id=business.id).all()
+    services = Service.query.filter_by(business_id=business.id).all()
     accounts = business.expense_accounts.all()
     if business.profile_img:
         payload["profileImg"] = True
@@ -555,3 +547,27 @@ def fetch_business_categories():
         all_categories.append(serialize_business_category(category))
 
     return jsonify({"message": "Successful", "categories": all_categories}), 200
+
+
+@business_blueprint.route("/business-hours", methods=["PUT"])
+@business_login_required
+def add_business_hours(business):
+    """
+        Add the business Operating hours
+        :param business: Logged in business
+        :return: 200
+    """
+    payload = request.get_json()
+    weekday_opening = datetime.strptime(payload["weekdayOpening"], '%H:%M').time()
+    weekday_closing = datetime.strptime(payload["weekdayClosing"], '%H:%M').time()
+    weekend_opening = datetime.strptime(payload["weekendOpening"], '%H:%M').time()
+    weekend_closing = datetime.strptime(payload["weekendClosing"], '%H:%M').time()
+
+    business.weekday_opening = weekday_opening
+    business.weekday_closing = weekday_closing
+    business.weekend_opening = weekend_opening
+    business.weekend_closing = weekend_closing
+
+    db.session.commit()
+
+    return jsonify({"message": "Successful! Business hours added"}), 200
