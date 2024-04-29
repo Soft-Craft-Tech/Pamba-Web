@@ -53,6 +53,10 @@ class Business(db.Model):
     verified = db.Column(db.Boolean, default=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     parent_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
+    weekend_opening = db.Column(db.DateTime)
+    weekend_closing = db.Column(db.DateTime)
+    weekday_opening = db.Column(db.DateTime)
+    weekday_closing = db.Column(db.DateTime)
     updated_on = db.Column(db.DateTime)
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
