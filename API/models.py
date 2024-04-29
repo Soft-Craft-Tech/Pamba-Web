@@ -10,20 +10,6 @@ businesses_clients_association = db.Table(
 )
 
 
-# Business services Junction Table
-class ServicesBusinessesAssociation(db.Model):
-    """
-        Junction Table
-    """
-    __tablename__ = "services_businesses_association"
-
-    id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'))
-    service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
-    specific_service = db.Column(db.String(100), nullable=False)
-    price = db.Column(db.Integer)
-
-
 class BusinessCategoriesAssociation(db.Model):
     """
         Junction Table for Businesses and BusinessCategories
@@ -33,6 +19,17 @@ class BusinessCategoriesAssociation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     category_id = db.Column(db.Integer, db.ForeignKey("businesscategories.id"))
+
+
+class AppointmentsServicesAssociation(db.Model):
+    __table_name__ = "appointments_services_association"
+    """
+        Junction Table Between Services and Appointments.
+        To allow multiple services in one appointment
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appoinments.id"))
+    service_id = db.Column(db.Integer, db.ForeignKey("services.id"))
 
 
 class Business(db.Model):
@@ -61,9 +58,7 @@ class Business(db.Model):
     average_rating = db.Column(db.Integer)
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
-    services = db.relationship("Service", secondary='services_businesses_association',  backref="businesses",
-                               lazy="dynamic"
-                               )
+    services = db.relationship("Service",  backref="businesses", lazy="dynamic")
     branches = db.relationship("Business", backref=db.backref("parent", remote_side=[id]))  # Business branch
     inventory = db.relationship("Inventory", backref="business", lazy="dynamic", cascade='all, delete-orphan')
     expense_accounts = db.relationship("ExpenseAccount", backref="business", lazy="dynamic", cascade='all, '
@@ -92,15 +87,31 @@ class BusinessCategory(db.Model):
         return f"Category({self.category_name}, {self.description})"
 
 
+class ServiceCategories(db.Model):
+    """
+        Services Categories for pre-defined categories
+    """
+    __table_name__ = "service_categories"
+    id = db.Column(db.Integer, primary_key=True)
+    category_name = db.Column(db.String(30))
+
+    def __repr__(self):
+        return f"ServiceCategory(${self.category_name})"
+
+
 class Service(db.Model):
     """Services offered by the business"""
     __tablename__ = "services"
 
     id = db.Column(db.Integer, primary_key=True)
     service = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Integer)
     description = db.Column(db.Text, nullable=True)
+    category = db.Column(db.Integer, db.ForeignKey("service_categories.id",  ondelete='SET NULL'))
     sales = db.relationship("Sale", backref="service", lazy="dynamic")
-    appointments = db.relationship("Appointment", backref="service", lazy="dynamic")
+    appointments = db.relationship(
+        "Appointment", secondary="appointments_services_association", backref="service", lazy="dynamic"
+    )
 
     def __str__(self):
         return f"Services({self.service})"
@@ -297,7 +308,6 @@ class Appointment(db.Model):
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     staff_id = db.Column(db.Integer, db.ForeignKey("staff.id", ondelete='SET NULL'))
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id", ondelete='SET NULL'))
-    service_id = db.Column(db.Integer, db.ForeignKey("services.id", ondelete='SET NULL'))
 
     def __repr__(self):
         return f"Appointment({self.date}, {self.time}, {self.comment})"
