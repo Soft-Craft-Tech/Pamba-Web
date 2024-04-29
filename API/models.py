@@ -58,6 +58,7 @@ class Business(db.Model):
     weekday_opening = db.Column(db.DateTime)
     weekday_closing = db.Column(db.DateTime)
     updated_on = db.Column(db.DateTime)
+    average_rating = db.Column(db.Integer)
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
     services = db.relationship("Service", secondary='services_businesses_association',  backref="businesses",
