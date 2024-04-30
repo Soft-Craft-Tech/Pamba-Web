@@ -515,7 +515,8 @@ def profile_completion_status(business):
         "profileImg": False,
         "description": False,
         "services": False,
-        "expenseAccounts": False
+        "expenseAccounts": False,
+        "openingAndClosing": False
     }
     services = Service.query.filter_by(business_id=business.id).all()
     accounts = business.expense_accounts.all()
@@ -530,6 +531,9 @@ def profile_completion_status(business):
 
     if len(services) != 0:
         payload["services"] = True
+
+    if business.weekday_opening and business.weekday_closing and business.weekend_opening and business.weekend_closing:
+        payload["openingAndClosing"] = True
 
     return jsonify(payload), 200
 

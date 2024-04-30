@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from API.models import Service
+from API.models import ServiceCategories
 from API.lib.auth import verify_api_key
 from API.lib.data_serializer import serialize_service
 
@@ -13,9 +13,9 @@ def fetch_all_services():
         Fetch all services listed
         :return: 200
     """
-    services = Service.query.all()
-    all_services = []
-    for service in services:
-        all_services.append(serialize_service(service))
+    categories = ServiceCategories.query.all()
+    all_categories = []
+    for category in categories:
+        all_categories.append({"id": category.id, "category": category.category_name})
 
-    return jsonify({"message": "Success", "services": all_services}), 200
+    return jsonify({"message": "Success", "categories": all_categories}), 200

@@ -21,27 +21,39 @@ def client_signup():
     email = payload["email"].strip().lower()
     phone = payload["phone"]
     name = payload["name"].strip().title()
-
-    # Check for existence of user with same email or phone number and are not web users who haven't signup
-    email_exists = Client.query.filter_by(email=email).first()
-    if email_exists and email_exists.name and email_exists.password:
-        return jsonify({"message": "Email already exists!"}), 409
-
-    phone_exists = Client.query.filter_by(phone=phone).first()
-    if phone_exists and phone_exists.name and phone_exists.password:
-        return jsonify({"message": "Phone number already exists!"}), 409
-
+    otp, otp_hash = generate_otp()
     # Hash the password
     password_hash = bcrypt.generate_password_hash(payload["password"].strip()).decode("utf-8")
 
-    otp, otp_hash = generate_otp()
+    # Check for existence of user with same email or phone number and are not web users who haven't signup
+    email_exists = Client.query.filter_by(email=email).first()
+    phone_exists = Client.query.filter_by(phone=phone).first()
+
+    if email_exists or phone_exists:
+        if email_exists and email_exists.name and email_exists.password:
+            return jsonify({"message": "Email already exists!"}), 409
+
+        if phone_exists and phone_exists.name and phone_exists.password:
+            return jsonify({"message": "Phone number already exists!"}), 409
+
+        client = email_exists or phone_exists
+        client.email = email
+        client.phone = phone
+        client.name = name
+        client.password = password_hash
+        client.otp = otp_hash
+        client.otp_expiration = datetime.now() + timedelta(minutes=30)
+        db.session.commit()
+
+        send_otp(recipient=email, otp=otp, name=name)
+
     client = Client(
         name=name,
         email=email,
         phone=phone,
         password=password_hash,
         otp=otp_hash,
-        otp_expiration=datetime.now() + timedelta(minutes=5)
+        otp_expiration=datetime.now() + timedelta(minutes=30)
     )
     db.session.add(client)
     db.session.commit()

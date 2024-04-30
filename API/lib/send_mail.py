@@ -24,7 +24,7 @@ def send_reset_email(recipient, token, name):
         :param name: User's name
         :return:
     """
-    reset_url = f"https://www.pamba.africa/reset/{token}"
+    reset_url = f"https://www.pamba.africa/reset-password/{token}"
     message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
     message.html = render_template("reset.html", url=reset_url, name=name)
     mail.send(message)
@@ -51,7 +51,7 @@ def business_account_activation_email(recipient, token, name):
         :param name: Business Name.
         :return:
     """
-    url = f"https://pamba.africa/activate/{token}"
+    url = f"https://www.pamba.africa/activate/{token}"
     message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
     message.html = render_template("activatebusiness.html", name=name, url=url)
     mail.send(message)

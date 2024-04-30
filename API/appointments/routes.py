@@ -74,17 +74,27 @@ def book_appointment_on_web():
     if not business:
         return jsonify({"message": "Business not found"}), 404
 
-    # Check staff availability.
-    if staff_id:
-        staff = Staff.query.get(staff_id)
-        if not staff:
-            return jsonify({"message": "Staff you booked with doesn't exist"}), 404
-
-
     # Check whether the business will be closed for the hours booked.
     open_status = check_business_closed(time, date, business)
     if not open_status:
         return jsonify({"message": "Our premises are not open at the picked time and day"}), 400
+
+    # Check staff availability.
+    if staff_id:
+        staff = business.staff.filter_by(id=staff_id).first()
+        if not staff:
+            return jsonify({"message": "Staff you booked with doesn't exist"}), 404
+
+        # Check if the staff is booked at the selected time slot
+        current_date = datetime.now().date()
+        upcoming_staffs_appointments = staff.appointments.filter(Appointment.date >= current_date).all()
+        for appointment in upcoming_staffs_appointments:
+            if appointment.date == date.date() and appointment.time == time:
+                return jsonify({
+                    "message": "The Staff you selected is already booked at this time. "
+                               "Please book with a different staff or let us assign you someone"
+                    }
+                ), 400
 
     client = Client.query.filter_by(email=email).first()
     # If the client is not a mobile user or hasn't booked an appointment before

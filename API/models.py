@@ -191,9 +191,25 @@ class Staff(db.Model):
     role = db.Column(db.String(20), nullable=False)
     public_id = db.Column(db.String(15), nullable=False, unique=True)
     employer_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
+    appointments = db.relationship("Appointment", backref="staff", lazy="dynamic", )
+    availability = db.relationship("StaffAvailability", backref="staff", lazy="dynamic", cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"Staff({self.f_name}, {self.l_name})"
+
+
+class StaffAvailability(db.Model):
+    """
+        Staff availability schedules
+    """
+    __tablename__ = "staff_availability"
+
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, nullable=False)
+    day_of_week = db.Column(db.Integer, nullable=False)
+    staff_id = db.Column(db.Integer, db.ForeignKey("staff.id"))
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
 
 
 class Inventory(db.Model):
