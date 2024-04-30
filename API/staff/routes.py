@@ -1,7 +1,7 @@
 from API import db, bcrypt
 from API.models import Staff
 from flask import jsonify, Blueprint, request
-from API.lib.auth import business_login_required
+from API.lib.auth import business_login_required, verify_api_key
 from API.lib.data_serializer import serialize_staff
 import secrets
 
@@ -143,7 +143,7 @@ def fetch_all_staff(business):
         :return: 200
     """
     all_staff = []
-    staff_records = Staff.query.filter_by(employer_id=business.id).all()
+    staff_records = business.staff.all()
 
     for staff in staff_records:
         all_staff.append((serialize_staff(staff)))

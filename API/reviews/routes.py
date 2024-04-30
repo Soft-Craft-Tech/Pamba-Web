@@ -7,11 +7,9 @@ reviews_blueprint = Blueprint("reviews", __name__, url_prefix="/API/reviews")
 
 
 @reviews_blueprint.route("/create/<int:appointment_id>", methods=["POST"])
-@client_login_required
-def create_review(client, appointment_id):
+def create_review(appointment_id):
     """
         Add reviews to businesses.
-        :param client: Client posting the review.
         :param appointment_id: ID of Appointment being reviewed.
         :return: 200
     """
@@ -26,7 +24,7 @@ def create_review(client, appointment_id):
     review = Review(
         message=message,
         business_id=appointment.business.id,
-        client_id=client.id,
+        client_id=appointment.client_id,
         appointment_id=appointment.id
     )
     db.session.add(review)
