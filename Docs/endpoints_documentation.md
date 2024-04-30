@@ -500,7 +500,7 @@ Fetch Businesses associated with a certain service
 
 ```javascript
 
-    endpoint: PUT /business-hours
+    endpoint: GET API/businesess/business-hours
     method: PUT
     Content Type: "Application/Json"
 
@@ -588,12 +588,11 @@ Fetch notifications for a client
         "comment": "***",
         "provider": "***" // Refers to the ID if the business/shop.
     }
-```                                              * ### Book Web Appointments
+```                                              
 
-### Book an appointment from the web without requiring authentication.
-
+### Book an appointment from the web 
 ```javascript
-    endpoint: GET API/appointment/book/web-appointments
+    endpoint: GET API/appointments/book/web-appointments
     method: POST
     Content Type: "Application/Json"
 
@@ -1195,10 +1194,10 @@ activate business account for the business
      body: {
         
      }
-```                                              * ### Add Service Categories
+```                                             
 
 
-
+* ### add service categories
 ```javascript
      endpoint: GET API/admin/add-service-categories
     method: POST
