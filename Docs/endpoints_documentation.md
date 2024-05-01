@@ -392,7 +392,7 @@ get business analytics
 Fetch a single business given Business id
 
 ```javascript
-    endpoint: GET /API/businesses/{business_id}
+    endpoint: GET /API/businesses/<string:slug>
     method: GET
     Content Type: "Application/Json"
 
@@ -492,7 +492,25 @@ Fetch Businesses associated with a certain service
          
      }
 ```
-
+* ### Add Business Hours
+### Add operating hours for the logged-in business.
+```javascript
+    endpoint: GET API/businesses/business-hours
+    method: PUT
+    Content Type: "Application/Json"
+    Status Codes: 
+        "200 OK": Successful! Business hours added
+        "401 Unauthorized": Unauthorized
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "weekdayOpening": "HH:MM",
+        "weekdayClosing": "HH:MM",
+        "weekendOpening": "HH:MM",
+        "weekendClosing": "HH:MM"
+    }
+```
 # 4. Client Notifications
 
 * ### Read Notification
@@ -562,6 +580,26 @@ Client's appointment Booking
         "provider": "***" // Refers to the ID if the business/shop.
     }
 ```
+### Book Web Appointments
+### Book an appointment from the web 
+```javascript
+    endpoint: GET API/appointment/book/web-appointments
+    method: POST
+    Content Type: "Application/Json"
+    Status Codes: 
+        "201 Created": Appointment Booked Successfully
+        "404 Not Found": The service you are booking is unavailable or Business not found
+        "400 Bad Request": Our premises are not open at the picked time and day
+    body: {
+        "date": "DD-MM-YYYY",
+        "time": "HH:MM",
+        "business": "Business ID",
+        "service": "Service ID",
+        "email": "Client's email",
+        "phone": "Client's phone number"
+    }
+``` 
+
 
 * ### Reschedule Appointment
 Reschedule client's appointments.
@@ -1146,6 +1184,18 @@ activate business account for the business
         
      }
 ```
+### Add Service Categories
+```javascript
+     endpoint: GET API/admin/add-service-categories
+    method: POST
+    Content Type: "Application/Json"
+    Status Codes: 
+        "201 Created": Service Categories added successfully
+    body: {
+        "categories": ["Category1", "Category2", ...]
+    }
+``` 
+
 # 14. services
 * ### fetch all services
  fetch all services
