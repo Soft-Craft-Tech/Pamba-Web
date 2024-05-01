@@ -213,3 +213,19 @@ def serialize_business_category(category):
     }
 
     return marshal(category, category_fields)
+
+
+def serialize_availability(availability):
+    """
+        Serialize staff availability
+        :param availability: Availability Object
+        :return: JSON serialized object
+    """
+    availability_fields = {
+        "id": fields.Integer,
+        "date": fields.DateTime(dt_format='iso8601'),
+        "day_of_week": fields.Integer,
+        "start_time": fields.String,
+        "end_time": fields.String
+    }
+    return marshal(availability, availability_fields)

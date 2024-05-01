@@ -115,7 +115,7 @@ def book_appointment_on_web():
     )
     db.session.add(appointment)
     service.appointments.append(appointment)
-    # db.session.commit()
+    db.session.commit()
 
     # Send Confirmation Notification/Email
 

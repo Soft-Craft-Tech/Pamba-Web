@@ -205,7 +205,7 @@ class StaffAvailability(db.Model):
     __tablename__ = "staff_availability"
 
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, nullable=False)
+    date = db.Column(db.Date, nullable=False)
     day_of_week = db.Column(db.Integer, nullable=False)
     staff_id = db.Column(db.Integer, db.ForeignKey("staff.id"))
     start_time = db.Column(db.Time, nullable=False)

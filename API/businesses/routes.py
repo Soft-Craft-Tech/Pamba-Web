@@ -280,7 +280,7 @@ def assign_services(business):
                 service=service["name"].title().strip(),
                 price=service["price"],
                 description=service["description"].strip(),
-                estimated_service_time=service["estimatedTime"].strip(),
+                estimated_service_time=service["estimatedTime"],
                 service_category=service["category"],
                 business_id=business.id
             )

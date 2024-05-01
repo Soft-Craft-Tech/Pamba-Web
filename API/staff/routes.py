@@ -1,9 +1,10 @@
 from API import db, bcrypt
-from API.models import Staff
+from API.models import Staff, Appointment
 from flask import jsonify, Blueprint, request
 from API.lib.auth import business_login_required, verify_api_key
-from API.lib.data_serializer import serialize_staff
+from API.lib.data_serializer import serialize_staff, serialize_availability
 import secrets
+from datetime import datetime
 
 staff_blueprint = Blueprint("staff", __name__, url_prefix="/API/staff")
 
@@ -149,3 +150,30 @@ def fetch_all_staff(business):
         all_staff.append((serialize_staff(staff)))
 
     return jsonify({"staff": all_staff})
+
+
+@staff_blueprint.route("/availability/<int:staff_id>", methods=["GET"])
+@verify_api_key
+def fetch_staff_availability(staff_id):
+    """
+        Check when a staff is available for booking
+        :param staff_id: ID of staff being requested
+        :return: 404, 400, 200
+    """
+    payload = request.get_json()
+    date = datetime.strptime(payload["date"], '%d-%m-%Y').date()
+
+    staff = Staff.query.get(staff_id)
+    if not staff:
+        return jsonify({"message": "Staff not found"}), 404
+
+    staff_availability = staff.availability.filter_by(date=date).all()
+
+    if not staff_availability:
+        return jsonify({"message": "Staff not available on selected date"}), 400
+
+    availability = []
+    for period in staff_availability:
+        availability.append(serialize_availability(period))
+
+    return jsonify({"message": "Success", "availability": availability}), 200
