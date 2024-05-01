@@ -1,6 +1,6 @@
 from API.models import (
     Business, Service, Rating, Review, BusinessCategory, BusinessCategoriesAssociation,
-    ServiceCategories, Expense
+    ServiceCategories
 )
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt

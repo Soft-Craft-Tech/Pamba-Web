@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from API.models import Sale
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
@@ -87,3 +88,45 @@ def delete_sale(business, sale_id):
     db.session.commit()
 
     return jsonify({"message": "Sale deleted"})
+
+
+@sales_blueprint.route("/analysis", methods=["GET"])
+@business_login_required
+def revenue_analytics(business):
+    """
+        Business Revenue Analysis
+        :param business: Logged in Business
+        :return: 200
+    """
+    today = datetime.today().date()
+    current_month = today.month
+    current_year = today.year
+    sales = business.sales.all()
+    seven_days_ago = today - timedelta(days=7)
+
+    lifetime_sales = []
+    total_sales = 0
+    current_month_revenue = 0
+    last_seven_days_sales = 0
+
+    for sale in sales:
+        service = sale.service
+        serialized_sale = serialize_sale(sale)
+        serialized_sale["price"] = service.price
+        lifetime_sales.append(serialized_sale)
+        total_sales += service.price
+        if sale.date_created.date().month == current_month and sale.date_created.date().year == current_year:
+            current_month_revenue += service.price
+        if sale.date_created.date() > seven_days_ago:
+            last_seven_days_sales += service.price
+
+    return jsonify(
+        {
+            "message": "Success",
+            "lifetime_sales": lifetime_sales,
+            "total_sales": total_sales,
+            "current_month_revenue": current_month_revenue,
+            "last_seven_days": last_seven_days_sales
+        }
+    ), 200
+
