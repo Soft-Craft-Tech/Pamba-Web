@@ -178,7 +178,7 @@ def fetch_staff_unavailability(staff_id):
                 return jsonify({"message": "Staff not Available at this time"}), 400
 
     for appointment in staff_appointments:
-        # Add time it takes to complete the services
+        # Add the estimated time it takes to complete the services
         appointment_completion_time = appointment.service[0].estimated_service_time  # How long an appointment takes
         appointment_finish_time = add_decimal_hours_to_time(appointment.time, float(appointment_completion_time))
 

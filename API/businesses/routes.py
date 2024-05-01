@@ -1,6 +1,6 @@
 from API.models import (
-    Business, Appointment, Sale, Service, Rating, Review, BusinessCategory, BusinessCategoriesAssociation,
-    ServiceCategories
+    Business, Service, Rating, Review, BusinessCategory, BusinessCategoriesAssociation,
+    ServiceCategories, Expense
 )
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
@@ -9,7 +9,8 @@ from API.lib.slugify import slugify
 from API.lib.send_mail import business_account_activation_email, send_reset_email
 from API.lib.data_serializer import (serialize_business,
                                      serialize_service,
-                                     serialize_review, serialize_appointment, serialize_business_category)
+                                     serialize_review, serialize_appointment, serialize_business_category,
+                                     serialize_sale, serialize_expenses)
 from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta
 
@@ -397,34 +398,54 @@ def get_business_analytics(business):
         :param business: Logged in Business
         :return: 200
     """
-    # Today's Appointments
+    # Today's Appointments & all appointments
     today = datetime.today().date()
     current_month = today.month
     current_year = today.year
-    appointments = Appointment.query.filter_by(date=today, business_id=business.id).all()
+    appointments = business.appointments.filter_by(cancelled=False).all()
     today_appointments = []
+    all_appointments = []
     for appointment in appointments:
-        appointment_serialized = serialize_appointment(appointment)
-        appointment_serialized["service"] = appointment.service.service
-        today_appointments.append(appointment_serialized)
+        all_appointments.append(serialize_appointment(appointment))
+        if appointment.date == today and not appointment.completed:
+            appointment_serialized = serialize_appointment(appointment)
+            appointment_serialized["service"] = appointment.service.service
+            today_appointments.append(appointment_serialized)
 
     # Today's Revenue & current month Revenue
-    sales = Sale.query.filter_by(business_id=business.id).all()
-    sales_sum = 0
+    sales = business.sales.all()
+    today_sales = 0
     current_month_sales = 0
+    lifetime_sales = []
     for sale in sales:
-        service = Service.query.filter_by(business_id=business.id, id=sale.service_id).first()
+        service = sale.service
+        sale_serialized = serialize_sale(sale)
+        sale_serialized["price"] = service.price
+        lifetime_sales.append(sale_serialized)
         if sale.date_created.date().month == current_month and sale.date_created.date().year == current_year:
             if sale.date_created.date() == today:
-                sales_sum += service.price
+                today_sales += service.price
             current_month_sales += service.price
+
+    # Expenses
+    expenses = business.expenses.all()
+    current_month_expenses = 0
+    lifetime_expenses = []
+    for expense in expenses:
+        lifetime_expenses.append(serialize_expenses(expense))
+        if expense.created_at.date().month == current_month and expense.created_at.date().year == current_year:
+            current_month_expenses += expense.amount
 
     return jsonify(
         {
-            "message": "yes",
+            "message": "Success",
+            "all_appointments": all_appointments,
             "today_appointments": today_appointments,
-            "today_revenue": sales_sum,
-            "current_month_revenue": current_month_sales
+            "today_revenue": today_sales,
+            "current_month_revenue": current_month_sales,
+            "lifetime_sales": lifetime_sales,
+            "current_month_expenses": current_month_expenses,
+            "lifetime_expenses": lifetime_expenses
         }
     ), 200
 

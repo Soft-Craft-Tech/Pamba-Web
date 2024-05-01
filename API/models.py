@@ -68,6 +68,7 @@ class Business(db.Model):
     sales = db.relationship("Sale", backref="business", lazy="dynamic", cascade="all, delete-orphan")
     appointments = db.relationship("Appointment", backref="business", lazy="dynamic", cascade="all, delete-orphan")
     clients = db.relationship('Client', secondary='businesses_clients_association', backref='service_providers')
+    expenses = db.relationship("Expense", backref="business", lazy="dynamic", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"Business({self.business_name}, {self.slug})"
@@ -158,6 +159,7 @@ class Expense(db.Model):
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime)
+    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     expense_account = db.Column(db.Integer, db.ForeignKey("expenseaccounts.id", ondelete='SET NULL'))
 
     def __repr__(self):
