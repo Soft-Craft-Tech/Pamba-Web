@@ -240,7 +240,7 @@ reset password
 activate  business account
 ```javascript
 
-     endpoint : GET API/business/activate-account/<token>
+     endpoint : GET API/businesses/activate-account/<token>
      method : POST
      Status Code : 
        "200 " : Success
@@ -318,7 +318,7 @@ assign services to a business
 
 ```javascript
 
-     endpoint : GET API/business/assign-services
+     endpoint : GET API/businesses/assign-services
      method : POST
      Content Type : "Application/Json"
      Status Code : 
@@ -345,7 +345,7 @@ remove service from a business account
 
 ```javascript
 
-     endpoint : GET API/business/remove-service
+     endpoint : GET API/businesses/remove-service
      method : POST
      Content Type : "Application/Json"
      Status Code : 
@@ -379,7 +379,7 @@ Fetch all activated Businesses.
 get business analytics
 ```javascript
 
-     endpoint : GET /business/analysis
+     endpoint : GET /businesses/analysis
      method : GET
      Status Code : 
        "200 " : Analysis data
@@ -392,7 +392,7 @@ get business analytics
 Fetch a single business given Business id
 
 ```javascript
-    endpoint: GET /API/businesses/{business_id}
+    endpoint: GET /API/businesses/<string:slug>
     method: GET
     Content Type: "Application/Json"
 
@@ -432,7 +432,7 @@ Fetch Businesses associated with a certain service
 ```
 ### upload-profile-img
 ```javascript
-    endpoint: GET API/business/upload-profile-img
+    endpoint: GET API/businesses/upload-profile-img
     method : PUT
     Content Type: "Application/Json"
     Status Codes: 
@@ -445,7 +445,7 @@ Fetch Businesses associated with a certain service
 ```
 ### update-description
 ```javascript
-     endpoint: GET API/business/update-description
+     endpoint: GET API/businesses/update-description
      method: PUT
      Content Type: "Application/Json"
      Status Codes: 
@@ -461,7 +461,7 @@ Fetch Businesses associated with a certain service
 ```
 ### profile-completion-status
 ```javascript
-     endpoint: GET API/business/profile-completion-status
+     endpoint: GET API/businesses/profile-completion-status
      method: GET
      Content Type: "Application/Json"
      Status Codes: 
@@ -477,7 +477,7 @@ Fetch Businesses associated with a certain service
 
 ### fetch-business-category
 ```javascript
-     endpoint: GET /API/business/fetch-business-category
+     endpoint: GET /API/businesses/fetch-business-category
      method : GET
      Content Type: "Application/Json"
      Status Codes: 
@@ -492,7 +492,25 @@ Fetch Businesses associated with a certain service
          
      }
 ```
-
+* ### Add Business Hours
+### Add operating hours for the logged-in business.
+```javascript
+    endpoint: GET API/businesses/business-hours
+    method: PUT
+    Content Type: "Application/Json"
+    Status Codes: 
+        "200 OK": Successful! Business hours added
+        "401 Unauthorized": Unauthorized
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "weekdayOpening": "HH:MM",
+        "weekdayClosing": "HH:MM",
+        "weekendOpening": "HH:MM",
+        "weekendClosing": "HH:MM"
+    }
+```
 # 4. Client Notifications
 
 * ### Read Notification
@@ -562,6 +580,26 @@ Client's appointment Booking
         "provider": "***" // Refers to the ID if the business/shop.
     }
 ```
+### Book Web Appointments
+### Book an appointment from the web 
+```javascript
+    endpoint: GET API/appointment/book/web-appointments
+    method: POST
+    Content Type: "Application/Json"
+    Status Codes: 
+        "201 Created": Appointment Booked Successfully
+        "404 Not Found": The service you are booking is unavailable or Business not found
+        "400 Bad Request": Our premises are not open at the picked time and day
+    body: {
+        "date": "DD-MM-YYYY",
+        "time": "HH:MM",
+        "business": "Business ID",
+        "service": "Service ID",
+        "email": "Client's email",
+        "phone": "Client's phone number"
+    }
+``` 
+
 
 * ### Reschedule Appointment
 Reschedule client's appointments.
@@ -1146,6 +1184,18 @@ activate business account for the business
         
      }
 ```
+### Add Service Categories
+```javascript
+     endpoint: GET API/admin/add-service-categories
+    method: POST
+    Content Type: "Application/Json"
+    Status Codes: 
+        "201 Created": Service Categories added successfully
+    body: {
+        "categories": ["Category1", "Category2", ...]
+    }
+``` 
+
 # 14. services
 * ### fetch all services
  fetch all services
