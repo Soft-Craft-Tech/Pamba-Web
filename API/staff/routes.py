@@ -1,8 +1,9 @@
 from API import db, bcrypt
+from API.lib.utils import add_decimal_hours_to_time
 from API.models import Staff, Appointment, StaffAvailability
 from flask import jsonify, Blueprint, request
 from API.lib.auth import business_login_required, verify_api_key
-from API.lib.data_serializer import serialize_staff, serialize_availability
+from API.lib.data_serializer import serialize_staff
 import secrets
 from datetime import datetime
 
@@ -152,9 +153,9 @@ def fetch_all_staff(business):
     return jsonify({"staff": all_staff})
 
 
-@staff_blueprint.route("/availability/<int:staff_id>", methods=["GET"])
+@staff_blueprint.route("/unavailability/<int:staff_id>", methods=["GET"])
 @verify_api_key
-def fetch_staff_availability(staff_id):
+def fetch_staff_unavailability(staff_id):
     """
         Check when a staff is available for booking
         :param staff_id: ID of staff being requested
@@ -162,28 +163,37 @@ def fetch_staff_availability(staff_id):
     """
     payload = request.get_json()
     date = datetime.strptime(payload["date"], '%d-%m-%Y').date()
+    time = datetime.strptime(payload["time"], '%H:%M').time()
 
     staff = Staff.query.get(staff_id)
     if not staff:
         return jsonify({"message": "Staff not found"}), 404
 
-    staff_availability = staff.availability.filter_by(date=date).all()
+    staff_unavailability = staff.availability.filter_by(date=date).all()
+    staff_appointments = staff.appointments.filter(Appointment.date >= date).all()
 
-    if not staff_availability:
-        return jsonify({"message": "Staff not available on selected date"}), 400
+    if staff_unavailability:
+        for period in staff_unavailability:
+            if period.end_time > time > period.start_time:
+                return jsonify({"message": "Staff not Available at this time"}), 400
 
-    availability = []
-    for period in staff_availability:
-        availability.append(serialize_availability(period))
+    for appointment in staff_appointments:
+        # Add time it takes to complete the services
+        appointment_completion_time = appointment.service[0].estimated_service_time  # How long an appointment takes
+        appointment_finish_time = add_decimal_hours_to_time(appointment.time, float(appointment_completion_time))
 
-    return jsonify({"message": "Success", "availability": availability}), 200
+        if appointment_finish_time > time > appointment.time:
+            return jsonify({"message": "Staff is booked at this time"}), 400
+
+    return jsonify({"message": "Staff is available"}), 200
 
 
-@staff_blueprint.route("/create-availability/<int:staff_id>", methods=["POST"])
+@staff_blueprint.route("/create-unavailability/<int:staff_id>", methods=["POST"])
 @business_login_required
-def add_staff_availability(business, staff_id):
+def add_staff_unavailability(business, staff_id):
     """
-        Allow businesses to add availability schedules for their staff
+        Allow Businesses to add staff unavailability.
+        So that they are not booked during periods when they are unavailable
         :param business: Business logged
         :param staff_id: Staff_id
         :return: 400, 404, 200
@@ -199,6 +209,7 @@ def add_staff_availability(business, staff_id):
     if staff.business.id != business.id:
         return jsonify({"message": "Not Allowed"}), 400
 
+    # If they are not available the whole day
     if payload["all_day"]:
         opening_time = business.weekend_opening if day_of_week >= 5 else business.weekday_opening
         closing_time = business.weekend_closing if day_of_week >= 5 else business.weekday_closing
@@ -210,17 +221,21 @@ def add_staff_availability(business, staff_id):
             end_time=closing_time
         )
         db.session.add(availability)
+    # When specific unavailability slots are added
     else:
         availability_periods = payload["periods"]
         for period in availability_periods:
+            start_time = datetime.strptime(period["startTime"], '%H:%M').time()
+            end_time = datetime.strptime(period["endTime"], '%H:%M').time()
+
             availability = StaffAvailability(
                 date=date,
                 day_of_week=day_of_week,
                 staff_id=staff.id,
-                start_time=datetime.strptime(period["startTime"], '%H:%M').time(),
-                end_time=datetime.strptime(period["endTime"], '%H:%M').time()
+                start_time=start_time,
+                end_time=end_time
             )
             db.session.add(availability)
-    db.session.commit()
+    # db.session.commit()
 
     return jsonify({"message": "Success"}), 200

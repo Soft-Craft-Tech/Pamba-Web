@@ -201,6 +201,7 @@ class Staff(db.Model):
 class StaffAvailability(db.Model):
     """
         Staff availability schedules
+        Stores dates and times when the the staff might not be available, maybe leave or other
     """
     __tablename__ = "staff_availability"
 
@@ -210,6 +211,9 @@ class StaffAvailability(db.Model):
     staff_id = db.Column(db.Integer, db.ForeignKey("staff.id"))
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
+
+    def __repr__(self):
+        return f"StaffAvailability({self.date}, {self.day_of_week})"
 
 
 class Inventory(db.Model):
