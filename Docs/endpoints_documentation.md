@@ -240,7 +240,7 @@ reset password
 activate  business account
 ```javascript
 
-     endpoint : GET API/business/activate-account/<token>
+     endpoint : GET API/businesses/activate-account/<token>
      method : POST
      Status Code : 
        "200 " : Success
@@ -318,7 +318,7 @@ assign services to a business
 
 ```javascript
 
-     endpoint : GET API/business/assign-services
+     endpoint : GET API/businesses/assign-services
      method : POST
      Content Type : "Application/Json"
      Status Code : 
@@ -345,7 +345,7 @@ remove service from a business account
 
 ```javascript
 
-     endpoint : GET API/business/remove-service
+     endpoint : GET API/businesses/remove-service
      method : POST
      Content Type : "Application/Json"
      Status Code : 
@@ -379,7 +379,7 @@ Fetch all activated Businesses.
 get business analytics
 ```javascript
 
-     endpoint : GET /business/analysis
+     endpoint : GET /businesses/analysis
      method : GET
      Status Code : 
        "200 " : Analysis data
@@ -432,7 +432,7 @@ Fetch Businesses associated with a certain service
 ```
 ### upload-profile-img
 ```javascript
-    endpoint: GET API/business/upload-profile-img
+    endpoint: GET API/businesses/upload-profile-img
     method : PUT
     Content Type: "Application/Json"
     Status Codes: 
@@ -445,7 +445,7 @@ Fetch Businesses associated with a certain service
 ```
 ### update-description
 ```javascript
-     endpoint: GET API/business/update-description
+     endpoint: GET API/businesses/update-description
      method: PUT
      Content Type: "Application/Json"
      Status Codes: 
@@ -461,7 +461,7 @@ Fetch Businesses associated with a certain service
 ```
 ### profile-completion-status
 ```javascript
-     endpoint: GET API/business/profile-completion-status
+     endpoint: GET API/businesses/profile-completion-status
      method: GET
      Content Type: "Application/Json"
      Status Codes: 
@@ -477,7 +477,7 @@ Fetch Businesses associated with a certain service
 
 ### fetch-business-category
 ```javascript
-     endpoint: GET /API/business/fetch-business-category
+     endpoint: GET /API/businesses/fetch-business-category
      method : GET
      Content Type: "Application/Json"
      Status Codes: 
