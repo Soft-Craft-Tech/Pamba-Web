@@ -93,7 +93,7 @@ def book_appointment_on_web():
                 return jsonify({
                     "message": "The Staff you selected is already booked at this time. "
                                "Please book with a different staff or let us assign you someone"
-                    }
+                }
                 ), 400
 
     client = Client.query.filter_by(email=email).first()
@@ -147,7 +147,7 @@ def reschedule_appointment(client, appointment_id):
         return jsonify({"message": "Appointment already completed."}), 400
 
     # Avoid Booking multiple appointments scheduled at the same time
-    appointments_booked_same_time = Appointment.query\
+    appointments_booked_same_time = Appointment.query \
         .filter_by(date=date, time=time, client_id=client.id, cancelled=False).first()
     if appointments_booked_same_time:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
@@ -285,3 +285,25 @@ def fetch_business_appointments(business):
         all_appointments.append(serialize_appointment(appointment))
 
     return jsonify({"appointment": all_appointments}), 200
+
+
+@appointment_blueprint.route("/end_appointment/<int:appointment_id>", methods=["PUT"])
+@business_login_required
+def end_appointment(business, appointment_id):
+    """
+        End Appointment when completed
+        Trigger a notification for appointment Review.
+        :param business: Logged in Business.
+        :param appointment_id: ID of appointment being ended
+        :return: 200, 400.
+    """
+
+    appointment = Appointment.query.get(appointment_id)
+
+    if appointment.business_id == business.id:
+        return jsonify({"message": "Not Allowed"}), 400
+
+    appointment.completed = True
+    db.session.commit()
+
+    return jsonify({"message": "Appointment Ended"}), 200
