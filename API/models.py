@@ -109,6 +109,7 @@ class Service(db.Model):
     price = db.Column(db.Integer)
     description = db.Column(db.Text, nullable=True)
     estimated_service_time = db.Column(db.String(100), nullable=True)
+    service_image = db.Column(db.String(100), nullable=True)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     service_category = db.Column(db.Integer, db.ForeignKey("service_categories.id",  ondelete='SET NULL'))
     sales = db.relationship("Sale", backref="service", lazy="dynamic")
