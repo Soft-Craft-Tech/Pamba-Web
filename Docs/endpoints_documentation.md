@@ -263,7 +263,7 @@ resend activation token
      headers : 
        X-API-Key : <API_KEY>
      body : {
-        "name": "Clean Shave",
+        "name": "*******",
         "categories": "***",
         "email": "***************",
         "phone": "*********",
