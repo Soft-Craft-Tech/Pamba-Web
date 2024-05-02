@@ -263,6 +263,14 @@ resend activation token
      headers : 
        X-API-Key : <API_KEY>
      body : {
+        "name": "*******",
+        "categories": "***",
+        "email": "***************",
+        "phone": "*********",
+        "city": "******",
+        "location": "********",
+        "mapUrl": "********************************",
+        "password": "*********"
 }
 ```
 
