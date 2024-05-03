@@ -55,3 +55,48 @@ def business_account_activation_email(recipient, token, name):
     message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
     message.html = render_template("activatebusiness.html", name=name, url=url)
     mail.send(message)
+
+
+def appointment_confirmation_email(client_name, date, time, business_location, business_name, business_directions, recipient):
+    """
+        Send email notification for successful appointment booking
+        :param recipient: Client email
+        :param client_name: Name of the client
+        :param date: Appointment Date
+        :param time: Appointment Time
+        :param business_location: Business Location
+        :param business_name: Name of the Business
+        :param business_directions: Direction to the Business Location
+        :return:
+    """
+    message = Message("Pamba - New Appointment", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template(
+        "confirmAppointment.html",
+        name=client_name if client_name else None,
+        appointment_date=date,
+        appointment_time=time,
+        business_location=business_location,
+        business_name=business_name,
+        business_direction=business_directions
+    )
+    mail.send(message)
+
+
+def send_ask_for_review_mail(url, name, business_name, recipient):
+    """
+        Ask clients to review
+        :param url: Review url
+        :param name: client name if any
+        :param business_name: Name of Business
+        :param recipient: Client Email
+        :return:
+    """
+    message = Message("Pamba - Review your Appointment", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template(
+        "askForReview.html",
+        url=url,
+        name=name,
+        business_name=business_name
+    )
+    mail.send(message)
+
