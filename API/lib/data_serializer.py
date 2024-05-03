@@ -126,7 +126,8 @@ def serialize_service(service):
         "description": fields.String,
         "business_id": fields.Integer,
         "service_category": fields.Integer,
-        "price": fields.Integer
+        "price": fields.Integer,
+        "service_image": fields.String
     }
 
     return marshal(service, service_fields)

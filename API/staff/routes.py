@@ -236,6 +236,6 @@ def add_staff_unavailability(business, staff_id):
                 end_time=end_time
             )
             db.session.add(availability)
-    # db.session.commit()
+    db.session.commit()
 
     return jsonify({"message": "Success"}), 200

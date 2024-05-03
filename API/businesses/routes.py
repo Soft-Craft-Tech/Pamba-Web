@@ -596,3 +596,22 @@ def add_business_hours(business):
     db.session.commit()
 
     return jsonify({"message": "Successful! Business hours added"}), 200
+
+
+@business_blueprint.route("/business-services", methods=["GET"])
+@business_login_required
+def fetch_business_services(business):
+    """
+        Fetch Services associated with a certain business
+        :param business: Logged in business
+        :return: 200
+    """
+    services = business.services.all()
+
+    all_services = []
+    for service in services:
+        all_services.append(serialize_service(service))
+
+    return jsonify(
+        {"message": "Success", "services": all_services}
+    ), 200
