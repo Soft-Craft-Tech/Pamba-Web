@@ -306,4 +306,6 @@ def end_appointment(business, appointment_id):
     appointment.completed = True
     db.session.commit()
 
+    # Send a notification with the review link
+
     return jsonify({"message": "Appointment Ended"}), 200

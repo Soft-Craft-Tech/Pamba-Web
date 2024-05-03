@@ -1,7 +1,9 @@
 from flask import jsonify, request, Blueprint
-from API.models import Client, ClientDeleted
-from API.lib.data_serializer import serialize_client
-from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
+from sqlalchemy import func
+
+from API.models import Client, ClientDeleted, Appointment
+from API.lib.data_serializer import serialize_client, serialize_appointment
+from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required, business_login_required
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
@@ -287,5 +289,43 @@ def resend_verification_otp():
     send_otp(recipient=email, otp=otp, name=client.name)
     masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
     return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
+
+
+@clients_blueprint.route("/business-clients", methods=["GET"])
+@business_login_required
+def fetch_business_clients(business):
+    """
+        Fetch all clients associated with a certain business
+        :param business: Logged in business
+        :return: 200
+    """
+    lifetime_number_of_clients = 0
+    all_clients = []
+    all_appointments = []
+
+    appointments = business.appointments.filter_by(cancelled=False).order_by(Appointment.date.desc()).all()
+    for appointment in appointments:
+        all_appointments.append(serialize_appointment(appointment))
+        client = appointment.client
+        lifetime_number_of_clients += 1
+        all_clients.append(serialize_client(client))
+
+    client_appointment_counts = db.session.query(Client.id, func.count(Appointment.id)) \
+        .join(Appointment) \
+        .group_by(Client.id) \
+        .having(func.count(Appointment.id) > 1) \
+        .all()
+    returning_clients = len(client_appointment_counts)
+
+    return jsonify(
+        {
+            "message": "Success",
+            "lifetime_client_number_of_clients": lifetime_number_of_clients,
+            "all_clients": all_clients,
+            "all_appointments": all_appointments,
+            "returning_clients": returning_clients
+        }
+    ), 200
+
 
 
