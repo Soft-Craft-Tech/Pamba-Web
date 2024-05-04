@@ -26,7 +26,7 @@ def business_signup():
     """
     payload = request.get_json()
     name = payload["name"].strip().title()
-    category_ids = payload["categories"]
+    category_ids = payload["category"]
     email = payload["email"].strip().lower()
     phone = payload["phone"]
     city = payload["city"].strip().title()
