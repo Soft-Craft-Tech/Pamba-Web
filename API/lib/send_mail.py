@@ -51,7 +51,7 @@ def business_account_activation_email(recipient, token, name):
         :param name: Business Name.
         :return:
     """
-    url = f"https://www.pamba.africa/activate/{token}"
+    url = f"https://www.pamba.africa/verify/{token}"
     message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
     message.html = render_template("activatebusiness.html", name=name, url=url)
     mail.send(message)
