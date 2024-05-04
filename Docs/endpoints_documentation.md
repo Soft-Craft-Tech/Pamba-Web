@@ -321,7 +321,7 @@ change password
 ```
 
 
-* ###assign services
+* ### assign services
 assign services to a business
 
 ```javascript
@@ -673,8 +673,19 @@ All appointments for a certain client.
         
     }
 ```
-
-# 5. Expenses
+* ### End Appointment
+```javascript
+     endpoint: GET API/appointments/end_appointment{appointment_id>}
+     method: PUT
+     Content Type: Application/Json
+     Status Codes:
+      "200": "message": Appointment Ended.
+      "401": "message": Not Allowed.
+     headers:
+       X-API-KEY: <API_KEY>
+     body{
+}
+```
 
 * ### New Expense Record
 Create new expense.
@@ -1066,7 +1077,7 @@ Delete Inventory with id
 ```
 * ### Delete Business Notifications
 ```javascript
-        Endpoint: DELETE /API/notifications/business/delete/{notification_id}
+    Endpoint: DELETE /API/notifications/business/delete/{notification_id}
     Method: DELETE
     Content Type: "Application/Json"
 
@@ -1199,6 +1210,8 @@ activate business account for the business
     Content Type: "Application/Json"
     Status Codes: 
         "201 Created": Service Categories added successfully
+    headers:
+      X-API-Key: <API_KEY>
     body: {
         "categories": ["Category1", "Category2", ...]
     }
