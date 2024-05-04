@@ -59,6 +59,8 @@ def business_signup():
 
     # Add Business categories to business.
     for cat_id in category_ids:
+        if not cat_id:
+            return jsonify({"message": "Invalid Business Category"})
         business_categories = BusinessCategoriesAssociation(
             business_id=business.id,
             category_id=cat_id
