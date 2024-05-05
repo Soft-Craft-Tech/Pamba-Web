@@ -33,7 +33,8 @@ def record_expenses(business):
         expense=expense,
         amount=amount,
         description=description,
-        expense_account=account_id
+        expense_account=account_id,
+        business_id=business.id
     )
 
     db.session.add(new_expense)
@@ -109,12 +110,10 @@ def fetch_business_expenses(business):
         :return: 400, 200
     """
     all_expenses = []
-    accounts = [account.id for account in business.expense_accounts.all()]
-    if len(accounts) > 0:
-        expenses = Expense.query.filter(Expense.expense_account.in_(accounts)).all()
-
-        for expense in expenses:
-            all_expenses.append(serialize_expenses(expense))
+    for expense in business.expenses.all():
+        serialized_expense = serialize_expenses(expense)
+        serialized_expense["category"] = expense.account.account_name
+        all_expenses.append(serialized_expense)
 
     return jsonify({"expenses": all_expenses}), 200
 

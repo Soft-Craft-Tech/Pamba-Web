@@ -569,7 +569,7 @@ def fetch_business_categories():
         :return: 200
     """
     all_categories = []
-    categories = BusinessCategory.query.all()
+    categories = BusinessCategory.query.order_by(BusinessCategory.category_name).all()
     for category in categories:
         all_categories.append(serialize_business_category(category))
 
