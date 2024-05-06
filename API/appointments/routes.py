@@ -133,10 +133,10 @@ def book_appointment_on_web():
         comment=comment,
         business_id=business.id,
         staff_id=staff_id if staff_id else None,
-        client_id=client.id
+        client_id=client.id,
+        service_id=service.id
     )
     db.session.add(appointment)
-    service.appointments.append(appointment)
     db.session.commit()
 
     # Send email or notification when a new appointment is scheduled
@@ -305,17 +305,31 @@ def assign_appointment(business, appointment_id):
 @business_login_required
 def fetch_business_appointments(business):
     """
-        Fetch all appointments booked with the logged-in business
+        Fetch all appointments booked with the logged-in business. Exc: Cancelled and Completed
         :param business: Logged-in
         :return: 200
     """
-    appointments = Appointment.query.filter_by(business_id=business.id).all()
+    today = datetime.today().date()
+    appointments = business.appointments\
+        .filter(Appointment.date >= today, ~Appointment.cancelled, ~Appointment.completed)\
+        .order_by(Appointment.date.desc(), Appointment.time.desc()).all()
     all_appointments = []
 
     for appointment in appointments:
-        all_appointments.append(serialize_appointment(appointment))
+        combined_datetime = datetime.combine(appointment.date, appointment.time)
+        appointment_timestamp = combined_datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        staff = ""
 
-    return jsonify({"appointment": all_appointments}), 200
+        if appointment.staff:
+            staff = f"{appointment.staff.f_name} {appointment.staff.l_name}"
+
+        serialized_appointment = serialize_appointment(appointment)
+        serialized_appointment["staff"] = staff
+        serialized_appointment["timestamp"] = appointment_timestamp
+        serialized_appointment["title"] = appointment.service.service
+        all_appointments.append(serialized_appointment)
+
+    return jsonify({"appointments": all_appointments}), 200
 
 
 @appointment_blueprint.route("/end_appointment/<int:appointment_id>", methods=["PUT"])

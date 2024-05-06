@@ -21,17 +21,6 @@ class BusinessCategoriesAssociation(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey("businesscategories.id"))
 
 
-class AppointmentsServicesAssociation(db.Model):
-    __table_name__ = "appointments_services_association"
-    """
-        Junction Table Between Services and Appointments.
-        To allow multiple services in one appointment
-    """
-    id = db.Column(db.Integer, primary_key=True)
-    appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id"))
-    service_id = db.Column(db.Integer, db.ForeignKey("services.id"))
-
-
 class Business(db.Model):
     """Businesses table"""
     __tablename__ = "businesses"
@@ -113,9 +102,7 @@ class Service(db.Model):
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     service_category = db.Column(db.Integer, db.ForeignKey("service_categories.id",  ondelete='SET NULL'))
     sales = db.relationship("Sale", backref="service", lazy="dynamic")
-    appointments = db.relationship(
-        "Appointment", secondary="appointments_services_association", backref="service", lazy="dynamic"
-    )
+    appointments = db.relationship("Appointment",  backref="service", lazy="dynamic")
 
     def __str__(self):
         return f"Services({self.service}, {self.price})"
@@ -335,6 +322,7 @@ class Appointment(db.Model):
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     staff_id = db.Column(db.Integer, db.ForeignKey("staff.id", ondelete='SET NULL'))
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id", ondelete='SET NULL'))
+    service_id = db.Column(db.ForeignKey("services.id", ondelete='SET NULL'))
 
     def __repr__(self):
         return f"Appointment({self.date}, {self.time}, {self.comment})"
