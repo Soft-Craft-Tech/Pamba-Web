@@ -1,4 +1,3 @@
-from API.lib.dateformatter import format_date
 from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
 from API.lib.auth import client_login_required, business_login_required, verify_api_key
@@ -114,7 +113,10 @@ def book_appointment_on_web():
             .filter(Appointment.date >= current_date, ~Appointment.cancelled)\
             .all()
         for appointment in upcoming_staffs_appointments:
-            if appointment.date == date and appointment.time == time:  # Rethink this part #025
+            if appointment.date == date:  # Rethink this part #025
+                appointment_duration = appointment.service.estimated_service_time
+                appointment_end = appointment.time + timedelta(minutes=int(float(appointment_duration) * 60))
+                print(appointment_end)
                 return jsonify({
                     "message": "The Staff you selected is already booked at this time. "
                                "Please book with a different staff or let us assign you someone"
@@ -140,7 +142,7 @@ def book_appointment_on_web():
         service_id=service.id
     )
     db.session.add(appointment)
-    db.session.commit()
+    # db.session.commit()
 
     # Send email or notification when a new appointment is scheduled
     appointment_confirmation_email(
@@ -328,11 +330,10 @@ def fetch_business_appointments(business):
             staff = f"{appointment.staff.f_name} {appointment.staff.l_name}"
 
         serialized_appointment = serialize_appointment(appointment)
-
         serialized_appointment["staff"] = staff
         serialized_appointment["event_id"] = appointment.id
-        serialized_appointment["start"] = format_date(combined_datetime)
-        serialized_appointment["end"] = format_date(appointment_ends)
+        serialized_appointment["start"] = combined_datetime.isoformat()
+        serialized_appointment["end"] = appointment_ends.isoformat()
         serialized_appointment["title"] = appointment.service.service
         all_appointments.append(serialized_appointment)
 
