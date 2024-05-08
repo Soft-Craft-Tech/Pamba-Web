@@ -1,9 +1,10 @@
+from API.lib.dateformatter import format_date
 from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
 from API.lib.auth import client_login_required, business_login_required, verify_api_key
 from API.lib.data_serializer import serialize_appointment
 from API import db, bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
 from API.lib.checkBusinessClosed import check_business_closed
 from API.lib.send_mail import appointment_confirmation_email, send_ask_for_review_mail
 
@@ -109,9 +110,11 @@ def book_appointment_on_web():
 
         # Check if the staff is booked at the selected time slot
         current_date = datetime.now().date()
-        upcoming_staffs_appointments = staff.appointments.filter(Appointment.date >= current_date).all()
+        upcoming_staffs_appointments = staff.appointments\
+            .filter(Appointment.date >= current_date, ~Appointment.cancelled)\
+            .all()
         for appointment in upcoming_staffs_appointments:
-            if not appointment.cancelled and appointment.date == date and appointment.time == time:  # Rethink this part #025
+            if appointment.date == date and appointment.time == time:  # Rethink this part #025
                 return jsonify({
                     "message": "The Staff you selected is already booked at this time. "
                                "Please book with a different staff or let us assign you someone"
@@ -317,15 +320,19 @@ def fetch_business_appointments(business):
 
     for appointment in appointments:
         combined_datetime = datetime.combine(appointment.date, appointment.time)
-        appointment_timestamp = combined_datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        appointment_duration = int(float(appointment.service.estimated_service_time) * 60)
+        appointment_ends = combined_datetime + timedelta(minutes=appointment_duration)
         staff = ""
 
         if appointment.staff:
             staff = f"{appointment.staff.f_name} {appointment.staff.l_name}"
 
         serialized_appointment = serialize_appointment(appointment)
+
         serialized_appointment["staff"] = staff
-        serialized_appointment["timestamp"] = appointment_timestamp
+        serialized_appointment["event_id"] = appointment.id
+        serialized_appointment["start"] = format_date(combined_datetime)
+        serialized_appointment["end"] = format_date(appointment_ends)
         serialized_appointment["title"] = appointment.service.service
         all_appointments.append(serialized_appointment)
 

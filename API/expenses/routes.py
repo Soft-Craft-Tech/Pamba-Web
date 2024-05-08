@@ -136,3 +136,4 @@ def fetch_single_expense(business, expense_id):
         return jsonify({"message": "Not Allowed"}), 403
 
     return jsonify({"expense": serialize_expenses(expense)}), 200
+
