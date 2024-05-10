@@ -127,6 +127,7 @@ def serialize_service(service):
         "business_id": fields.Integer,
         "service_category": fields.Integer,
         "price": fields.Integer,
+        "estimated_service_time": fields.Float,
         "service_image": fields.String
     }
 

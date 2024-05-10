@@ -115,13 +115,28 @@ def book_appointment_on_web():
         for appointment in upcoming_staffs_appointments:
             if appointment.date == date:  # Rethink this part #025
                 appointment_duration = appointment.service.estimated_service_time
-                appointment_end = appointment.time + timedelta(minutes=int(float(appointment_duration) * 60))
-                print(appointment_end)
-                return jsonify({
-                    "message": "The Staff you selected is already booked at this time. "
-                               "Please book with a different staff or let us assign you someone"
-                }
-                ), 400
+                appointment_start = datetime.combine(appointment.date, appointment.time)
+                appointment_end = appointment_start + timedelta(minutes=int(float(appointment_duration) * 60))
+
+                new_appointment_duration = service.estimated_service_time
+                new_appointment_start = datetime.combine(date, time)
+                new_appointment_end = new_appointment_start + timedelta(minutes=int(float(new_appointment_duration)*60))
+
+                # Check overlapping appointments
+                overlap = (new_appointment_start < appointment_end) and (new_appointment_end > appointment_start)
+
+                # Check if the start and end times of the old interval fall within the new interval
+                overlap |= (appointment_start >= new_appointment_start and appointment_end <= new_appointment_end)
+
+                # Check if the start time of the new interval falls within the old interval's time range
+                overlap |= (appointment_start <= new_appointment_start < appointment_end)
+
+                if overlap:
+                    return jsonify({
+                        "message": "The Staff you selected is already booked at this time. "
+                                   "Please book with a different staff or let us assign you someone"
+                    }
+                    ), 400
 
     client = Client.query.filter_by(email=email).first()
     # If the client is not a mobile user or hasn't booked an appointment before
@@ -315,9 +330,10 @@ def fetch_business_appointments(business):
         :return: 200
     """
     today = datetime.today().date()
-    appointments = business.appointments\
-        .filter(Appointment.date >= today, ~Appointment.cancelled, ~Appointment.completed)\
+    appointments = business.appointments \
         .order_by(Appointment.date.desc(), Appointment.time.desc()).all()
+    #  .filter(Appointment.date >= today, ~Appointment.cancelled, ~Appointment.completed)\
+
     all_appointments = []
 
     for appointment in appointments:
