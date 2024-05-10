@@ -351,6 +351,7 @@ def fetch_business_appointments(business):
         serialized_appointment["start"] = combined_datetime.isoformat()
         serialized_appointment["end"] = appointment_ends.isoformat()
         serialized_appointment["title"] = appointment.service.service
+        serialized_appointment["color"] = "#DB1471"  # Color attribute required by the scheduler library
         all_appointments.append(serialized_appointment)
 
     return jsonify({"appointments": all_appointments}), 200
