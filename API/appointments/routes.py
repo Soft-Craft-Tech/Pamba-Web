@@ -157,7 +157,7 @@ def book_appointment_on_web():
         service_id=service.id
     )
     db.session.add(appointment)
-    # db.session.commit()
+    db.session.commit()
 
     # Send email or notification when a new appointment is scheduled
     appointment_confirmation_email(
@@ -343,7 +343,7 @@ def fetch_business_appointments(business):
         staff = ""
 
         if appointment.staff:
-            staff = f"{appointment.staff.f_name} {appointment.staff.l_name}"
+            staff = {appointment.staff.f_name}
 
         serialized_appointment = serialize_appointment(appointment)
         serialized_appointment["staff"] = staff

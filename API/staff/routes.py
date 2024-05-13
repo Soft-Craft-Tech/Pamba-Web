@@ -136,7 +136,7 @@ def fetch_all_staff(slug):
     all_staff = []
     business = Business.query.filter_by(slug=slug).first()
 
-    for staff in business.staff.all():
+    for staff in business.staff.order_by(Staff.f_name).all():
         all_staff.append((serialize_staff(staff)))
 
     return jsonify({"staff": all_staff})

@@ -101,7 +101,7 @@ def fetch_business_expenses(business):
         :return: 400, 200
     """
     all_expenses = []
-    for expense in business.expenses.all():
+    for expense in business.expenses.order_by(Expense.created_at.desc()).all():
         serialized_expense = serialize_expenses(expense)
         serialized_expense["category"] = expense.account.account_name
         all_expenses.append(serialized_expense)
