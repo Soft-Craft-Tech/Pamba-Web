@@ -1,5 +1,5 @@
 from flask import jsonify, request, Blueprint
-from API import db, bcrypt
+from API import db
 from API.lib.auth import business_login_required
 from API.lib.data_serializer import serialize_expenses
 from API.models import Expense, ExpenseAccount
@@ -52,11 +52,6 @@ def delete_expense(business, expense_id):
         :param expense_id: ID of expense to be deleted
         :return: 404, 400, 200
     """
-    payload = request.get_json()
-    password = payload["password"].strip()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 400
 
     expense = Expense.query.get(expense_id)
     if not expense:
@@ -82,10 +77,6 @@ def update_expense(business, expense_id):
     amount = payload["expenseAmount"]
     description = payload["description"].strip().capitalize()
     account_id = payload["accountID"]
-    password = payload["password"].strip()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect Password"}), 400
 
     expense_record = Expense.query.get(expense_id)
     if not expense_record:
