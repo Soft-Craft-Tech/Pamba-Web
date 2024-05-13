@@ -174,6 +174,33 @@ Resend the client's verification token incase the one sent on signup is expired.
         "email": "***"
     }
 ```
+* ### Delete Account
+### Client delete account 
+```javascript
+     endpoint: POST API/clients/delete-account
+     method: POST
+     Content-Type: Application/Json
+     Status Codes:
+       "200 OK": Message "We are sorry to see you leave. Your data will be deleted in 30 days"
+       "400 ": Message  "Deletion request will be done on  number of days remaining"
+       "400" : Message "Email doesn't exist"
+```
+* ### Fetch all clients associated with a certain business
+```javascript
+     Endpoint: GET /API/clients/business-clients
+     Method: GET
+     Content Type: "Application/Json"
+
+     Status Codes: 
+    "200 OK": All clients associated with the logged-in business fetched successfully.
+    "401 Unauthorized": Not authorized to access this resource.
+
+    Headers:
+    X-API-KEY: <API_KEY>
+    x-access-token: <LOGIN_TOKEN>
+    Body: {
+}
+```
 
 # 2. Business Auth
 ### signup businesses
@@ -278,7 +305,8 @@ resend activation token
      Status Code : 
        "200 " : Update Successful
        "401" : Incorrect password
-       "409" : Phone number already exists/Email already exists  
+       "409" : Phone/email number already exists
+    
      headers : 
        X-API-Key : <API_KEY>
      body : {
@@ -289,7 +317,7 @@ resend activation token
          "location": "Updated Location",
          "description": "Updated business description.",
          "mapUrl": "https://maps.google.com/...",
-         "password": "currentPassword123"
+         "password": "********"
 }
 ```
 * ### change password
@@ -307,13 +335,13 @@ change password
      headers : 
        X-API-Key : <API_KEY>
      body : {
-         "oldPassword": "currentPassword123",
-         "newPassword": "newPassword456"
+         "oldPassword": "*********",
+         "newPassword":"********************************"
 }
 ```
 
 
-* ###assign services
+* ### assign services
 assign services to a business
 
 ```javascript
@@ -492,11 +520,42 @@ Fetch Businesses associated with a certain service
          
      }
 ```
+* ### Fetch Services associated with a certain business
+```javascript
+    Endpoint: GET /API/business/business-services
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+    "200 OK": Services associated with the logged-in business fetched successfully.
+    "401 Unauthorized": Not authorized to access this resource.
+
+    Headers:
+    X-API-KEY: <API_KEY>
+    x-access-token: <LOGIN_TOKEN>
+
+
+
+    Body: 
+       {
+             "message": "Success",
+          "services": [
+            {
+                "service_id": <service_id>,
+                "name": <service_name>,
+                "description": <service_description>,
+                "price": <service_price>
+            },
+            
+         ]
+       }
+
+```
 
 # 4. Client Notifications
 
 * ### Read Notification
-Mark notification as read
+## Mark notification as read
 
 ```javascript
     endpoint: PUT /API/notifications/client/read/{notification_id}
@@ -516,6 +575,48 @@ Mark notification as read
         
     }
 ```
+* ### Create notifications for clients.
+```javascript
+    Endpoint: POST /API/notifications/client/add
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+       "201 Created": Notification successfully created.
+       "401 Unauthorized": Not authorized to access this resource.
+
+    Headers:
+    X-API-KEY: <API_KEY>
+    x-access-token: <LOGIN_TOKEN>
+
+    Body: 
+    {
+        "title": <title>,
+        "message": <message>,
+        "clientID": <client_id>
+    }
+
+```
+* ### Delete notifications
+```javascript
+    Endpoint: DELETE /API/notifications/client/delete/<int:notification_id>
+Method: DELETE
+Content Type: "Application/Json"
+
+Status Codes: 
+    "200 OK": Notification successfully deleted.
+    "400 Bad Request": Notification not found.
+    "401 Unauthorized": Not authorized to access this resource.
+
+Headers:
+    X-API-KEY: <API_KEY>
+    x-access-token: <LOGIN_TOKEN>
+
+
+Body: {
+}
+```
+
 
 * ### Fetch Notifications
 Fetch notifications for a client
@@ -559,7 +660,7 @@ Client's appointment Booking
         "date": "***",
         "time": "***",
         "comment": "***",
-        "provider": "***" // Refers to the ID if the business/shop.
+        "provider": "***"
     }
 ```
 
@@ -627,9 +728,49 @@ All appointments for a certain client.
         
     }
 ```
+### assign-appointment
+```javascript
+    endpoint: PUT /API/appointments/assign-appointment/<int:appointment_id>
+    method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+    "200 OK": Appointment successfully assigned.
+    "400 Bad Request":  appointment already cancelled.
+    "401 Unauthorized": Incorrect password provided.
+    "403 Forbidden": Not allowed to perform action.
+    "404 Not Found": Appointment or staff not found.
+
+    headers:
+    X-API-KEY: <API_KEY>
+    x-access-token: <LOGIN_TOKEN>
+
+    body: 
+    {
+        "staffID": <****>,
+        "password": <******>
+    }
+
+
+```
+### Fetch all appointments booked with the logged-in business
+```javascript
+      endpoint: GET /API/appointments/business-appointments
+      method: GET
+      Content Type: "Application/Json"
+
+      Status Codes: 
+       "200 OK": List of appointments booked with the logged-in business.
+       "401 Unauthorized": Not authorized to access this resource.
+
+headers:
+    X-API-KEY: <API_KEY>
+    x-access-token: <LOGIN_TOKEN>
+
+```
 
 # 5. Expenses
-
+ 
 * ### New Expense Record
 Create new expense.
 
@@ -724,7 +865,7 @@ Fetch all Expenses associated with the business.
 
     Status Codes: 
         "200 Created": expenses //empty array if null
-        "400 Bad Request": message: Not Allowed //If expense doen't belong to business requesting.
+        "400 Bad Request": message: Not Allowed 
         "404 Not Found": message: Expense Not found
 
     headers:
@@ -787,7 +928,7 @@ Delete Inventory with id
     Content Type: "Application/Json"
 
     Status Codes: 
-        "200 Created": Message, Updated //Updated inventory.
+        "200 Created": Message, Updated 
         "400 Bad Request": Message: Status not recognized
         "401 Unauthorized": Message: Not allowed
         "404 Not Found": Message: Record Not found
@@ -820,7 +961,7 @@ Delete Inventory with id
 # 8. Review
 * ### Create Review 
 ```javascript
-      Endpoint: POST /API/reviews/create
+      Endpoint: POST /API/reviews/create{appointment_id}
     Method: POST
     Content Type: "Application/Json"
 
@@ -836,21 +977,7 @@ Delete Inventory with id
     }
 ```
 # 9. Sales
-* ### fetch a single sale 
-```javascript
-     Endpoint: GET /API/sales/{sale_id}
-    Method: GET
-    Content Type: "Application/Json"
 
-    Status Codes: 
-        "200 OK": Sale details.
-        "401 Unauthorized": Message: Not allowed
-        "404 Not Found": Message: Sale not found
-
-    Headers:
-        x-access-token: <LOGIN_TOKEN>
-    Body: {}
-```
 * ### fetch all sales
 ```javascript
     Endpoint: GET /API/sales/all
@@ -863,6 +990,22 @@ Delete Inventory with id
     Headers:
         x-access-token: <LOGIN_TOKEN>
     Body: {}
+```
+
+### fetch a single sale
+```javascript
+     Endpoint: GET /API/sales/{sale_id}
+     Method: GET
+     Content Type: "Application/Json"
+
+     Status Codes: 
+        "200 OK": Sale details.
+        "401 Unauthorized": Message: Not allowed
+        "404 Not Found": Message: Sale not found
+
+     Headers:
+        x-access-token: <LOGIN_TOKEN>
+     Body: {}
 ```
 * ### Record New sale 
 ```javascript
@@ -882,26 +1025,24 @@ Delete Inventory with id
         "serviceId": <int>
     }
 ```
-* ### Update sale
-``` javascript
-      Endpoint: PUT /API/sales/update/{sale_id}
-    Method: PUT
-    Content Type: "Application/Json"
+* ### Business Revenue Analysis 
+```javascript
+     Endpoint: GET /API/sales/analysis
+     Method: GET
+     Content Type: "Application/Json"    
 
-    Status Codes: 
-        "200 OK": Message: Sale updated.
-        "400 Bad Request": Message: Incorrect password or Invalid sale ID
-        "401 Unauthorized": Message: Not allowed
-        "404 Not Found": Message: Sale not found
+     Status Codes: 
+       "200 OK": Business revenue analysis successfully retrieved.
+       "401 Unauthorized": Not authorized to access this resource.
 
-    Headers:
-        x-access-token: <LOGIN_TOKEN>
-    Body: {
-        "paymentMethod": "New Payment Method",
-        "description": "New Description",
-        "password": "xxxx"
-    }
+     Headers:
+      X-API-KEY: <API_KEY>
+      x-access-token: <LOGIN_TOKEN>
+     Body : {
+}
 ```
+
+
 * ### Delete a sale
 ```javascript
     Endpoint: DELETE /API/sales/delete/{sale_id}
@@ -1034,48 +1175,24 @@ Delete Inventory with id
     Body: {}
 ```
 # 12. Expense_accounts
-* ### fetch single expense_account for the business
+* ### fetch all expense_accounts for the business
 ```javascript
         Endpoint: GET /API/accounts/single/{account_id}
     Method: GET
     Content Type: "Application/Json"
 
     Status Codes: 
-        "200 OK": Single account details.
+        "200 OK":  account details.
         "401 Unauthorized": Message: Not allowed
-        "404 Not Found": Message: Account not found
+        "404 Not Found": Message: business  not found
 
     Headers:
         x-access-token: <LOGIN_TOKEN>
     Body: {}
 ```
-* ### Fetch all expense accounts for the business* ### activate-account
-activate business account for the business
-```javascript
-    endpoint : GET API/business/activate-account{business_id}
-    method : POST
-    Content Type: "Application/Json"
-    Status Codes:
-      "200": success
-      " 400": account already activate
-      " 404": business not found 
-    headers :
-      X-API-KEY : <API_KEY>
-    body : {
-}
-```
-```javascript
-        Endpoint: GET /API/accounts/all
-    Method: GET
-    Content Type: "Application/Json"
 
-    Status Codes: 
-        "200 OK": All accounts records.
 
-    Headers:
-        x-access-token: <LOGIN_TOKEN>
-    Body: {}
-```
+
 * ### create expense account for the business
 ```javascript
         Endpoint: POST /API/accounts/create-account
