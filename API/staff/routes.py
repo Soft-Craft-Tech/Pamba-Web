@@ -1,6 +1,6 @@
 from API import db, bcrypt
 from API.lib.utils import add_decimal_hours_to_time
-from API.models import Staff, Appointment, StaffAvailability
+from API.models import Staff, Appointment, StaffAvailability, Business
 from flask import jsonify, Blueprint, request
 from API.lib.auth import business_login_required, verify_api_key
 from API.lib.data_serializer import serialize_staff
@@ -20,7 +20,6 @@ def add_staff(business):
     """
     payload = request.get_json()
     f_name = payload["f_name"].strip().title()
-    l_name = payload["l_name"].strip().title()
     phone = payload["phone"]
     role = payload["role"].strip().title()
     public_id = secrets.token_hex(6)
@@ -40,7 +39,6 @@ def add_staff(business):
 
     staff = Staff(
         f_name=f_name,
-        l_name=l_name,
         phone=phone,
         role=role,
         public_id=public_id,
@@ -136,18 +134,18 @@ def fetch_single_staff(business, staff_id):
     return jsonify({"staff": serialize_staff(staff)}), 200
 
 
-@staff_blueprint.route("/all", methods=["GET"])
-@business_login_required
-def fetch_all_staff(business):
+@staff_blueprint.route("/all/<string:slug>", methods=["GET"])
+@verify_api_key
+def fetch_all_staff(slug):
     """
         Fetch all staff associated with the business logged in
-        :param business: Business logged in.
+        :param slug: Slug of the business
         :return: 200
     """
     all_staff = []
-    staff_records = business.staff.all()
+    business = Business.query.filter_by(slug=slug).first()
 
-    for staff in staff_records:
+    for staff in business.staff.all():
         all_staff.append((serialize_staff(staff)))
 
     return jsonify({"staff": all_staff})

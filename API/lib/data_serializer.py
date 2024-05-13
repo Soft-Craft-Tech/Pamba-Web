@@ -194,7 +194,6 @@ def serialize_staff(staff):
     staff_fields = {
         "id": fields.Integer,
         "f_name": fields.String,
-        "l_name": fields.String,
         "phone": fields.String,
         "created_at": fields.DateTime(dt_format='iso8601'),
         "role": fields.String,

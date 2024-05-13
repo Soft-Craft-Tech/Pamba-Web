@@ -5,6 +5,7 @@ from flask_mail import Mail
 from flask_cors import CORS
 from flask_migrate import Migrate
 from API.config import Config
+from dotenv import load_dotenv
 
 
 db = SQLAlchemy()
@@ -15,6 +16,8 @@ cors = CORS()
 
 
 def create_app():
+    load_dotenv()
+
     app = Flask(__name__)
     app.config.from_object(Config)
 

@@ -20,7 +20,7 @@ def verify_api_key(func):
         if not api_key:
             return jsonify({"message": "API KEY is missing"}), 401
 
-        if api_key != os.environ.get("API_KEY"):
+        if api_key != os.getenv("API_KEY"):
             return jsonify({"message": "Invalid API KEY"}), 401
         return func(*args, **kwargs)
     return decorated
@@ -51,7 +51,7 @@ def decode_token(token):
         :return: Decoded data or None.
     """
     try:
-        data = jwt.decode(token, os.environ.get('SECRET'), algorithms=["HS256"])
+        data = jwt.decode(token, os.getenv('SECRET'), algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:
@@ -76,7 +76,7 @@ def client_login_required(f):
         if not api_key:
             return jsonify({"message": "API KEY is missing"}), 400
 
-        if api_key != os.environ.get("API_KEY"):
+        if api_key != os.getenv("API_KEY"):
             return jsonify({"message": "Invalid API KEY"}), 400
 
         if "x-access-token" in request.headers:
@@ -84,7 +84,7 @@ def client_login_required(f):
         if not token:
             return jsonify({"message": "Token is missing"}), 401
         try:
-            data = jwt.decode(token, os.environ.get('SECRET'), algorithms=["HS256"])
+            data = jwt.decode(token, os.getenv('SECRET'), algorithms=["HS256"])
             current_user = Client.query.filter_by(email=data["username"]).first()
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Expired Session! Login Again"}), 401
@@ -110,7 +110,7 @@ def business_login_required(f):
         if not api_key:
             return jsonify({"message": "API KEY is missing"}), 400
 
-        if api_key != os.environ.get("API_KEY"):
+        if api_key != os.getenv("API_KEY"):
             return jsonify({"message": "Invalid API KEY"}), 400
 
         if "x-access-token" in request.headers:
@@ -118,7 +118,7 @@ def business_login_required(f):
         if not token:
             return jsonify({"message": "Token is missing"}), 401
         try:
-            data = jwt.decode(token, os.environ.get('SECRET'), algorithms=["HS256"])
+            data = jwt.decode(token, os.getenv('SECRET'), algorithms=["HS256"])
             current_user = Business.query.filter_by(slug=data["username"]).first()
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Expired Session! Login Again"}), 401
