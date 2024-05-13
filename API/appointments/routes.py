@@ -343,7 +343,7 @@ def fetch_business_appointments(business):
         staff = ""
 
         if appointment.staff:
-            staff = {appointment.staff.f_name}
+            staff = appointment.staff.f_name
 
         serialized_appointment = serialize_appointment(appointment)
         serialized_appointment["staff"] = staff
