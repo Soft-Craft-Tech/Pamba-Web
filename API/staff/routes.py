@@ -1,4 +1,4 @@
-from API import db, bcrypt
+from API import db
 from API.lib.utils import add_decimal_hours_to_time
 from API.models import Staff, Appointment, StaffAvailability, Business
 from flask import jsonify, Blueprint, request
@@ -59,11 +59,6 @@ def delete_staff(business, staff_id):
         :param staff_id: Staff ID
         :return: 404, 401, 200
     """
-    payload = request.get_json()
-    password = payload["password"].strip()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 401
 
     staff = Staff.query.get(staff_id)
     if not staff:
@@ -88,12 +83,8 @@ def update_staff(business, staff_id):
         :return: 200, 404, 401
     """
     payload = request.get_json()
-    password = payload["password"].strip()
     phone = payload["phone"]
     role = payload["role"].strip().title()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 401
 
     staff = Staff.query.get(staff_id)
     if not staff:
