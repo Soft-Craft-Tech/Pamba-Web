@@ -2,6 +2,7 @@ from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
 from API.lib.auth import client_login_required, business_login_required, verify_api_key
 from API.lib.data_serializer import serialize_appointment
+from API.lib.send_messages import whatsapp_appointment_reminder
 from API import db, bcrypt
 from datetime import datetime, timedelta
 from API.lib.checkBusinessClosed import check_business_closed
@@ -80,6 +81,7 @@ def book_appointment_on_web():
     staff_id = payload["staff"]
     email = payload["email"].strip().lower()
     phone = payload["phone"].strip()
+    notification_mode = payload["notification"].lower()
     today_date = datetime.today().date()
     current_time = datetime.today().time()
 
@@ -151,6 +153,7 @@ def book_appointment_on_web():
         date=date,
         time=time,
         comment=comment,
+        notification_mode=notification_mode,
         business_id=business.id,
         staff_id=staff_id if staff_id else None,
         client_id=client.id,
@@ -393,3 +396,19 @@ def end_appointment(business, appointment_id):
     )
 
     return jsonify({"message": "Appointment Ended", "appointment": serialize_appointment(appointment)}), 200
+
+
+@appointment_blueprint.route("/<int:appointment_id>", methods=["GET"])
+def fetch_single_appointment(appointment_id):
+    """
+        Fetch single appointment
+        :param appointment_id:
+        :return:
+    """
+    appointment = Appointment.query.get(appointment_id)
+
+    if not appointment:
+        return jsonify({"message": "Not found"}), 404
+
+    return jsonify({"appointment": serialize_appointment(appointment)}), 200
+
