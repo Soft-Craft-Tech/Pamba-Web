@@ -317,6 +317,7 @@ class Appointment(db.Model):
     cancelled = db.Column(db.Boolean, default=False)
     comment = db.Column(db.Text, nullable=True)
     create_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notification_mode = db.Column(db.String(100), nullable=True)  # Mode of notification for upcoming appointments
     review = db.relationship("Review", backref="appointment", uselist=False)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     staff_id = db.Column(db.Integer, db.ForeignKey("staff.id", ondelete='SET NULL'))
