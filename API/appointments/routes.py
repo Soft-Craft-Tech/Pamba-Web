@@ -412,3 +412,16 @@ def fetch_single_appointment(appointment_id):
 
     return jsonify({"appointment": serialize_appointment(appointment)}), 200
 
+
+@appointment_blueprint.route("/send-reminders", methods=["POST"])
+@verify_api_key
+def send_appointment_reminder():
+    """
+        Send reminder for upcoming appointments
+        Reminder can be sent via SMS or whatsapp
+        :return:
+    """
+    today = datetime.today()
+    appointments = Appointment.filter(Appointment.date == today, ~Appointment.cancelled, ~Appointment.completed).all()
+    for appointment in appointments:
+        pass
