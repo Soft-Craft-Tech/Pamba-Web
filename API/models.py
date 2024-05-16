@@ -46,6 +46,7 @@ class Business(db.Model):
     updated_on = db.Column(db.DateTime)
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
+    rating = db.Column(db.Float, default=0)
     services = db.relationship("Service",  backref="business", lazy="dynamic", cascade='all, delete-orphan')
     branches = db.relationship("Business", backref=db.backref("parent", remote_side=[id]))  # Business branch
     inventory = db.relationship("Inventory", backref="business", lazy="dynamic", cascade='all, delete-orphan')
@@ -58,6 +59,7 @@ class Business(db.Model):
     appointments = db.relationship("Appointment", backref="business", lazy="dynamic", cascade="all, delete-orphan")
     clients = db.relationship('Client', secondary='businesses_clients_association', backref='service_providers')
     expenses = db.relationship("Expense", backref="business", lazy="dynamic", cascade="all, delete-orphan")
+    reviews = db.relationship("Review", backref="business", lazy="dynamic", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"Business({self.business_name}, {self.slug})"

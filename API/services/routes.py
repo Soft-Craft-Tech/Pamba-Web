@@ -32,6 +32,13 @@ def fetch_all_services():
     services = Service.query.all()
     serialized_services = []
     for service in services:
-        serialized_services.append(serialize_service(service))
+        serialized = serialize_service(service)
+        serialized["business_name"] = service.business.business_name
+        serialized["business_location"] = service.business.location
+        serialized["business_slug"] = service.business.slug
+        serialized["business_profile_image"] = service.business.profile_img
+        serialized["business_rating"] = service.business.rating
+        serialized["business_reviews"] = service.business.reviews.count()
+        serialized_services.append(serialized)
 
     return jsonify({"services": serialized_services}), 200
