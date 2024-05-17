@@ -46,3 +46,26 @@ def add_gallery_image(business):
     db.session.commit()
 
     return jsonify({"message": "Image Added"}), 200
+
+
+@gallery_blueprint.route("/delete/<int:image_id>", methods=["DELETE"])
+@business_login_required
+def delete_gallery_image(business, image_id):
+    """
+        Delete an image from business gallery
+        :param business: Logged-in Business
+        :param image_id: ID of Image to be deleted
+        :return: 400, 404, 200
+    """
+
+    image = BusinessGallery.query.get(image_id)
+    if not image:
+        return jsonify({"message": "Image doesn't exist"}), 404
+
+    if image.business.id != business.id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    db.session.delete(image)
+    db.session.commit()
+
+    return jsonify({"message": "Image deleted"}), 200
