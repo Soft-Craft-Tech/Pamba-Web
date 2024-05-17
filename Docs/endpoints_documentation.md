@@ -404,12 +404,13 @@ Fetch all activated Businesses.
 get business analytics
 ```javascript
 
-     endpoint : GET /business/analysis
+     endpoint : GET /businessess/analysis
      method : GET
      Status Code : 
        "200 " : Analysis data
      headers : 
        X-API-Key : <API_KEY>
+       x-access-token : <LOGIN-TOKEN>
      body : {
 }
 ```
