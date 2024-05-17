@@ -231,3 +231,19 @@ def serialize_availability(availability):
         "end_time": fields.String
     }
     return marshal(availability, availability_fields)
+
+
+def serialize_gallery(gallery):
+    """
+        Serialize Gallery
+        :param gallery: Gallery DB Object
+        :return: Serialized gallery object
+    """
+    gallery_fields = {
+        "id": fields.Integer,
+        "created_at": fields.DateTime(dt_format='iso8601'),
+        "image_url": fields.String,
+        "business_id": fields.Integer
+    }
+
+    return marshal(gallery, gallery_fields)
