@@ -404,12 +404,13 @@ Fetch all activated Businesses.
 get business analytics
 ```javascript
 
-     endpoint : GET /business/analysis
+     endpoint : GET /businessess/analysis
      method : GET
      Status Code : 
        "200 " : Analysis data
      headers : 
        X-API-Key : <API_KEY>
+       x-access-token : <LOGIN-TOKEN>
      body : {
 }
 ```
@@ -1318,4 +1319,63 @@ all service categories
 
         }
      
+```
+# 15. gallery
+* # Fetch Business Gallery
+Fetch the business's gallery images.
+
+```javascript
+
+    endpoint: GET API/gallery/{slug}
+    method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Gallery fetched successfully.
+        "404 Not Found": Business does not exist.
+
+    headers:
+        X-API-KEY: <API_KEY>
+    body: {}
+```
+* ### Add Gallery Image
+
+Add an image to the business's gallery.
+
+```javascript
+
+    endpoint: POST API/gallery/add
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Image added successfully.
+        "401 Unauthorized": Not allowed.
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {
+        "imgURL": "***"  // URL of the image to be added
+    }
+```
+* ### Delete Gallery Image
+
+Delete an image from the business's gallery.
+
+```javascript
+
+    endpoint: GET API/gallery/delete/{image_id}
+    method: DELETE
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Image deleted successfully.
+        "400 Bad Request": Not allowed.
+        "404 Not Found": Image does not exist.
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {}
 ```
