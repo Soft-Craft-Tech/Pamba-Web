@@ -60,9 +60,23 @@ class Business(db.Model):
     clients = db.relationship('Client', secondary='businesses_clients_association', backref='service_providers')
     expenses = db.relationship("Expense", backref="business", lazy="dynamic", cascade="all, delete-orphan")
     reviews = db.relationship("Review", backref="business", lazy="dynamic", cascade="all, delete-orphan")
+    gallery = db.relationship("BusinessGallery", backref="business", lazy="dynamic", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"Business({self.business_name}, {self.slug})"
+
+
+class BusinessGallery(db.Model):
+    """Business Gallery Images"""
+    __tablename__ = "businessgallery"
+
+    id = db.Column(db.Integer, primary_key=True)
+    image_url = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
+
+    def __repr__(self):
+        return self.image_url
 
 
 class BusinessCategory(db.Model):
