@@ -1,4 +1,4 @@
-# Pamba Mobile Endpoint Docs
+# Pamba Endpoint Docs
 
 # 1. Auth Client
 
@@ -25,9 +25,7 @@ Client signup endpoint
     }
 ```
 
-* ### Client Verification
-Verify client with a verification code.
-
+* ### Client Verification with OTP after signup
 ```javascript
     endpoint: POST /API/clients/verify-otp
     method: POST
@@ -131,7 +129,28 @@ Client's change password
         "newPassword": "***"
     }
 ```
+* ### Resend Verification Code
+Resend the client's verification token incase the one sent on signup is expired.
 
+```javascript
+    endpoint: POST /API/clients/resend-otp
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": OTP sent to email
+        "404 Not Found": Client does not exist.
+        "400 Bad Request": Account already verified
+
+    headers:
+        X-API-KEY: <API_KEY>
+
+    body: {
+        "email": "***"
+    }
+```
+
+# clients
 * ### Update Client's profile
 Change the clients profile information
 
@@ -151,27 +170,6 @@ Change the clients profile information
     body: {
         "email": "***",
         "phone": "***"
-    }
-```
-
-* ### Resend Verification Code
-Resend the client's verification token incase the one sent on signup is expired.
-
-```javascript
-    endpoint: POST /API/clients/resend-otp
-    method: POST
-    Content Type: "Application/Json"
-
-    Status Codes: 
-        "200 OK": OTP sent to email
-        "404 Not Found": Client does not exist.
-        "400 Bad Request": Account already verified
-
-    headers:
-        X-API-KEY: <API_KEY>
-
-    body: {
-        "email": "***"
     }
 ```
 * ### Delete Account
@@ -263,6 +261,25 @@ reset password
      body : {
 }
 ```
+* ### change password
+Allow the business owner to change their password
+change password
+
+```javascript
+
+     endpoint : GET API/businesses/change-password
+     method : PUT
+     Content Type : "Application/Json"
+     Status Code : 
+       "200 " : Success! Password has been changed
+       "401" : Old password is incorrect
+     headers : 
+       X-API-Key : <API_KEY>
+     body : {
+         "oldPassword": "*********",
+         "newPassword":"********************************"
+}
+```
 * ### activate account
 activate  business account
 ```javascript
@@ -320,27 +337,7 @@ resend activation token
          "password": "********"
 }
 ```
-* ### change password
-Allow the business owner to change their password
-change password
-
-```javascript
-
-     endpoint : GET API/businesses/change-password
-     method : PUT
-     Content Type : "Application/Json"
-     Status Code : 
-       "200 " : Success! Password has been changed
-       "401" : Old password is incorrect
-     headers : 
-       X-API-Key : <API_KEY>
-     body : {
-         "oldPassword": "*********",
-         "newPassword":"********************************"
-}
-```
-
-
+# 
 * ### assign services
 assign services to a business
 
@@ -603,8 +600,8 @@ Client's appointment Booking
     Status Codes: 
         "200 OK": Booking Successful.
         "400 Bad Request": Double Booking. Another Appointment scheduled at the same time.
-        "401 Unauthorized": Account not verified.
-        "404 Not Found": The shop/business does not exist.
+        "401 Unauthorized": please verify account.
+        "404 Not Found": The shop/business/services not found .
 
     headers:
         X-API-KEY: <API_KEY>
@@ -614,6 +611,32 @@ Client's appointment Booking
         "time": "***",
         "comment": "***",
         "provider": "***"
+    }
+```
+ # Book appointment from the web 
+```javascript
+     endpoint : POST /API/appoinments/book/web-appoinments
+     method : POST 
+     Content Type  : Application/Json
+     
+     Status Codes: 
+      "201 Ok" : Appointment Booked Successfully
+      "400" : Can't book an appointment on a past date
+      "400" : message  "The Staff you selected is already booked at this time please book with a different staff or let us assign you someone"
+      "404" : Service/business not found
+      ""
+     headers:
+        X-API-KEY: <API_KEY>
+    body: {
+        "date": "***",         
+        "time": "***",         
+        "comment": "***",      // Additional comments
+        "business": *** ,      // Business ID
+        "service": *** ,       // Service ID
+        "staff": *** ,         // Staff ID (optional)
+        "email": "***",        // Client's email
+        "phone": "***",        // Client's phone number
+        "notification": "***"  // Notification mode (e.g., 'email' or 'sms')
     }
 ```
 
@@ -720,6 +743,58 @@ headers:
     X-API-KEY: <API_KEY>
     x-access-token: <LOGIN_TOKEN>
 
+```
+# Fetch Single Appointment
+Fetch details of a single appointment.
+
+```javascript
+
+    endpoint: GET API/appointments/{appointment_id}
+    method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Appointment fetched successfully.
+        "404 Not Found": Appointment does not exist.
+
+    headers: {}
+    body: {}
+```
+# End Appointment
+End an appointment when completed and trigger a notification for an appointment review.
+
+```javascript
+
+    endpoint: PUT API/appointments/end_appointment/{appointment_id}
+    method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Appointment Ended Successfully.
+        "400 Bad Request": Appointment already completed or cannot end a future appointment.
+        "401 Unauthorized": Not allowed.
+
+    headers:
+        X-API-KEY: <API_KEY>
+        x-access-token: <LOGIN_TOKEN>
+    body: {}
+```
+
+# Send Appointment Reminder
+Send reminders for upcoming appointments. Reminders can be sent via SMS or WhatsApp.
+
+```javascript
+
+    endpoint: POST API/appointments/send-reminders
+    method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Reminders sent successfully.
+
+    headers:
+        X-API-KEY: <API_KEY>
+    body: {}
 ```
 
 # 5. Expenses
@@ -1224,10 +1299,23 @@ Delete Inventory with id
 
      endpoint : GET /API/services/fetch_all
      method : GET
+     Content-Type : Application/Json
      Status Code : 
        "200 " : Success
      headers : 
        X-API-Key : <API_KEY>
      body : {
 }
+```
+### fetch all service categories
+all service categories
+```javascript
+     endpoint : GET API/services/categories
+     method: GET
+     headers :
+       X-API-Key: <API_KEY>
+     body : {
+
+        }
+     
 ```
