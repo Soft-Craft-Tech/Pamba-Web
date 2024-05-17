@@ -38,6 +38,7 @@ def serialize_business(business):
         "active": fields.Boolean,
         "verified": fields.Boolean,
         "join_date": fields.DateTime(dt_format='iso8601'),
+        "rating": fields.Float,
         "profile_img": fields.String,
         "weekday_opening": fields.String,
         "weekday_closing": fields.String,

@@ -29,7 +29,7 @@ def fetch_all_services():
         :return: 200
     """
 
-    services = Service.query.all()
+    services = Service.query.order_by(Service.service).all()
     serialized_services = []
     for service in services:
         serialized = serialize_service(service)

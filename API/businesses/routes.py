@@ -368,7 +368,8 @@ def fetch_business(slug):
         description=business.description,
         imageUrl=business.profile_img,
         city=business.city,
-        email=business.email
+        email=business.email,
+        rating=business.rating
     )
 
     all_services = []
