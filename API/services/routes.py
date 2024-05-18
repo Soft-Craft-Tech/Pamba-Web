@@ -42,3 +42,18 @@ def fetch_all_services():
         serialized_services.append(serialized)
 
     return jsonify({"services": serialized_services}), 200
+
+
+@services_blueprint.route("/retrieve/<int:service_id", methods=["GET"])
+@verify_api_key
+def retrieve_service(service_id):
+    """
+        Retrieve single service.
+        :param : Id of the service to be retrieved
+    """
+    service = Service.query.get(service_id)
+
+    if not service:
+        return jsonify({"message": "Not found"}), 404
+
+    return jsonify({"service": serialize_service(service)}), 200
