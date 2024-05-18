@@ -44,7 +44,7 @@ def fetch_all_services():
     return jsonify({"services": serialized_services}), 200
 
 
-@services_blueprint.route("/retrieve/<int:service_id", methods=["GET"])
+@services_blueprint.route("/retrieve/<int:service_id>", methods=["GET"])
 @verify_api_key
 def retrieve_service(service_id):
     """
