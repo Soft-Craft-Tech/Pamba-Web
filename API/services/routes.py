@@ -1,7 +1,7 @@
 from flask import jsonify, Blueprint
 from API.models import ServiceCategories, Service
 from API.lib.auth import verify_api_key
-from API.lib.data_serializer import serialize_service
+from API.lib.data_serializer import serialize_service, serialize_staff
 
 services_blueprint = Blueprint("services", __name__, url_prefix="/API/services")
 
@@ -69,4 +69,7 @@ def retrieve_service(service_id):
     serialized_service["business_name"] = service.business.business_name
     serialized_service["slug"] = service.business.slug
 
-    return jsonify({"service": serialized_service}), 200
+    all_staff = service.business.staff.all()
+    serialized_staff = [serialize_staff(staff) for staff in all_staff]
+
+    return jsonify({"service": serialized_service, "staff": serialized_staff}), 200
