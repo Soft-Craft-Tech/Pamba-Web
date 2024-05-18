@@ -602,14 +602,19 @@ def add_business_hours(business):
     return jsonify({"message": "Successful! Business hours added"}), 200
 
 
-@business_blueprint.route("/business-services", methods=["GET"])
-@business_login_required
-def fetch_business_services(business):
+@business_blueprint.route("/business-services/<string:slug>", methods=["GET"])
+@verify_api_key
+def fetch_business_services(slug):
     """
         Fetch Services associated with a certain business
-        :param business: Logged in business
+        :param slug: Business slug value
         :return: 200
     """
+    business = Business.query.filter_by(slug=slug).first()
+
+    if not business:
+        return jsonify({"message": "Business doesn't exist"}), 404
+
     services = business.services.all()
 
     all_services = []
