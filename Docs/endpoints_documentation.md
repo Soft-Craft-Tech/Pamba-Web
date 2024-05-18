@@ -429,7 +429,7 @@ Fetch a single business given Business id
 
     headers:
         X-API-KEY: <API_KEY>
-        x-access-token: <LOGIN-TOKEN>
+        
 
     body: {
         
