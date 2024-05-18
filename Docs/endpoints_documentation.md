@@ -1313,6 +1313,9 @@ all service categories
 ```javascript
      endpoint : GET API/services/categories
      method: GET
+     Content-Type : Application/Json
+     Status Code : 
+       "200 " : Success
      headers :
        X-API-Key: <API_KEY>
      body : {
@@ -1320,6 +1323,22 @@ all service categories
         }
      
 ```
+* #  Retrieve single service.
+```javascript
+     endpoint : GET API/services/retrieve/{service_id}    
+     method : GET
+     Content-Type : Application/Json
+     Status Code : 
+       "200 " : Success  
+       "404" : Not Found   
+     headers :
+       X-API-Key: <API_KEY>
+     body : {
+
+        }
+   
+```
+
 # 15. gallery
 * # Fetch Business Gallery
 Fetch the business's gallery images.
