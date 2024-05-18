@@ -418,7 +418,7 @@ get business analytics
 Fetch a single business given Business id
 
 ```javascript
-    endpoint: GET /API/businesses/{business_id}
+    endpoint: GET /API/businesses/{slug}
     method: GET
     Content Type: "Application/Json"
 
@@ -440,7 +440,7 @@ Fetch a single business given Business id
 Fetch Businesses associated with a certain service
 
 ```javascript
-    endpoint: GET /API/businesses/service-businesses/{service_id}
+    endpoint: GET /API/businesses/service-businesses/{slug}
     method: GET
     Content Type: "Application/Json"
 
