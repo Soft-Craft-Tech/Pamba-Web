@@ -55,5 +55,18 @@ def retrieve_service(service_id):
 
     if not service:
         return jsonify({"message": "Not found"}), 404
+    serialized_service = serialize_service(service)
+    estimated_time = serialized_service.pop("estimated_service_time")
+    hours = int(estimated_time)
+    minutes = int((estimated_time - hours) * 60)
 
-    return jsonify({"service": serialize_service(service)}), 200
+    if minutes == 0:
+        estimated_time_string = f"{hours} Hour(s)"
+    else:
+        estimated_time_string = f"{hours} Hour(s), {minutes} minutes" if hours != 0 else f"{minutes} minutes"
+
+    serialized_service["estimated_time_string"] = estimated_time_string
+    serialized_service["business_name"] = service.business.business_name
+    serialized_service["slug"] = service.business.slug
+
+    return jsonify({"service": serialized_service}), 200
