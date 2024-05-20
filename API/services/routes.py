@@ -73,3 +73,5 @@ def retrieve_service(service_id):
     serialized_staff = [serialize_staff(staff) for staff in all_staff]
 
     return jsonify({"service": serialized_service, "staff": serialized_staff}), 200
+
+
