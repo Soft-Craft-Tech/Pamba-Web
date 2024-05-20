@@ -1,7 +1,9 @@
 from flask import jsonify, Blueprint
-from API.models import ServiceCategories, Service
+from API.models import ServiceCategories, Service, Business
 from API.lib.auth import verify_api_key
-from API.lib.data_serializer import serialize_service, serialize_staff
+from API.lib.data_serializer import serialize_service, serialize_staff, serialize_business
+from API import db
+import time
 
 services_blueprint = Blueprint("services", __name__, url_prefix="/API/services")
 
@@ -28,19 +30,14 @@ def fetch_all_services():
         Fetch all services
         :return: 200
     """
-
-    services = Service.query.order_by(Service.service).all()
+    services = db.session.query(Service, Business).order_by(Service.service)\
+        .join(Business, Service.business_id == Business.id).all()
     serialized_services = []
-    for service in services:
+    for service, business in services:
         serialized = serialize_service(service)
-        serialized["business_name"] = service.business.business_name
-        serialized["business_location"] = service.business.location
-        serialized["business_slug"] = service.business.slug
-        serialized["business_profile_image"] = service.business.profile_img
-        serialized["business_rating"] = service.business.rating
-        serialized["business_reviews"] = service.business.reviews.count()
-        serialized_services.append(serialized)
-
+        serialized_business = serialize_business(business)
+        record = {"serviceInfo": serialized, "businessInfo": serialized_business}
+        serialized_services.append(record)
     return jsonify({"services": serialized_services}), 200
 
 
