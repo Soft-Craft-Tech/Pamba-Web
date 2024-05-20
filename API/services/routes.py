@@ -30,22 +30,14 @@ def fetch_all_services():
         Fetch all services
         :return: 200
     """
-    start = time.time()
-    services = db.session.query(Service, Business).order_by(Service.service).join(Business, Service.business_id == Business.id).all()
+    services = db.session.query(Service, Business).order_by(Service.service)\
+        .join(Business, Service.business_id == Business.id).all()
     serialized_services = []
     for service, business in services:
         serialized = serialize_service(service)
         serialized_business = serialize_business(business)
         record = {"serviceInfo": serialized, "businessInfo": serialized_business}
-        # serialized["business_name"] = business.business_name
-        # serialized["business_location"] = business.location
-        # serialized["business_slug"] = business.slug
-        # serialized["business_profile_image"] = business.profile_img
-        # serialized["business_rating"] = business.rating
-        # serialized["business_reviews"] = business.reviews.count()
         serialized_services.append(record)
-    end = time.time()
-    print(end - start)
     return jsonify({"services": serialized_services}), 200
 
 
