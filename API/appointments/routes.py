@@ -73,8 +73,11 @@ def book_appointment_on_web():
         :return: 200, 404
     """
     payload = request.get_json()
-    date = datetime.strptime(payload["date"], '%d-%m-%Y').date()
-    time = datetime.strptime(payload["time"], '%H:%M').time()
+    try:
+        date = datetime.strptime(payload["date"], '%d-%m-%Y').date()
+        time = datetime.strptime(payload["time"], '%H:%M').time()
+    except ValueError:
+        return jsonify({"message": "Invalid Time/Date format"}), 400
     comment = payload["comment"].strip()
     business_id = payload["business"]
     service_id = payload["service"]
