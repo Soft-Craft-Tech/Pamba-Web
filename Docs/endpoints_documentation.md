@@ -995,10 +995,10 @@ Delete Inventory with id
 ```javascript
       Endpoint: POST /API/reviews/create{appointment_id}
     Method: POST
-    Content Type: "Application/Json"
-
+    Co
     Status Codes: 
-        "200 Created": Message, Review has been posted.
+       ntent Type: "Application/Json"
+ "200 Created": Message, Review has been posted.
         "404 Not Found": Message: Business doesn't exist
 
     Headers:
@@ -1008,6 +1008,34 @@ Delete Inventory with id
         "businessID": <int>
     }
 ```
+
+### Fetch Business Reviews
+Value of {slug} refers to the slug value for the business.
+```javascript
+    Endpoint: GET /API/reviews/all/{slug}
+    Method: GET
+    Status Codes: 
+    Content Type: "Application/Json"
+    
+    Responses:
+        "200": {
+            "reviews": [
+                {
+                    "id": <number>,
+                    "message": <string>,
+                    "rating": <number>,
+                    "reviewed_at": <datetime>,
+                    "reviewer": <string>
+                }
+            ]
+        }
+        "400": {"message": "Shop doesn't exist"}
+
+    Headers:
+        X-API-KEY: <API_KEY>
+    Body: None
+```
+
 # 9. Sales
 
 * ### fetch all sales
