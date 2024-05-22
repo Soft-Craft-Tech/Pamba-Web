@@ -290,7 +290,6 @@ def assign_services(business):
             )
             db.session.add(service_to_add)
     except Exception as e:
-        print(e)
         return jsonify({"message": "An error occurred please try again"}), 500
     else:
         db.session.commit()
