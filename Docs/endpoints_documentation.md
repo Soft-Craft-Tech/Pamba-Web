@@ -616,15 +616,18 @@ Client's appointment Booking
 ```
  # Book appointment from the web 
 ```javascript
-     endpoint : POST /API/appoinments/book/web-appoinments
+     endpoint : POST /API/appointments/book/web-appoinments
      method : POST 
      Content Type  : Application/Json
      
      Status Codes: 
       "201 Ok" : Appointment Booked Successfully
-      "400" : Can't book an appointment on a past date
+      "400" : message "Can't book an appointment on a past date/time"
+      " 400" : Message "Our premises are not open at the picked time and date"
       "400" : message  "The Staff you selected is already booked at this time please book with a different staff or let us assign you someone"
       "404" : Service/business not found
+      "404" : message "staff you booked with doesnt exist"
+      "404" : message "service you are booking is unavailable"
       ""
      headers:
         X-API-KEY: <API_KEY>
