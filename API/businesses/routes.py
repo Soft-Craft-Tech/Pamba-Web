@@ -588,10 +588,13 @@ def add_business_hours(business):
         :return: 200
     """
     payload = request.get_json()
-    weekday_opening = datetime.strptime(payload["weekdayOpening"], '%H:%M').time()
-    weekday_closing = datetime.strptime(payload["weekdayClosing"], '%H:%M').time()
-    weekend_opening = datetime.strptime(payload["weekendOpening"], '%H:%M').time()
-    weekend_closing = datetime.strptime(payload["weekendClosing"], '%H:%M').time()
+    try:
+        weekday_opening = datetime.strptime(payload["weekdayOpening"], '%H:%M').time()
+        weekday_closing = datetime.strptime(payload["weekdayClosing"], '%H:%M').time()
+        weekend_opening = datetime.strptime(payload["weekendOpening"], '%H:%M').time()
+        weekend_closing = datetime.strptime(payload["weekendClosing"], '%H:%M').time()
+    except ValueError:
+        return jsonify({"message": "Invalid Time format. Time format MUST be (12:00)"})
 
     business.weekday_opening = weekday_opening
     business.weekday_closing = weekday_closing
