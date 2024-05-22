@@ -1401,3 +1401,15 @@ Delete an image from the business's gallery.
         x-access-token: <LOGIN_TOKEN>
     body: {}
 ```
+* 16. ### messaging
+whatsapp notifications
+```javascript
+     endpoint: GET API/messaging/whatsapp-response
+     methods: ["GET","POST"]
+     Content-Type: Application/Json
+     Status Codes :
+        "200" : message " Thank you for contacting Pamba Africa Our staff will respond to you shortly 😊" 
+     body: {}
+     
+
+```
