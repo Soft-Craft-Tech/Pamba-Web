@@ -85,7 +85,7 @@ def update_expense(business, expense_id):
     expense_record.expense = expense
     expense_record.amount = amount
     expense_record.description = description
-    expense_record.account_id = account_id
+    expense_record.expense_account = account_id
     expense_record.modified_at = datetime.utcnow()
     db.session.commit()
 
