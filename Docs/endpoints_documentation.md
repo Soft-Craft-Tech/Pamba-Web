@@ -1301,7 +1301,7 @@ Delete Inventory with id
 
 ```javascript
 
-     endpoint : GET /API/services/fetch_all
+     endpoint : GET /API/services/all
      method : GET
      Content-Type : Application/Json
      Status Code : 
