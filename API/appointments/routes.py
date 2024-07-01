@@ -73,17 +73,20 @@ def book_appointment_on_web():
         :return: 200, 404
     """
     payload = request.get_json()
+
     try:
         date = datetime.strptime(payload["date"], '%d-%m-%Y').date()
         time = datetime.strptime(payload["time"], '%H:%M').time()
     except ValueError:
         return jsonify({"message": "Invalid Time/Date format"}), 400
+
     comment = payload["comment"].strip()
     business_id = payload["business"]
     service_id = payload["service"]
     staff_id = payload["staff"]
     email = payload["email"].strip().lower()
     phone = payload["phone"].strip()
+    name = payload["name"].strip().title()
     notification_mode = payload["notification"].lower()
     today_date = datetime.today().date()
     current_time = datetime.today().time()
@@ -143,12 +146,13 @@ def book_appointment_on_web():
                     }
                     ), 400
 
-    client = Client.query.filter_by(email=email).first()
+    client = Client.query.filter_by(email=email, phone=phone).first()
     # If the client is not a mobile user or hasn't booked an appointment before
     if not client:
         client = Client(
             email=email,
-            phone=phone
+            phone=phone,
+            name=name
         )
         db.session.add(client)
 

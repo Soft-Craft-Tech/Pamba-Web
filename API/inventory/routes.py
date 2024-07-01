@@ -38,10 +38,6 @@ def delete_inventory(business, inventory_id):
         :param inventory_id: ID of the inventory to be deleted
         :return: 404, 401, 200
     """
-    payload = request.get_json()
-    password = payload["password"]
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 401
     inventory = Inventory.query.get(inventory_id)
     if not inventory:
         return jsonify({"message": "Record not found"}), 404
