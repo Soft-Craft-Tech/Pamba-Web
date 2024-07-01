@@ -1120,6 +1120,26 @@ Value of {slug} refers to the slug value for the business.
         "password": "xxxx"
     }
 ```
+* ### Edit a Sale
+
+```javascript
+      Endpoint: PUT /API/sales/edit/{sale_id}
+      Method: PUT
+      Content Type: "Application/Json"
+
+      Status Codes: 
+        "200 OK": Message: Sale updated, Updated Sale.
+        "400 Bad Request": Message: Not found or We are not offering this service at the moment.
+        "404 Not Found": Message: Sale not found
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "paymentmethod": "New Payment Method",
+        "description": "New Description",
+        "service_id": <int>
+    }
+```
 # 10. staff
 * ### fetch single staff
 ```javascript
@@ -1329,7 +1349,7 @@ Value of {slug} refers to the slug value for the business.
 
 ```javascript
 
-     endpoint : GET /API/services/fetch_all
+     endpoint : GET /API/services/all
      method : GET
      Content-Type : Application/Json
      Status Code : 

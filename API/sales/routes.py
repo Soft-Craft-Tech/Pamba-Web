@@ -130,3 +130,39 @@ def revenue_analytics(business):
         }
     ), 200
 
+@sales_blueprint.route("/edit/<int:sale_id>", methods=["PUT"])
+@business_login_required
+def edit_sale(business, sale_id):
+    """
+        Edit a sale
+        :param business : Business
+        :param sale_id : ID of the sale to edit 
+        :return : 200, 400 , 404
+    """
+    payload = request.get_json()
+    payment_method = payload.get("paymentmethod", "").strip()
+    description = payload.get("description", "").strip()
+    service_id = payload.get("service_id")
+
+    sale = Sale.query.get(sale_id)
+    if not sale:
+        return jsonify({"message": "Sale not found"}), 404
+    
+    if business.id != sale.business_id:
+        return jsonify({"message": "Not found"}), 400
+    
+    if payment_method:
+        sale.payment_method = payment_method
+    
+    if description:
+        sale.description = description
+    
+    if service_id:
+        business_services = [service.id for service in business.services.all()]
+        if service_id not in business_services:
+            return jsonify({"message": "We are not offering this service at the moment"}), 400
+        sale.service_id = service_id
+    
+    db.session.commit()
+
+    return jsonify({"message": "Sale updated", "updatedSale": serialize_sale(sale)}), 200
