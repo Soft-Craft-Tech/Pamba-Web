@@ -326,6 +326,3 @@ def fetch_business_clients(business):
             "returning_clients": returning_clients
         }
     ), 200
-
-
-
