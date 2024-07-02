@@ -1089,7 +1089,7 @@ Delete Inventory with id
     Headers:
         x-access-token: <LOGIN_TOKEN>
     Body: {
-        "password": "xxxx"
+        
     }
 ```
 * ### Edit a Sale
