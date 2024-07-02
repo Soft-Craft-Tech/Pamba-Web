@@ -634,13 +634,13 @@ Client's appointment Booking
     body: {
         "date": "***",         
         "time": "***",         
-        "comment": "***",      // Additional comments
-        "business": *** ,      // Business ID
-        "service": *** ,       // Service ID
-        "staff": *** ,         // Staff ID (optional)
-        "email": "***",        // Client's email
-        "phone": "***",        // Client's phone number
-        "notification": "***"  // Notification mode (e.g., 'email' or 'sms')
+        "comment": "***",      
+        "business": *** ,     
+        "staff": *** ,         
+        "email": "***",        
+        "phone": "***", 
+        "name" : "***",        
+        "notification": "***"
     }
 ```
 
@@ -1117,7 +1117,7 @@ Value of {slug} refers to the slug value for the business.
     Headers:
         x-access-token: <LOGIN_TOKEN>
     Body: {
-        "password": "xxxx"
+        
     }
 ```
 * ### Edit a Sale
