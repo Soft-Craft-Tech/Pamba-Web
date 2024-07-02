@@ -130,6 +130,7 @@ def revenue_analytics(business):
         }
     ), 200
 
+
 @sales_blueprint.route("/edit/<int:sale_id>", methods=["PUT"])
 @business_login_required
 def edit_sale(business, sale_id):
@@ -140,8 +141,8 @@ def edit_sale(business, sale_id):
         :return : 200, 400 , 404
     """
     payload = request.get_json()
-    payment_method = payload.get("paymentmethod", "").strip()
-    description = payload.get("description", "").strip()
+    payment_method = payload.get("paymentmethod", "").strip().title()
+    description = payload.get("description", "").strip().capitalize()
     service_id = payload.get("service_id")
 
     sale = Sale.query.get(sale_id)
@@ -160,7 +161,7 @@ def edit_sale(business, sale_id):
     if service_id:
         business_services = [service.id for service in business.services.all()]
         if service_id not in business_services:
-            return jsonify({"message": "We are not offering this service at the moment"}), 400
+            return jsonify({"message": "Service does not exist!"}), 400
         sale.service_id = service_id
     
     db.session.commit()
