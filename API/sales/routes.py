@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from API.models import Sale
 from flask import Blueprint, jsonify, request
-from API import db, bcrypt
+from API import db
 from API.lib.auth import business_login_required
 from API.lib.data_serializer import serialize_sale
 
@@ -70,11 +70,6 @@ def delete_sale(business, sale_id):
         :param sale_id:
         :return: 404, 400, 200
     """
-    payload = request.get_json()
-    password = payload["password"].strip()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 401
 
     sale = Sale.query.get(sale_id)
 
