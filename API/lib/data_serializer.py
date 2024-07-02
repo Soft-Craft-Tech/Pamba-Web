@@ -92,6 +92,7 @@ def serialize_sale(sale):
         :return: JSON serialized sale record
     """
     sales_fields = {
+        "id": fields.Integer,
         "payment_method": fields.String,
         "description": fields.String,
         "date_created": fields.DateTime(dt_format='iso8601')
