@@ -62,7 +62,8 @@ def serialize_appointment(appointment):
         "cancelled": fields.Boolean,
         "comment": fields.String,
         "create_at": fields.DateTime(dt_format='iso8601'),
-        "completed": fields.Boolean
+        "completed": fields.Boolean,
+        "service_id": fields.Integer
     }
 
     return marshal(appointment, appointment_fields)
