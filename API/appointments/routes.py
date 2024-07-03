@@ -155,6 +155,7 @@ def book_appointment_on_web():
             name=name
         )
         db.session.add(client)
+        db.session.commit()
 
     appointment = Appointment(
         date=date,

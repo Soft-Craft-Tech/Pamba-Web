@@ -310,6 +310,7 @@ def fetch_business_clients(business):
         all_appointments.append(serialize_appointment(appointment))
         client = appointment.client
         lifetime_number_of_clients += 1
+        print(client)
         all_clients.append(serialize_client(client))
 
         if appointment.date.year == year:
