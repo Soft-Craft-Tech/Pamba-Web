@@ -663,7 +663,10 @@ Reschedule client's appointments.
         x-access-token: <LOGIN_TOKEN>
     body: {
         "date": "***",
-        "time": "***"
+        "time": "***",
+        "notification": "<Notification Method>",
+        "comment": "***",
+        "staff_id": "***"
     }
 ```
 
