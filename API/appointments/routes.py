@@ -1,10 +1,13 @@
+from typing import Union, Optional, Any
+
 from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
 from API.lib.auth import client_login_required, business_login_required, verify_api_key
 from API.lib.data_serializer import serialize_appointment
-from API.lib.send_messages import whatsapp_appointment_reminder
+from API.lib.sendSMS import send_sms
 from API import db, bcrypt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
+from API.lib.SMS_messages import reschedule_appointment_composer
 from API.lib.checkBusinessClosed import check_business_closed
 from API.lib.send_mail import appointment_confirmation_email, send_ask_for_review_mail
 
@@ -194,10 +197,20 @@ def reschedule_appointment(client, appointment_id):
         :return: 200
     """
 
-    payload = request.get_json()
-    date = datetime.strptime(payload["date"], '%d-%m-%Y')
-    time = datetime.strptime(payload["time"], '%H:%M').time()
-    appointment = Appointment.query.get(appointment_id)
+    payload: Any = request.get_json()
+    appointment_date: datetime = datetime.strptime(payload["date"], '%d-%m-%Y')
+    appointment_time: time = datetime.strptime(payload["time"], '%H:%M').time()
+    notification_method: str = payload.get("notification", "")
+    comment: str = payload.get("comment", "")
+    staff_id: Union[str, int] = payload.get("staff_id", "")
+    staff: Optional[Staff] = None
+
+    appointment: Appointment = Appointment.query.get(appointment_id)
+
+    if staff_id != "":
+        staff = Staff.query.get(staff_id)
+        if not staff:
+            return jsonify({"message": "This staff doesn't exist"}), 404
 
     if not appointment:
         return jsonify({"message": "Appointment doesn't exist"}), 404
@@ -209,14 +222,28 @@ def reschedule_appointment(client, appointment_id):
         return jsonify({"message": "Appointment already completed."}), 400
 
     # Avoid Booking multiple appointments scheduled at the same time
-    appointments_booked_same_time = Appointment.query \
-        .filter_by(date=date, time=time, client_id=client.id, cancelled=False).first()
+    appointments_booked_same_time: Appointment = Appointment.query \
+        .filter_by(date=appointment_date, time=appointment_time, client_id=client.id, cancelled=False).first()
     if appointments_booked_same_time:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
-    appointment.time = time
-    appointment.date = date
+    appointment.time = appointment_time
+    appointment.date = appointment_date
+    appointment.staff_id = staff.id if staff else appointment.staff_id
+    appointment.comment = comment if comment != "" else appointment.comment
+    appointment.notification_mode = notification_method if notification_method != "" else appointment.notification_mode
     db.session.commit()
+
+    client: Client = appointment.client
+    message: str = reschedule_appointment_composer(
+        name=client.name.split()[0],
+        time_=appointment_time,
+        date_=appointment_date.strftime("%d-%b-%Y"),
+        service=appointment.service.service,
+        business=appointment.business.business_name
+    )
+
+    send_sms(appointment.client.phone, message)
 
     return jsonify({"message": "Appointment has been rescheduled"}), 200
 
