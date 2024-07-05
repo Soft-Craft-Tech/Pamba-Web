@@ -48,26 +48,30 @@ def retrieve_service(service_id):
         Retrieve single service.
         :param : Id of the service to be retrieved
     """
-    service = Service.query.get(service_id)
+    service: Service = Service.query.get(service_id)
 
     if not service:
         return jsonify({"message": "Not found"}), 404
-    serialized_service = serialize_service(service)
-    estimated_time = serialized_service.pop("estimated_service_time")
-    hours = int(estimated_time)
-    minutes = int((estimated_time - hours) * 60)
+    serialized_service: dict = serialize_service(service)
+    estimated_time: float = serialized_service.pop("estimated_service_time")
+    hours: int = int(estimated_time)
+    minutes: int = int((estimated_time - hours) * 60)
 
     if minutes == 0:
         estimated_time_string = f"{hours} Hour(s)"
     else:
         estimated_time_string = f"{hours} Hour(s), {minutes} minutes" if hours != 0 else f"{minutes} minutes"
 
+    business: Business = service.business
     serialized_service["estimated_time_string"] = estimated_time_string
-    serialized_service["business_name"] = service.business.business_name
-    serialized_service["slug"] = service.business.slug
+    serialized_service["business_name"] = business.business_name
+    serialized_service["slug"] = business.slug
+    serialized_service["location"] = business.location
+    serialized_service["phone"] = business.phone
+    serialized_service["directions"] = business.google_map
 
-    all_staff = service.business.staff.all()
-    serialized_staff = [serialize_staff(staff) for staff in all_staff]
+    all_staff: list = service.business.staff.all()
+    serialized_staff: list = [serialize_staff(staff) for staff in all_staff]
 
     return jsonify({"service": serialized_service, "staff": serialized_staff}), 200
 

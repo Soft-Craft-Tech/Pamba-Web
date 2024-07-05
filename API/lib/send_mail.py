@@ -30,16 +30,16 @@ def send_reset_email(recipient, token, name):
     mail.send(message)
 
 
-def sent_client_reset_token(recipient, token, name):
+def sent_client_reset_token(recipient: str, url: str, name: str) -> None:
     """
         Send password reset token for clients
         :param recipient: User Email
-        :param token: JWT Token
+        :param url: Reset Link
         :param name: User's name
-        :return:
+        :return: None
     """
     message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
-    message.html = render_template("clientReset.html", token=token, name=name)
+    message.html = render_template("clientReset.html", url=url, name=name)
     mail.send(message)
 
 
