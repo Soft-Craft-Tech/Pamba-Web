@@ -204,23 +204,23 @@ def update_profile(business):
         :param business: Logged in business
         :return: 200
     """
-    payload = request.get_json()
-    name = payload["name"].strip().title()
-    email = payload["email"].strip().lower()
-    phone = payload["phone"].strip()
-    city = payload["city"].strip().title()
-    location = payload["location"].strip().title()
-    description = payload["description"]
-    google_map = payload["mapUrl"].strip()
-    password = payload["password"].strip()
-    slug = business.slug if business.business_name == name else slugify(name)
+    payload: dict = request.get_json()
+    name: str = payload.get("name").strip().title()
+    email: str = payload.get("email").strip().lower()
+    phone: str = payload.get("phone").strip()
+    city: str = payload.get("city").strip().title()
+    location: str = payload.get("location").strip().title()
+    description: str = payload.get("description")
+    google_map: str = payload.get("mapUrl").strip()
+    password: str = payload.get("password").strip()
+    slug: str = business.slug if business.business_name == name else slugify(name)
 
     if not bcrypt.check_password_hash(business.password, password):
         return jsonify({"message": "Incorrect password"}), 401
 
     # Check if email and phone number already exists
-    existing_email = Business.query.filter_by(email=email).first()
-    existing_phone = Business.query.filter_by(phone=phone).first()
+    existing_email: Business = Business.query.filter_by(email=email).first()
+    existing_phone: Business = Business.query.filter_by(phone=phone).first()
 
     if existing_email and existing_email.email != business.email:
         return jsonify({"message": "Email already exists"}), 409
@@ -238,7 +238,7 @@ def update_profile(business):
     business.description = description
     db.session.commit()
 
-    return jsonify({"message": "Update Successful"}), 200
+    return jsonify({"message": "Update Successful", "business": serialize_business(business)}), 200
 
 
 @business_blueprint.route("/change-password", methods=["PUT"])
