@@ -157,7 +157,7 @@ def client_login():
         return jsonify({"message": "Can't Log In. You requested account deletion"}), 400
 
     if not client:
-        return jsonify({"message": "Incorrect Email or Password"}), 404
+        return jsonify({"message": "Incorrect Email or Password"}), 401
 
     if not bcrypt.check_password_hash(client.password, auth.password.strip()):
         return jsonify({"message": "Incorrect Email or Password"}), 401
@@ -186,7 +186,7 @@ def request_password_reset():
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
 
     token = generate_token(expiry=token_expiry_time, username=client.email)
-    sent_client_reset_token(recipient=client.email, token=token, name=client.name)
+    sent_client_reset_token(recipient=client.email, url=f"pamba://reset-password/{token}", name=client.name)
 
     return jsonify({"message": "Token sent to your email"}), 200
 
@@ -299,9 +299,11 @@ def fetch_business_clients(business):
         :param business: Logged in business
         :return: 200
     """
-    lifetime_number_of_clients = 0
-    all_clients = []
-    all_appointments = []
+    lifetime_number_of_clients: int = 0
+    all_clients: list = []
+    all_appointments: list = []
+    year: int = 2024
+    yearly_appointments: dict = {}
 
     appointments = business.appointments.filter_by(cancelled=False).order_by(Appointment.date.desc()).all()
     for appointment in appointments:
@@ -310,6 +312,13 @@ def fetch_business_clients(business):
         lifetime_number_of_clients += 1
         all_clients.append(serialize_client(client))
 
+        if appointment.date.year == year:
+            month = appointment.date.strftime("%b")
+            if month in yearly_appointments.keys():
+                yearly_appointments[month] += 1
+            else:
+                yearly_appointments[month] = 1
+
     client_appointment_counts = db.session.query(Client.id, func.count(Appointment.id)) \
         .join(Appointment) \
         .group_by(Client.id) \
@@ -317,15 +326,14 @@ def fetch_business_clients(business):
         .all()
     returning_clients = len(client_appointment_counts)
 
+    monthly_appointments: list = [{month: count} for month, count in yearly_appointments.items()]
+
     return jsonify(
         {
             "message": "Success",
             "lifetime_client_number_of_clients": lifetime_number_of_clients,
             "all_clients": all_clients,
-            "all_appointments": all_appointments,
+            "all_appointments": monthly_appointments,
             "returning_clients": returning_clients
         }
     ), 200
-
-
-

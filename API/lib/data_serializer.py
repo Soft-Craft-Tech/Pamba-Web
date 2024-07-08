@@ -62,7 +62,8 @@ def serialize_appointment(appointment):
         "cancelled": fields.Boolean,
         "comment": fields.String,
         "create_at": fields.DateTime(dt_format='iso8601'),
-        "completed": fields.Boolean
+        "completed": fields.Boolean,
+        "service_id": fields.Integer
     }
 
     return marshal(appointment, appointment_fields)
@@ -92,6 +93,7 @@ def serialize_sale(sale):
         :return: JSON serialized sale record
     """
     sales_fields = {
+        "id": fields.Integer,
         "payment_method": fields.String,
         "description": fields.String,
         "date_created": fields.DateTime(dt_format='iso8601')

@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
-from API.models import Sale
+from datetime import datetime, timedelta, date
+from API.models import Sale, Service
 from flask import Blueprint, jsonify, request
-from API import db, bcrypt
+from API import db
 from API.lib.auth import business_login_required
 from API.lib.data_serializer import serialize_sale
 
@@ -50,12 +50,13 @@ def fetch_all_business_sales(business):
         :return:
     """
 
-    sales = Sale.query.filter_by(business_id=business.id).all()
-    all_sales = []
+    sales: list = Sale.query.filter_by(business_id=business.id).all()
+    all_sales: list = []
 
     for sale in sales:
         sale_info = serialize_sale(sale)
         sale_info["service"] = sale.service.service
+        sale_info["service_id"] = sale.service.id
         all_sales.append(sale_info)
 
     return jsonify({"message": "Sales", "sales": all_sales})
@@ -70,11 +71,6 @@ def delete_sale(business, sale_id):
         :param sale_id:
         :return: 404, 400, 200
     """
-    payload = request.get_json()
-    password = payload["password"].strip()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 401
 
     sale = Sale.query.get(sale_id)
 
@@ -98,21 +94,22 @@ def revenue_analytics(business):
         :param business: Logged in Business
         :return: 200
     """
-    today = datetime.today().date()
-    current_month = today.month
-    current_year = today.year
-    sales = business.sales.all()
-    seven_days_ago = today - timedelta(days=7)
+    today: date = datetime.today().date()
+    current_month: int = today.month
+    current_year: int = today.year
+    sales: list = business.sales.all()
+    seven_days_ago: date = today - timedelta(days=7)
 
-    lifetime_sales = []
-    total_sales = 0
-    current_month_revenue = 0
-    last_seven_days_sales = 0
+    lifetime_sales: list = []
+    total_sales: int = 0
+    current_month_revenue: int = 0
+    last_seven_days_sales: int = 0
 
     for sale in sales:
-        service = sale.service
-        serialized_sale = serialize_sale(sale)
+        service: Service = sale.service
+        serialized_sale: dict = serialize_sale(sale)
         serialized_sale["price"] = service.price
+        serialized_sale["service_id"] = service.id
         lifetime_sales.append(serialized_sale)
         total_sales += service.price
         if sale.date_created.date().month == current_month and sale.date_created.date().year == current_year:
@@ -130,6 +127,7 @@ def revenue_analytics(business):
         }
     ), 200
 
+
 @sales_blueprint.route("/edit/<int:sale_id>", methods=["PUT"])
 @business_login_required
 def edit_sale(business, sale_id):
@@ -140,8 +138,8 @@ def edit_sale(business, sale_id):
         :return : 200, 400 , 404
     """
     payload = request.get_json()
-    payment_method = payload.get("paymentmethod", "").strip()
-    description = payload.get("description", "").strip()
+    payment_method = payload.get("paymentmethod", "").strip().title()
+    description = payload.get("description", "").strip().capitalize()
     service_id = payload.get("service_id")
 
     sale = Sale.query.get(sale_id)
@@ -160,7 +158,7 @@ def edit_sale(business, sale_id):
     if service_id:
         business_services = [service.id for service in business.services.all()]
         if service_id not in business_services:
-            return jsonify({"message": "We are not offering this service at the moment"}), 400
+            return jsonify({"message": "Service does not exist!"}), 400
         sale.service_id = service_id
     
     db.session.commit()
