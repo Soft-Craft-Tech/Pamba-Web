@@ -229,7 +229,7 @@ def update_profile(business):
         return jsonify({"message": "Phone number already exists"}), 409
 
     token_expiry_time = datetime.utcnow() + timedelta(days=1)
-    token = generate_token(expiry=token_expiry_time, username=business.slug)
+    token = generate_token(expiry=token_expiry_time, username=slug)
 
     business.business_name = name
     business.email = email
