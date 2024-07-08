@@ -228,6 +228,9 @@ def update_profile(business):
     if existing_phone and existing_phone.phone != business.phone:
         return jsonify({"message": "Phone number already exists"}), 409
 
+    token_expiry_time = datetime.utcnow() + timedelta(days=1)
+    token = generate_token(expiry=token_expiry_time, username=business.slug)
+
     business.business_name = name
     business.email = email
     business.phone = phone
@@ -238,7 +241,7 @@ def update_profile(business):
     business.description = description
     db.session.commit()
 
-    return jsonify({"message": "Update Successful", "business": serialize_business(business)}), 200
+    return jsonify({"message": "Update Successful", "business": serialize_business(business), "authToken": token}), 200
 
 
 @business_blueprint.route("/change-password", methods=["PUT"])
