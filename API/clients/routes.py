@@ -157,7 +157,7 @@ def client_login():
         return jsonify({"message": "Can't Log In. You requested account deletion"}), 400
 
     if not client:
-        return jsonify({"message": "Incorrect Email or Password"}), 404
+        return jsonify({"message": "Incorrect Email or Password"}), 401
 
     if not bcrypt.check_password_hash(client.password, auth.password.strip()):
         return jsonify({"message": "Incorrect Email or Password"}), 401
