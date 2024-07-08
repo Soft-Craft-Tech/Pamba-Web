@@ -611,7 +611,8 @@ Client's appointment Booking
         "date": "***",
         "time": "***",
         "comment": "***",
-        "provider": "***"
+        "staff": 2,
+        "service": 5
     }
 ```
  # Book appointment from the web 
@@ -655,7 +656,6 @@ Reschedule client's appointments.
     Status Codes: 
         "200 OK": Resheduling Successful.
         "400 Bad Request": Appointment is already completed.
-        "401 Unauthorized": Not allowed
         "404 Not Found": The shop/business does not exist.
 
     headers:
@@ -664,6 +664,7 @@ Reschedule client's appointments.
     body: {
         "date": "***",
         "time": "***",
+        "appointment_id": 1
         "notification": "<Notification Method>",
         "comment": "***",
         "staff_id": "***"
