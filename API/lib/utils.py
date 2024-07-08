@@ -1,5 +1,56 @@
 from datetime import timedelta, datetime, date, time
 from API.models import Staff, Appointment, Service
+from werkzeug.utils import secure_filename
+import secrets
+import os
+from PIL import Image
+import cloudinary
+import cloudinary.uploader
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+
+def allowed_file(filename):
+    """
+        Checks id file uploaded of an allowed filetype
+        :param filename:
+        :return: Boolean
+    """
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def save_response_image(image):
+    """
+        Takes in an image, renames the image and saves the image to directory
+    :param image: Image
+    :return: Saved image name
+    """
+    random_hex = secrets.token_hex(7)
+    filename = secure_filename(image.filename)
+    _, f_ext = os.path.splitext(filename)
+    image_filename = random_hex + f_ext
+    if not os.path.exists("./clients"):
+        os.mkdir("./clients")
+    picture_path = os.path.join('clients', image_filename)
+    # Resize image with pillow
+    image = Image.open(image)
+    resized_image = image.resize((400, 350))
+    resized_image.save(picture_path)
+
+    # Handle Cloudinary upload
+    cloudinary.config(
+        cloud_name=os.getenv("CLOUDINARY_NAME"),
+        api_key=os.getenv("CLOUDINARY_API_KEY"),
+        api_secret=os.getenv("CLOUDINARY_API_SECRET"),  # Click 'View Credentials' below to copy your API secret
+        secure=True
+    )
+
+    upload_result = cloudinary.uploader.upload(picture_path)
+    image_url = upload_result.get("secure_url")
+
+    os.remove(picture_path)
+    return image_url
 
 
 def add_decimal_hours_to_time(base_time: time, decimal_hours: float) -> time:
