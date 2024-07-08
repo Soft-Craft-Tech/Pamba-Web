@@ -6,7 +6,7 @@ from API.lib.auth import client_login_required, business_login_required, verify_
 from API.lib.data_serializer import serialize_appointment
 from API.lib.sendSMS import send_sms
 from API import db, bcrypt
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
 from API.lib.SMS_messages import reschedule_appointment_composer
 from API.lib.checkBusinessClosed import check_business_closed
 from API.lib.send_mail import appointment_confirmation_email, send_ask_for_review_mail
@@ -22,12 +22,12 @@ def book_appointment(client):
         :param client: Logged in client
         :return: 200, 403, 404
     """
-    payload = request.get_json()
-    date = datetime.strptime(payload["date"], '%d-%m-%Y')
-    time = datetime.strptime(payload["time"], '%H:%M').time()
-    comment = payload["comment"].strip()
-    business_id = payload["provider"]
-    service = payload["service"]
+    payload: dict = request.get_json()
+    appointment_date: date = datetime.strptime(payload.get("date"), '%d-%m-%Y')
+    appointment_time: time = datetime.strptime(payload.get("time"), '%H:%M').time()
+    comment = payload.get("comment").strip()
+    business_id = payload.get("provider")
+    service = payload.get("service")
 
     business = Business.query.get(business_id)
     if not business:
@@ -36,14 +36,15 @@ def book_appointment(client):
     if not client.verified:
         return jsonify({"message": "Please, verify your account."}), 403
     new_appointment = Appointment(
-        date=date,
-        time=time,
+        date=appointment_date,
+        time=appointment_time,
         comment=comment,
         business_id=business_id,
         client_id=client.id
     )
     # Avoid Booking multiple appointments scheduled at the same time
-    appointment = Appointment.query.filter_by(date=date, time=time, client_id=client.id, cancelled=False).first()
+    appointment = Appointment.query\
+        .filter_by(date=appointment_date, time=appointment_time, client_id=client.id, cancelled=False).first()
     if appointment:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
@@ -57,8 +58,8 @@ def book_appointment(client):
     # Send email or notification when a new appointment is scheduled
     appointment_confirmation_email(
         client_name=None,
-        date=date,
-        time=time,
+        date=appointment_date,
+        time=appointment_time,
         business_name=business.business_name,
         business_directions=business.google_map,
         business_location=business.location,
@@ -286,10 +287,11 @@ def my_appointments(client):
         :param client:
         :return:
     """
-    appointments = Appointment.query.filter_by(client_id=client.id).order_by(Appointment.date.desc()).all()
-    cancelled_appointments = []
-    upcoming_appointments = []
-    previous_appointments = []
+    appointments: list = Appointment.query.filter_by(client_id=client.id).order_by(Appointment.date.desc()).all()
+    cancelled_appointments: list = []
+    upcoming_appointments: list = []
+    previous_appointments: list = []
+    today: date = datetime.today().date()
 
     if not appointments:
         return jsonify({"message": "No appointments"}), 404
@@ -305,19 +307,16 @@ def my_appointments(client):
             cancelled_appointments.append(serialized_appointment)
         if appointment.completed:
             previous_appointments.append(serialized_appointment)
-        else:
-            if not appointment.cancelled:
-                upcoming_appointments.append(serialized_appointment)
 
-    sorted_previous = sorted(previous_appointments, key=lambda x: x['id'])
+        if not appointment.cancelled and today < appointment.date:
+            upcoming_appointments.append(serialized_appointment)
 
     return jsonify(
         {
             "message": "Success",
             "cancelled": cancelled_appointments,
             "upcoming": upcoming_appointments,
-            "previous": previous_appointments,
-            "last": sorted_previous[-1] if len(sorted_previous) > 0 else None
+            "previous": previous_appointments
         }
     ), 200
 
