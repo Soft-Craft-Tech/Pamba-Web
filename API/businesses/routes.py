@@ -360,7 +360,7 @@ def fetch_business(slug):
         rating_score = None
     reviews = Review.query.filter_by(business_id=business.id)
     business_data = dict(
-        name=business.business_name,
+        business_name=business.business_name,
         category=business.category,
         id=business.id,
         location=business.location,
