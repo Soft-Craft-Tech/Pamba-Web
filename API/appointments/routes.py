@@ -309,10 +309,10 @@ def my_appointments(client):
         serialized_appointment["mapUrl"] = appointment.business.google_map
         if appointment.cancelled:
             cancelled_appointments.append(serialized_appointment)
-        if appointment.completed:
+        if appointment.completed or today > appointment.date and not appointment.cancelled:
             previous_appointments.append(serialized_appointment)
 
-        if not appointment.cancelled and today < appointment.date:
+        if not appointment.cancelled and not appointment.completed and today < appointment.date:
             upcoming_appointments.append(serialized_appointment)
 
     return jsonify(
