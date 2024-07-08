@@ -265,6 +265,8 @@ class Client(db.Model):
     otp = db.Column(db.String(200), nullable=True)
     otp_expiration = db.Column(db.DateTime, nullable=True)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    dob = db.Column(db.Date, nullable=True)
+    profile_image = db.Column(db.String(200), nullable=True)
     notifications = db.relationship("ClientNotification", backref="client", lazy="dynamic", cascade="all, "
                                                                                                     "delete-orphan")
     reviews = db.relationship("Review", backref="client", lazy="dynamic", cascade="all, delete-orphan")
