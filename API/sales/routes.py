@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
-from API.models import Sale
+from datetime import datetime, timedelta, date
+from API.models import Sale, Service
 from flask import Blueprint, jsonify, request
 from API import db
 from API.lib.auth import business_login_required
@@ -50,12 +50,13 @@ def fetch_all_business_sales(business):
         :return:
     """
 
-    sales = Sale.query.filter_by(business_id=business.id).all()
-    all_sales = []
+    sales: list = Sale.query.filter_by(business_id=business.id).all()
+    all_sales: list = []
 
     for sale in sales:
         sale_info = serialize_sale(sale)
         sale_info["service"] = sale.service.service
+        sale_info["service_id"] = sale.service.id
         all_sales.append(sale_info)
 
     return jsonify({"message": "Sales", "sales": all_sales})
@@ -93,21 +94,22 @@ def revenue_analytics(business):
         :param business: Logged in Business
         :return: 200
     """
-    today = datetime.today().date()
-    current_month = today.month
-    current_year = today.year
-    sales = business.sales.all()
-    seven_days_ago = today - timedelta(days=7)
+    today: date = datetime.today().date()
+    current_month: int = today.month
+    current_year: int = today.year
+    sales: list = business.sales.all()
+    seven_days_ago: date = today - timedelta(days=7)
 
-    lifetime_sales = []
-    total_sales = 0
-    current_month_revenue = 0
-    last_seven_days_sales = 0
+    lifetime_sales: list = []
+    total_sales: int = 0
+    current_month_revenue: int = 0
+    last_seven_days_sales: int = 0
 
     for sale in sales:
-        service = sale.service
-        serialized_sale = serialize_sale(sale)
+        service: Service = sale.service
+        serialized_sale: dict = serialize_sale(sale)
         serialized_sale["price"] = service.price
+        serialized_sale["service_id"] = service.id
         lifetime_sales.append(serialized_sale)
         total_sales += service.price
         if sale.date_created.date().month == current_month and sale.date_created.date().year == current_year:
