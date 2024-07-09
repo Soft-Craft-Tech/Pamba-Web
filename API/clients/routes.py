@@ -3,11 +3,13 @@ from sqlalchemy import func
 
 from API.models import Client, ClientDeleted, Appointment
 from API.lib.data_serializer import serialize_client, serialize_appointment
+from API.lib.utils import save_response_image
 from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required, business_login_required
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import json
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
 
@@ -177,15 +179,14 @@ def request_password_reset():
         Token valid: 30min
         :return: 200, 404
     """
-    payload = request.get_json()
-    email = payload["email"].strip().lower()
-    client = Client.query.filter_by(email=email).first()
+    payload: dict = request.get_json()
+    email: str = payload["email"].strip().lower()
+    client: Client = Client.query.filter_by(email=email).first()
     if not client:
         return jsonify({"message": "Password reset failed"}), 404
 
-    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
-
-    token = generate_token(expiry=token_expiry_time, username=client.email)
+    token_expiry_time: datetime = datetime.utcnow() + timedelta(minutes=30)
+    token: str = generate_token(expiry=token_expiry_time, username=client.email)
     sent_client_reset_token(recipient=client.email, url=f"pamba://reset-password/{token}", name=client.name)
 
     return jsonify({"message": "Token sent to your email"}), 200
@@ -243,22 +244,35 @@ def update_profile(client):
     """
         Allow clients to update their profile
         :param client: Client currently logged in
-        :return: 409, 200
+        :return: 409, 400, 200
     """
-    payload = request.get_json()
-    email = payload["email"].strip().lower()
-    phone = payload["phone"].strip()
+    payload: dict = json.loads(request.form.get("payload"))
+    email: str = payload.get("email").strip().lower()
+    phone: str = payload.get("phone").strip()
+    files = request.files
 
-    email_taken = Client.query.filter_by(email=email).first()
-    phone_taken = Client.query.filter_by(phone=phone).first()
+    if "image" not in files:
+        return jsonify({"message": "No image uploaded"}), 400
+
+    try:
+        dob: date = datetime.strptime(payload.get("dob"), "%d-%m-%Y")
+    except ValueError:
+        return jsonify({"message": "Invalid Date Format"}), 400
+
+    email_taken: Client = Client.query.filter_by(email=email).first()
+    phone_taken: Client = Client.query.filter_by(phone=phone).first()
 
     if email_taken and email_taken.id != client.id:
         return jsonify({"message": "Email already exists"}), 409
     if phone_taken and phone_taken.id != client.id:
         return jsonify({"message": "Phone already taken"}), 409
 
+    image_name = save_response_image(files.get("image"))
+
     client.email = email
     client.phone = phone
+    client.dob = dob
+    client.profile_image = image_name
     db.session.commit()
 
     return jsonify({"message": "Update Successful", "client": serialize_client(client)}), 200
@@ -337,3 +351,20 @@ def fetch_business_clients(business):
             "returning_clients": returning_clients
         }
     ), 200
+
+
+@clients_blueprint.route("/<int:client_id>", methods=["GET"])
+@verify_api_key
+def retrieve_client(client_id: int):
+    """
+        Retrieve Client Profile
+        :param client_id: IdD of the client
+        :return: 404, 200
+    """
+
+    client = Client.query.get(client_id)
+
+    if not client:
+        return jsonify({"message": "Client Not found"}), 404
+
+    return jsonify(({"client": serialize_client(client)})), 200

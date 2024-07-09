@@ -167,9 +167,13 @@ Change the clients profile information
         X-API-KEY: <API_KEY>
         x-access-token: <LOGIN_TOKEN>
 
-    body: {
-        "email": "***",
-        "phone": "***"
+    formdata: {
+        image: <image_upload>
+        payload: {
+            "email": "***",
+            "phone": "***",
+            "dob": "12-12-2025"
+        }
     }
 ```
 * ### Delete Account

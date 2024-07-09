@@ -13,7 +13,9 @@ def serialize_client(client):
         "name": fields.String,
         "email": fields.String,
         "phone": fields.String,
-        "verified": fields.Boolean
+        "verified": fields.Boolean,
+        "dob": fields.DateTime(dt_format='iso8601'),
+        "profile_image": fields.String
     }
 
     return marshal(client, client_fields)
