@@ -44,10 +44,9 @@ def save_response_image(image):
         api_key=os.getenv("CLOUDINARY_API_KEY"),
         api_secret=os.getenv("CLOUDINARY_API_SECRET"),  # Click 'View Credentials' below to copy your API secret
         secure=True,
-        asset_folder="pamba-web"
     )
 
-    upload_result = cloudinary.uploader.upload(picture_path)
+    upload_result = cloudinary.uploader.upload(picture_path, folder="pamba-web")
     image_url = upload_result.get("secure_url")
 
     os.remove(picture_path)
