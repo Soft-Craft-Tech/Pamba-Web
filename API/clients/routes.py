@@ -187,7 +187,11 @@ def request_password_reset():
 
     token_expiry_time: datetime = datetime.utcnow() + timedelta(minutes=30)
     token: str = generate_token(expiry=token_expiry_time, username=client.email)
-    sent_client_reset_token(recipient=client.email, url=f"pamba://reset-password/{token}", name=client.name)
+    sent_client_reset_token(
+        recipient=client.email,
+        url=f"https:////www.pamba.africa/client-reset/{token}",
+        name=client.name
+    )
 
     return jsonify({"message": "Token sent to your email"}), 200
 

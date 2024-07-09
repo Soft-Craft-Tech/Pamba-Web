@@ -370,29 +370,28 @@ def fetch_business_appointments(business):
         :param business: Logged-in
         :return: 200
     """
-    today = datetime.today().date()
-    appointments = business.appointments \
-        .order_by(Appointment.date.desc(), Appointment.time.desc()).all()
-    #  .filter(Appointment.date >= today, ~Appointment.cancelled, ~Appointment.completed)\
+    today: datetime = datetime.today()
+    appointments: list = business.appointments \
+        .order_by(Appointment.date.desc(), Appointment.time.desc()) \
+        .filter(~Appointment.cancelled).all()
 
-    all_appointments = []
+    all_appointments: list = []
 
     for appointment in appointments:
-        combined_datetime = datetime.combine(appointment.date, appointment.time)
-        appointment_duration = int(float(appointment.service.estimated_service_time) * 60)
-        appointment_ends = combined_datetime + timedelta(minutes=appointment_duration)
-        staff = ""
+        combined_datetime: datetime = datetime.combine(appointment.date, appointment.time)
+        appointment_duration: int = int(float(appointment.service.estimated_service_time) * 60)
+        appointment_ends: datetime = combined_datetime + timedelta(minutes=appointment_duration)
+        staff: str = ""
 
         if appointment.staff:
             staff = appointment.staff.f_name
 
         serialized_appointment = serialize_appointment(appointment)
-        serialized_appointment["staff"] = staff
-        serialized_appointment["event_id"] = appointment.id
-        serialized_appointment["start"] = combined_datetime.isoformat()
-        serialized_appointment["end"] = appointment_ends.isoformat()
-        serialized_appointment["title"] = appointment.service.service
-        serialized_appointment["color"] = "#DB1471"  # Color attribute required by the scheduler library
+        serialized_appointment["start"] = combined_datetime.strftime("%Y-%m-%d %H:%M")
+        serialized_appointment["end"] = appointment_ends.strftime("%Y-%m-%d %H:%M")
+        serialized_appointment["people"] = [appointment.client.name]
+        serialized_appointment["title"] = f"{appointment.service.service} by {staff if staff else 'Unassigned'}"
+        serialized_appointment["calendarId"] = "past" if appointment_ends < today else "upcoming"
         all_appointments.append(serialized_appointment)
 
     return jsonify({"appointments": all_appointments}), 200
