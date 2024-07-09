@@ -9,6 +9,7 @@ from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
 from datetime import datetime, timedelta, date
+import json
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
 
@@ -178,15 +179,14 @@ def request_password_reset():
         Token valid: 30min
         :return: 200, 404
     """
-    payload = request.get_json()
-    email = payload["email"].strip().lower()
-    client = Client.query.filter_by(email=email).first()
+    payload: dict = request.get_json()
+    email: str = payload["email"].strip().lower()
+    client: Client = Client.query.filter_by(email=email).first()
     if not client:
         return jsonify({"message": "Password reset failed"}), 404
 
-    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
-
-    token = generate_token(expiry=token_expiry_time, username=client.email)
+    token_expiry_time: datetime = datetime.utcnow() + timedelta(minutes=30)
+    token: str = generate_token(expiry=token_expiry_time, username=client.email)
     sent_client_reset_token(recipient=client.email, url=f"pamba://reset-password/{token}", name=client.name)
 
     return jsonify({"message": "Token sent to your email"}), 200
@@ -246,7 +246,7 @@ def update_profile(client):
         :param client: Client currently logged in
         :return: 409, 400, 200
     """
-    payload: dict = request.get_json()
+    payload: dict = json.loads(request.form.get("payload"))
     email: str = payload.get("email").strip().lower()
     phone: str = payload.get("phone").strip()
     files = request.files

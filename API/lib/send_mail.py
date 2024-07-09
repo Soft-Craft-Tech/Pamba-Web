@@ -34,7 +34,7 @@ def sent_client_reset_token(recipient: str, url: str, name: str) -> None:
     """
         Send password reset token for clients
         :param recipient: User Email
-        :param url: Reset Link
+        :param url: Reset URL
         :param name: User's name
         :return: None
     """
@@ -43,7 +43,7 @@ def sent_client_reset_token(recipient: str, url: str, name: str) -> None:
     mail.send(message)
 
 
-def business_account_activation_email(recipient, token, name):
+def business_account_activation_email(recipient: str, token: str, name: str) -> None:
     """
         Send the account verification URL to businesses upon account creation.
         :param recipient: Recipient Email Address.
