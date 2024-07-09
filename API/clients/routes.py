@@ -357,18 +357,13 @@ def fetch_business_clients(business):
     ), 200
 
 
-@clients_blueprint.route("/<int:client_id>", methods=["GET"])
-@verify_api_key
-def retrieve_client(client_id: int):
+@clients_blueprint.route("/retrieve", methods=["GET"])
+@client_login_required
+def retrieve_client(client: Client):
     """
         Retrieve Client Profile
-        :param client_id: IdD of the client
+        :param client: Client Object
         :return: 404, 200
     """
-
-    client = Client.query.get(client_id)
-
-    if not client:
-        return jsonify({"message": "Client Not found"}), 404
 
     return jsonify(({"client": serialize_client(client)})), 200

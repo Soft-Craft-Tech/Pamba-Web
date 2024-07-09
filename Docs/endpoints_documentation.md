@@ -205,16 +205,16 @@ Change the clients profile information
 ```
 ### Retrieve client profile 
 ```javascript
-    Endpoint: GET /API/clients/{client_id}
+    Endpoint: GET /API/clients/retrieve
     Method: GET
     Content Type: "Application/Json"
 
     Status Codes: 
-        "200 OK": { client: Client Object }.
-        "404 Not Found": Message: Client Not found.
+        "200 OK": { client: Client Object }
 
     Headers:
         x-access-token: <LOGIN_TOKEN>
+        X-API-KEY: <API-KEY>
     Body: {}
 ```
 
