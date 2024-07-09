@@ -199,6 +199,20 @@ Change the clients profile information
     Body: {
 }
 ```
+### Retrieve client profile 
+```javascript
+    Endpoint: GET /API/clients/{client_id}
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": { client: Client Object }.
+        "404 Not Found": Message: Client Not found.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
 
 # 2. Business Auth
 ### signup businesses
@@ -665,9 +679,6 @@ Reschedule client's appointments.
         "date": "***",
         "time": "***",
         "appointment_id": 1
-        "notification": "<Notification Method>",
-        "comment": "***",
-        "staff_id": "***"
     }
 ```
 
@@ -999,10 +1010,10 @@ Delete Inventory with id
 ```javascript
       Endpoint: POST /API/reviews/create{appointment_id}
     Method: POST
-    Co
+    Content Type: "Application/Json"
+
     Status Codes: 
-       ntent Type: "Application/Json"
- "200 Created": Message, Review has been posted.
+        "200 Created": Message, Review has been posted.
         "404 Not Found": Message: Business doesn't exist
 
     Headers:
@@ -1012,34 +1023,6 @@ Delete Inventory with id
         "businessID": <int>
     }
 ```
-
-### Fetch Business Reviews
-Value of {slug} refers to the slug value for the business.
-```javascript
-    Endpoint: GET /API/reviews/all/{slug}
-    Method: GET
-    Status Codes: 
-    Content Type: "Application/Json"
-    
-    Responses:
-        "200": {
-            "reviews": [
-                {
-                    "id": <number>,
-                    "message": <string>,
-                    "rating": <number>,
-                    "reviewed_at": <datetime>,
-                    "reviewer": <string>
-                }
-            ]
-        }
-        "400": {"message": "Shop doesn't exist"}
-
-    Headers:
-        X-API-KEY: <API_KEY>
-    Body: None
-```
-
 # 9. Sales
 
 * ### fetch all sales
@@ -1145,71 +1128,131 @@ Value of {slug} refers to the slug value for the business.
     }
 ```
 # 10. staff
-* ### fetch single staff
+### create a new staff
 ```javascript
-    Endpoint: GET /API/staff/single/{staff_id}
-    Method: GET
+         Endpoint: POST /API/staff/create_staff
+    Method: POST
     Content Type: "Application/Json"
 
     Status Codes: 
-        "200 OK": Staff details.
-        "401 Unauthorized": Message: Not allowed
-        "404 Not Found": Message: Staff not found
-
-    Headers:
-        x-access-token: <LOGIN_TOKEN>
-    Body: {}
-```
-* ### fetch all staffs
-```javascript
-   Endpoint: GET /API/staff/all
-    Method: GET
-    Content Type: "Application/Json"
-
-    Status Codes: 
-        "200 OK": All staff records.
-
-    Headers:
-        x-access-token: <LOGIN_TOKEN>
-    Body: {}
-```
-* ### update staff info
-```javascript
-      Endpoint: PUT /API/staff/update-staff/{staff_id}
-    Method: PUT
-    Content Type: "Application/Json"
-
-    Status Codes: 
-        "200 OK": Message: Updated.
-        "401 Unauthorized": Message: Incorrect password
-        "404 Not Found": Message: Staff not found
-        "409 Conflict": Message: Phone number already exists
+        "201 Created": Message: Staff Created.
+        "400 Bad Request": Message: Bad request.
+        "409 Conflict": Message: Phone number already exists.
 
     Headers:
         x-access-token: <LOGIN_TOKEN>
     Body: {
-        "password": "xxxx",
-        "phone": "New Phone Number",
-        "role": "New Role"
+        "f_name": "First Name",
+        "phone": "Phone Number",
+        "role": "Role"
     }
 ```
-* ### delete a staff member
+### Delete a staff member 
 ```javascript
-    Endpoint: DELETE /API/staff/delete-staff/{staff_id}
+        Endpoint: DELETE /API/staff/delete-staff/{staff_id}
     Method: DELETE
     Content Type: "Application/Json"
 
     Status Codes: 
         "200 OK": Message: Staff deleted.
-        "401 Unauthorized": Message: Incorrect password
-        "404 Not Found": Message: Staff not found
+        "401 Unauthorized": Message: Not allowed.
+        "404 Not Found": Message: Staff not found.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+### Update a staff member's information
+```javascript
+        Endpoint: PUT /API/staff/update-staff/{staff_id}
+    Method: PUT
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Updated.
+        "401 Unauthorized": Message: Not allowed.
+        "404 Not Found": Message: Staff not found.
+        "409 Conflict": Message: Phone number already exists.
 
     Headers:
         x-access-token: <LOGIN_TOKEN>
     Body: {
-        "password": "xxxx"
+        "phone": "New Phone Number",
+        "role": "New Role"
     }
 ```
+### Get a single staff member's information
+```javascript
+        Endpoint: GET /API/staff/single/{staff_id}
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": { staff: Staff Object }.
+        "401 Unauthorized": Message: Not allowed.
+        "404 Not Found": Message: Staff not found.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+### Fetch all staff members associated with a business
+```javascript
+        Endpoint: GET /API/staff/all/{slug}
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": { staff: Array of Staff Objects }.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {}
+```
+### check a staff member's availability
+```javascript
+         Endpoint: GET /API/staff/unavailability/{staff_id}
+    Method: GET
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Staff is available.
+        "400 Bad Request": Message: Staff not available at this time.
+        "404 Not Found": Message: Staff not found.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "date": "dd-mm-yyyy",
+        "time": "HH:MM"
+    }
+```
+### add a staff members availabilty
+```javascript
+        Endpoint: POST /API/staff/create-unavailability/{staff_id}
+    Method: POST
+    Content Type: "Application/Json"
+
+    Status Codes: 
+        "200 OK": Message: Success.
+        "400 Bad Request": Message: Not allowed.
+        "404 Not Found": Message: Staff not found.
+
+    Headers:
+        x-access-token: <LOGIN_TOKEN>
+    Body: {
+        "date": "dd-mm-yyyy",
+        "all_day": true/false,
+        "periods": [
+            {
+                "startTime": "HH:MM",
+                "endTime": "HH:MM"
+            },
+            ...
+        ]
+    }
+```
+
 # 11. Business-Notifications
 * ### create Business notification
 ```javascript
