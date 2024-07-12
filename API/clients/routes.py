@@ -189,7 +189,7 @@ def request_password_reset():
     token: str = generate_token(expiry=token_expiry_time, username=client.email)
     sent_client_reset_token(
         recipient=client.email,
-        url=f"https:////www.pamba.africa/client-reset/{token}",
+        url=f"https://www.pamba.africa/client-reset/{token}",
         name=client.name
     )
 
