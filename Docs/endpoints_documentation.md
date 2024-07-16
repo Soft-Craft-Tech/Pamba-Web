@@ -667,8 +667,8 @@ Client's appointment Booking
 Reschedule client's appointments.
 
 ```javascript
-    endpoint: POST /API/appointments/reschedule/{appointment_id}
-    method: POST
+    endpoint: PUT /API/appointments/reschedule/{appointment_id}
+    method: PUT
     Content Type: "Application/Json"
 
     Status Codes: 
@@ -690,8 +690,8 @@ Reschedule client's appointments.
 Cancel Appointment
 
 ```javascript
-    endpoint: POST /API/appointments/cancel/{appointment_id}
-    method: POST
+    endpoint: PUT /API/appointments/cancel/{appointment_id}
+    method: PUT
     Content Type: "Application/Json"
 
     Status Codes: 
