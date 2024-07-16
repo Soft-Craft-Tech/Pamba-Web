@@ -66,7 +66,7 @@ def business_signup():
             category_id=cat_id
         )
         db.session.add(business_categories)
-    # db.session.commit()
+    db.session.commit()
 
     # Activation Token
     token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
