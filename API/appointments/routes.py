@@ -120,9 +120,9 @@ def book_appointment_on_web():
     current_time: time = datetime.today().time()
 
     if appointment_date < today_date:
-        return jsonify({"message": "Can't book an appointment on a past date"}), 400
+        return jsonify({"message": "Can't book an appointment for a past date"}), 400
     if appointment_date == today_date and appointment_time < current_time:
-        return jsonify({"message": "You can't book an appointment at a past time"}), 400
+        return jsonify({"message": "You can't book an appointment for a past time"}), 400
 
     service: Service = Service.query.get(service_id)
     if not service:
