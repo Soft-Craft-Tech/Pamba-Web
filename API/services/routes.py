@@ -111,3 +111,27 @@ def update_service(business: Business, service_id: int):
     db.session.commit()
 
     return jsonify({"message": "Service Update successfully", "service": serialize_service(service)}), 200
+
+
+@services_blueprint.route("/delete/<int:service_id>", methods=["DELETE"])
+@business_login_required
+def delete_service(business: Business, service_id: int):
+    """
+        Delete Service
+        :param business: Owner Id
+        :param service_id: Service to be deleted
+        :return: 400, 404, 200
+    """
+    service: Service = Service.query.get(service_id)
+
+    if not service:
+        return jsonify({"message": "Service doesn't exist"}), 404
+
+    if service.business_id != business.id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    db.session.delete(service)
+    db.session.commit()
+
+    return jsonify({"message": "Service Deleted successfully"}), 200
+
