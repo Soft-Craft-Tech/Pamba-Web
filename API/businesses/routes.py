@@ -269,21 +269,21 @@ def change_password(business):
 
 @business_blueprint.route("/assign-services", methods=["POST"])
 @business_login_required
-def assign_services(business):
+def assign_services(business: Business):
     """
         Assign services being offered by business logged in.
         :param business: Logged in business or owner.
         :return: 200
     """
-    payload = request.get_json()
-    services = payload["services"]
+    payload: dict = request.get_json()
+    services: list = payload["services"]
 
     if len(services) == 0:
         return jsonify({"message": "No service to be added"}), 400
 
     try:
         for service in services:
-            service_to_add = Service(
+            service_to_add: Service = Service(
                 service=service["name"].title().strip(),
                 price=service["price"],
                 description=service["description"].strip(),

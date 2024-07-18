@@ -1,9 +1,9 @@
-from flask import jsonify, Blueprint
+from flask import jsonify, Blueprint, request
 from API.models import ServiceCategories, Service, Business
 from API.lib.auth import verify_api_key
 from API.lib.data_serializer import serialize_service, serialize_staff, serialize_business
 from API import db
-import time
+from API.lib.auth import business_login_required
 
 services_blueprint = Blueprint("services", __name__, url_prefix="/API/services")
 
@@ -30,7 +30,7 @@ def fetch_all_services():
         Fetch all services
         :return: 200
     """
-    services = db.session.query(Service, Business).order_by(Service.service)\
+    services = db.session.query(Service, Business).order_by(Service.service) \
         .join(Business, Service.business_id == Business.id).all()
     serialized_services = []
     for service, business in services:
@@ -75,4 +75,63 @@ def retrieve_service(service_id):
 
     return jsonify({"service": serialized_service, "staff": serialized_staff}), 200
 
+
+@services_blueprint.route("/update/<int:service_id>", methods=["PUT"])
+@business_login_required
+def update_service(business: Business, service_id: int):
+    """
+        Update the service
+        :param business: Service Owner
+        :param service_id: Service ID
+        :return: 400, 404, 200
+    """
+    payload: dict = request.get_json()
+    service_name: str = payload.get("name", "").title().strip()
+    price: float = payload.get("price", "")
+    description: str = payload.get("description", "").strip()
+    estimated_service_time: float = payload.get("estimatedTime", "")
+    service_category: int = payload.get("category", "")
+    service_image: str = payload.get("imageURL", "")
+
+    service: Service = Service.query.get(service_id)
+
+    if not service:
+        return jsonify({"message": "Service doesn't exist"}), 404
+
+    if service.business_id != business.id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    service.service = service_name if service_name != "" else service.service
+    service.price = price if price != "" else service.price
+    service.description = description if description != "" else service.description
+    service.estimated_service_time = estimated_service_time if estimated_service_time != "" else service.estimated_service_time
+    service.service_category = service_category if service_category != "" else service.service_category
+    service.service_image = service_image if service_image != "" else service.service_image
+
+    db.session.commit()
+
+    return jsonify({"message": "Service Update successfully", "service": serialize_service(service)}), 200
+
+
+@services_blueprint.route("/delete/<int:service_id>", methods=["DELETE"])
+@business_login_required
+def delete_service(business: Business, service_id: int):
+    """
+        Delete Service
+        :param business: Owner Id
+        :param service_id: Service to be deleted
+        :return: 400, 404, 200
+    """
+    service: Service = Service.query.get(service_id)
+
+    if not service:
+        return jsonify({"message": "Service doesn't exist"}), 404
+
+    if service.business_id != business.id:
+        return jsonify({"message": "Not allowed"}), 400
+
+    db.session.delete(service)
+    db.session.commit()
+
+    return jsonify({"message": "Service Deleted successfully"}), 200
 
