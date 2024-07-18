@@ -1441,7 +1441,49 @@ all service categories
    
 ```
 
-# 15. gallery
+* # Update Service
+```javascript
+    endpoint : API/services/update/{service_id}    
+     method : PUT
+     Content-Type : Application/Json
+     
+     Status Code : 
+       "200 " : Success
+       "400" : Not allowed
+       "404" : Not Found 
+         
+     headers :
+       X-API-Key: <API_KEY>
+       x-access-token: <LOGIN_TOKEN>
+     body : {
+        "name": string
+        "price": int
+        "description": string
+        "estimatedTime": float
+        "category": int
+        "imageURL": string
+      }
+```
+
+* # Delete Service
+```javascript
+    endpoint : API/services/delete/{service_id}    
+     method : DELETE
+     Content-Type : Application/Json
+     
+     Status Code : 
+       "200 " : Success
+       "400" : Not allowed
+       "404" : Not Found 
+         
+     headers :
+       X-API-Key: <API_KEY>
+       x-access-token: <LOGIN_TOKEN>
+     body : {
+     }
+```
+
+# 15. Gallery
 * # Fetch Business Gallery
 Fetch the business's gallery images.
 
