@@ -8,7 +8,7 @@ from API.lib.sendSMS import send_sms
 from API.lib.utils import check_staff_availability
 from API import db, bcrypt
 from datetime import datetime, timedelta, time, date
-from API.lib.SMS_messages import reschedule_appointment_composer
+from API.lib.SMS_messages import reschedule_appointment_composer, new_appointment_notification_message
 from API.lib.checkBusinessClosed import check_business_closed
 from API.lib.send_mail import appointment_confirmation_email, send_ask_for_review_mail
 
@@ -66,7 +66,8 @@ def book_appointment(client):
         comment=comment,
         business_id=business.id,
         client_id=client.id,
-        staff_id=staff_id if staff_id else None
+        staff_id=staff_id if staff_id else None,
+        service_id=service.id
     )
 
     # Avoid Booking multiple appointments scheduled at the same time
@@ -75,19 +76,27 @@ def book_appointment(client):
     if appointment:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
-    new_appointment.service_id = service.id
     db.session.add(new_appointment)
     db.session.commit()
 
     # Send email or notification when a new appointment is scheduled
     appointment_confirmation_email(
-        client_name=None,
+        client_name=client.name.split()[0],
         date=appointment_date,
         time=appointment_time,
         business_name=business.business_name,
         business_directions=business.google_map,
         business_location=business.location,
         recipient=client.email
+    )
+
+    # Send SMS notification
+    new_appointment_notification_message(
+        name=client.name.split()[0],
+        time_=appointment_time,
+        date_=appointment_date,
+        service=service.service,
+        business=business.business_name
     )
 
     return jsonify({"message": "Booking Successful"}), 200
@@ -135,7 +144,7 @@ def book_appointment_on_web():
     # Check whether the business will be closed for the hours booked.
     open_status = check_business_closed(appointment_time, appointment_date, business)
     if not open_status:
-        return jsonify({"message": "Our premises are not open at the picked time and day"}), 400
+        return jsonify({"message": "Our premises are not open at the selected time and day"}), 400
 
     # Check staff availability.
     if staff_id:
@@ -155,6 +164,7 @@ def book_appointment_on_web():
             }), 400
 
     client: Client = Client.query.filter_by(email=email).first()
+
     # If the client is not a mobile user or hasn't booked an appointment before
     if not client:
         client = Client(
@@ -165,6 +175,7 @@ def book_appointment_on_web():
         db.session.add(client)
         db.session.commit()
 
+    # Create the new Appointment.
     appointment: Appointment = Appointment(
         date=appointment_date,
         time=appointment_time,
@@ -180,7 +191,7 @@ def book_appointment_on_web():
 
     # Send email or notification when a new appointment is scheduled
     appointment_confirmation_email(
-        client_name=None,
+        client_name=name.split()[0] if name != "" else None,
         date=appointment_date,
         time=appointment_time,
         business_name=business.business_name,
@@ -188,6 +199,16 @@ def book_appointment_on_web():
         business_location=business.location,
         recipient=client.email
     )
+
+    # SMS Notification
+    notification_message: str = new_appointment_notification_message(
+        name=name.split()[0] if name != "" else None,
+        time_=appointment_time,
+        date_=appointment_date,
+        service=service.service,
+        business=business.business_name
+    )
+    send_sms(phone=phone, message=notification_message)
 
     return jsonify({"message": "Appointment Booked Successfully"}), 201
 
