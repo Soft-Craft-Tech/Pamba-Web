@@ -617,16 +617,18 @@ def fetch_business_services(slug):
         :param slug: Business slug value
         :return: 200
     """
-    business = Business.query.filter_by(slug=slug).first()
+    business: Business = Business.query.filter_by(slug=slug).first()
 
     if not business:
         return jsonify({"message": "Business doesn't exist"}), 404
 
-    services = business.services.all()
+    services: list = business.services.all()
 
-    all_services = []
+    all_services: list = []
     for service in services:
-        all_services.append(serialize_service(service))
+        service_object: dict = serialize_service(service)
+        service_object["category_name"] = service.category.category_name
+        all_services.append(service_object)
 
     return jsonify(
         {"message": "Success", "services": all_services}
