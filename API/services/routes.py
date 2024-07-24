@@ -1,3 +1,5 @@
+import datetime
+
 from flask import jsonify, Blueprint, request
 from API.models import ServiceCategories, Service, Business
 from API.lib.auth import verify_api_key
@@ -65,6 +67,10 @@ def retrieve_service(service_id):
     business: Business = service.business
     serialized_service["estimated_time_string"] = estimated_time_string
     serialized_service["business_name"] = business.business_name
+    serialized_service["weekdayOpening"] = business.weekday_opening.strftime("%H:%M")
+    serialized_service["weekdayClosing"] = business.weekday_closing.strftime("%H:%M")
+    serialized_service["weekendOpening"] = business.weekend_opening.strftime("%H:%M")
+    serialized_service["weekendClosing"] = business.weekend_closing.strftime("%H:%M")
     serialized_service["slug"] = business.slug
     serialized_service["location"] = business.location
     serialized_service["phone"] = business.phone

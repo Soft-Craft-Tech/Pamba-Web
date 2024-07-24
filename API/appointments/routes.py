@@ -483,3 +483,4 @@ def send_appointment_reminder():
     appointments = Appointment.filter(Appointment.date == today, ~Appointment.cancelled, ~Appointment.completed).all()
     for appointment in appointments:
         pass
+    # TODO: Finish this
