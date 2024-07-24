@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, date
 
 
 def reschedule_appointment_composer(name: str, time_: time, date_: str, service: str, business: str) -> str:
@@ -43,7 +43,7 @@ Pamba Africa
     return message
 
 
-def new_appointment_notification(name: str, time_: time, date_: str, service: str, business: str) -> str:
+def new_appointment_notification_message(name: str, time_: time, date_: date, service: str, business: str) -> str:
     """
         Compose SMS message for new appointment
         :param name: Client Name
@@ -53,4 +53,12 @@ def new_appointment_notification(name: str, time_: time, date_: str, service: st
         :param business: Name of the Business
         :return:
     """
-
+    message: str = f"""
+Hello {name},
+Your {service} appointment has been successfully booked at {business} on {date_} at {time_}.
+We have sent the map directions to your email.
+ 
+Thank you,
+Pamba Africa.
+    """
+    return message

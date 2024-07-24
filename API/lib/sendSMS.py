@@ -5,7 +5,7 @@ import json
 import os
 
 
-def send_sms(phone: str, message: str) -> None:
+def send_sms(phone: str, message: str) -> object:
     """
         Send Mobile SMS
         :param phone: Recipient Phone Number
@@ -26,4 +26,5 @@ def send_sms(phone: str, message: str) -> None:
 
     payload: Any = json.dumps(post_data)
     response: Any = requests.post(url, headers=headers, data=payload)
-    print(response)
+
+    return response

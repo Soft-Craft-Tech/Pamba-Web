@@ -1,3 +1,5 @@
+import datetime
+
 from flask import jsonify, Blueprint, request
 from API.models import ServiceCategories, Service, Business
 from API.lib.auth import verify_api_key
@@ -65,15 +67,19 @@ def retrieve_service(service_id):
     business: Business = service.business
     serialized_service["estimated_time_string"] = estimated_time_string
     serialized_service["business_name"] = business.business_name
+    serialized_service["weekdayOpening"] = business.weekday_opening.strftime("%H:%M")
+    serialized_service["weekdayClosing"] = business.weekday_closing.strftime("%H:%M")
+    serialized_service["weekendOpening"] = business.weekend_opening.strftime("%H:%M")
+    serialized_service["weekendClosing"] = business.weekend_closing.strftime("%H:%M")
     serialized_service["slug"] = business.slug
     serialized_service["location"] = business.location
     serialized_service["phone"] = business.phone
     serialized_service["directions"] = business.google_map
 
-    all_staff: list = service.business.staff.all()
-    serialized_staff: list = [serialize_staff(staff) for staff in all_staff]
+    staff: list = service.business.staff.all()
+    # serialized_staff: list = [serialize_staff(staff) for staff in all_staff]
 
-    return jsonify({"service": serialized_service, "staff": serialized_staff}), 200
+    return jsonify({"service": serialized_service, "staff": serialize_staff(staff)}), 200
 
 
 @services_blueprint.route("/update/<int:service_id>", methods=["PUT"])
