@@ -3,12 +3,13 @@ from typing import Union, Optional, Any
 from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
 from API.lib.auth import client_login_required, business_login_required, verify_api_key
-from API.lib.data_serializer import serialize_appointment
+from API.lib.data_serializer import serialize_appointment, serialize_client
 from API.lib.sendSMS import send_sms
 from API.lib.utils import check_staff_availability
 from API import db, bcrypt
 from datetime import datetime, timedelta, time, date
-from API.lib.SMS_messages import reschedule_appointment_composer, new_appointment_notification_message
+from API.lib.SMS_messages import reschedule_appointment_composer, new_appointment_notification_message, \
+    appointment_remainder_message
 from API.lib.checkBusinessClosed import check_business_closed
 from API.lib.send_mail import appointment_confirmation_email, send_ask_for_review_mail
 
@@ -471,7 +472,7 @@ def fetch_single_appointment(appointment_id):
     return jsonify({"appointment": serialize_appointment(appointment)}), 200
 
 
-@appointment_blueprint.route("/send-reminders", methods=["POST"])
+@appointment_blueprint.route("/send_reminder", methods=["GET"])
 @verify_api_key
 def send_appointment_reminder():
     """
@@ -479,8 +480,23 @@ def send_appointment_reminder():
         Reminder can be sent via SMS or whatsapp
         :return:
     """
-    today = datetime.today()
-    appointments = Appointment.filter(Appointment.date == today, ~Appointment.cancelled, ~Appointment.completed).all()
+    today: date = datetime.today().date()
+    appointments: list = Appointment.query.filter(Appointment.date == today, ~Appointment.cancelled, ~Appointment.completed)\
+        .all()
+
+    unsent_reminders: int = 0
     for appointment in appointments:
-        pass
-    # TODO: Finish this
+        client: Client = appointment.client
+        message: str = appointment_remainder_message(
+            business=appointment.business.business_name,
+            date_=appointment.date,
+            time_=appointment.time.strftime("%H:%M"),
+            name=client.name.split()[0],
+            service=appointment.service.service
+        )
+
+        response = send_sms(phone=client.phone, message=message)
+        if response.status_code != 200:
+            unsent_reminders += 1
+
+    return jsonify({"message": f"Sent successfully", "unsuccessful": unsent_reminders}), 200

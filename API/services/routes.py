@@ -76,10 +76,10 @@ def retrieve_service(service_id):
     serialized_service["phone"] = business.phone
     serialized_service["directions"] = business.google_map
 
-    all_staff: list = service.business.staff.all()
-    serialized_staff: list = [serialize_staff(staff) for staff in all_staff]
+    staff: list = service.business.staff.all()
+    # serialized_staff: list = [serialize_staff(staff) for staff in all_staff]
 
-    return jsonify({"service": serialized_service, "staff": serialized_staff}), 200
+    return jsonify({"service": serialized_service, "staff": serialize_staff(staff)}), 200
 
 
 @services_blueprint.route("/update/<int:service_id>", methods=["PUT"])
