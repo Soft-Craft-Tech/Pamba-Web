@@ -43,7 +43,7 @@ Pamba Africa
     return message
 
 
-def new_appointment_notification_message(name: str, time_: time, date_: date, service: str, business: str) -> str:
+def new_appointment_notification_message(name: str, time_: str, date_: str, service: str, business: str) -> str:
     """
         Compose SMS message for new appointment
         :param name: Client Name

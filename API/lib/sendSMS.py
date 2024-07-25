@@ -26,5 +26,5 @@ def send_sms(phone: str, message: str) -> object:
 
     payload: Any = json.dumps(post_data)
     response: Any = requests.post(url, headers=headers, data=payload)
-
+    print(response)
     return response
