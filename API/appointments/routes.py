@@ -92,13 +92,14 @@ def book_appointment(client):
     )
 
     # Send SMS notification
-    new_appointment_notification_message(
+    appointment_message = new_appointment_notification_message(
         name=client.name.split()[0],
-        time_=appointment_time,
-        date_=appointment_date,
+        time_=appointment_time.strftime("%H:%M"),
+        date_=appointment_date.strftime("%d-%B-%Y"),
         service=service.service,
         business=business.business_name
     )
+    send_sms(client.phone, appointment_message)
 
     return jsonify({"message": "Booking Successful"}), 200
 
