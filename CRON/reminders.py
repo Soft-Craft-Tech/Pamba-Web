@@ -10,13 +10,13 @@ HEADERS: dict = {
 }
 
 
-def send_appointment_remainders():
+def send_appointment_remainders() -> requests.Response:
     """
         Send notification to the client on the day of the appointment
         :return: None
     """
 
-    response = requests.get(url=URL, headers=HEADERS)
+    response: requests.Response = requests.get(url=URL, headers=HEADERS)
     return response
 
 

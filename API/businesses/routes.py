@@ -281,22 +281,23 @@ def assign_services(business: Business):
     if len(services) == 0:
         return jsonify({"message": "No service to be added"}), 400
 
-    try:
-        for service in services:
-            service_to_add: Service = Service(
-                service=service["name"].title().strip(),
-                price=service["price"],
-                description=service["description"].strip(),
-                estimated_service_time=service["estimatedTime"],
-                service_category=service["category"],
-                service_image=service["imageURL"],
-                business_id=business.id
-            )
-            db.session.add(service_to_add)
-    except Exception as e:
-        return jsonify({"message": "An error occurred please try again"}), 500
-    else:
-        db.session.commit()
+    for service in services:
+        try:
+            parsedestimatedtime: float = float(service["estimatedTime"])
+        except ValueError:
+            return jsonify({"message": "Estimate Time should be a number"}), 400
+
+        service_to_add: Service = Service(
+            service=service["name"].title().strip(),
+            price=service["price"],
+            description=service["description"].strip(),
+            estimated_service_time=parsedestimatedtime,
+            service_category=service["category"],
+            service_image=service["imageURL"],
+            business_id=business.id
+        )
+        db.session.add(service_to_add)
+    db.session.commit()
 
     return jsonify({"message": "Services have been Added"}), 201
 

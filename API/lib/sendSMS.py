@@ -1,11 +1,9 @@
-from typing import Any
-
 import requests
 import json
 import os
 
 
-def send_sms(phone: str, message: str) -> object:
+def send_sms(phone: str, message: str) -> requests.Response:
     """
         Send Mobile SMS
         :param phone: Recipient Phone Number
@@ -24,7 +22,6 @@ def send_sms(phone: str, message: str) -> object:
         'pass_type': 'plain'
     }
 
-    payload: Any = json.dumps(post_data)
-    response: Any = requests.post(url, headers=headers, data=payload)
-    print(response)
+    payload: str = json.dumps(post_data)
+    response: requests.Response = requests.post(url, headers=headers, data=payload)
     return response
