@@ -1,5 +1,5 @@
 from API.models import (
-    Business, Service, Rating, Review, BusinessCategory, BusinessCategoriesAssociation,
+    Business, Service, Rating, Review, BusinessCategory,
     ServiceCategories
 )
 from flask import Blueprint, jsonify, request
@@ -26,7 +26,7 @@ def business_signup():
     """
     payload = request.get_json()
     name = payload["name"].strip().title()
-    category_ids = payload["category"]
+    category = payload["category"]
     email = payload["email"].strip().lower()
     phone = payload["phone"]
     city = payload["city"].strip().title()
@@ -38,12 +38,27 @@ def business_signup():
     # Check if email and phone number already exists
     existing_email = Business.query.filter_by(email=email).first()
     existing_phone = Business.query.filter_by(phone=phone).first()
+    category_id = None
 
     if existing_email:
         return jsonify({"message": "Email already exists"}), 409
 
     if existing_phone:
         return jsonify({"message": "Phone number already exists"}), 409
+
+    try:
+        id_ = int(category)  # ID of category
+        business_category = BusinessCategory.query.filter_by(id=id_).first()
+        if not business_category:
+            return jsonify({"message": "Invalid Category"}), 400
+        category_id = business_category.id
+    except ValueError:
+        new_business_category = BusinessCategory(
+            category_name=category.strip().title()
+        )
+        db.session.add(new_business_category)
+        db.session.commit()
+        category_id = new_business_category.id
 
     business = Business(
         business_name=name,
@@ -53,19 +68,10 @@ def business_signup():
         city=city,
         location=location,
         google_map=google_map,
-        password=hashed_password
+        password=hashed_password,
+        category_id=category_id
     )
     db.session.add(business)
-
-    # Add Business categories to business.
-    for cat_id in category_ids:
-        if not cat_id:
-            return jsonify({"message": "Invalid Business Category"})
-        business_categories = BusinessCategoriesAssociation(
-            business_id=business.id,
-            category_id=cat_id
-        )
-        db.session.add(business_categories)
     db.session.commit()
 
     # Activation Token

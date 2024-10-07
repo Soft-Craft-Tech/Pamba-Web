@@ -10,15 +10,16 @@ businesses_clients_association = db.Table(
 )
 
 
-class BusinessCategoriesAssociation(db.Model):
-    """
-        Junction Table for Businesses and BusinessCategories
-    """
-    __tablename__ = "business_categories_association"
+class BusinessCategory(db.Model):
+    """Business Categories"""
+    __tablename__ = "business_categories"
 
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
-    category_id = db.Column(db.Integer, db.ForeignKey("businesscategories.id"))
+    category_name = db.Column(db.String(100), nullable=False)
+    businesses = db.relationship("Business", backref="category", lazy="dynamic")
+
+    def __str__(self):
+        return f"Category({self.category_name}, {self.description})"
 
 
 class Business(db.Model):
@@ -47,6 +48,7 @@ class Business(db.Model):
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
     rating = db.Column(db.Float, default=0)
+    category_id = db.Column(db.Integer, db.ForeignKey("business_categories.id"))
     services = db.relationship("Service",  backref="business", lazy="dynamic", cascade='all, delete-orphan')
     branches = db.relationship("Business", backref=db.backref("parent", remote_side=[id]))  # Business branch
     inventory = db.relationship("Inventory", backref="business", lazy="dynamic", cascade='all, delete-orphan')
@@ -77,19 +79,6 @@ class BusinessGallery(db.Model):
 
     def __repr__(self):
         return self.image_url
-
-
-class BusinessCategory(db.Model):
-    """Business Categories"""
-    __tablename__ = "businesscategories"
-
-    id = db.Column(db.Integer, primary_key=True)
-    category_name = db.Column(db.String(100), nullable=False)
-    businesses = db.relationship("Business", secondary="business_categories_association", backref="category",
-                                 lazy="dynamic")
-
-    def __str__(self):
-        return f"Category({self.category_name}, {self.description})"
 
 
 class ServiceCategories(db.Model):
