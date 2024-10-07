@@ -233,7 +233,15 @@ signup a business
     headers:
         X-API-KEY: <API_KEY>
     body : {
-}
+        "name" : "",
+        "email" : "",
+        "category": "",
+        "phone" : "",
+        "city" : "",
+        "location" : "",
+        "mapUrl" : "",
+        "password": ""
+    }
 ```
 * ### login into a business account 
 login into a business account
