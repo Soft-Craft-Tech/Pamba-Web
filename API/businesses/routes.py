@@ -372,7 +372,7 @@ def fetch_business(slug):
     reviews = Review.query.filter_by(business_id=business.id)
     business_data = dict(
         business_name=business.business_name,
-        category=business.category,
+        category=business.category.category_name,
         id=business.id,
         location=business.location,
         phone=business.phone,
