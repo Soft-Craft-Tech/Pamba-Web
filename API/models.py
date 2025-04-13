@@ -10,27 +10,16 @@ businesses_clients_association = db.Table(
 )
 
 
-# Business services Junction Table
-class ServicesBusinessesAssociation(db.Model):
-    """
-        Junction Table
-    """
-    __tablename__ = "services_businesses_association"
+class BusinessCategory(db.Model):
+    """Business Categories"""
+    __tablename__ = "business_categories"
 
     id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey('businesses.id'))
-    service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
-    price = db.Column(db.Integer)
+    category_name = db.Column(db.String(100), nullable=False)
+    businesses = db.relationship("Business", backref="category", lazy="dynamic")
 
-
-class BusinessCategoriesAssociation(db.Model):
-    """
-        Junction Table for Businesses and BusinessCategories
-    """
-    __tablename__ = "business_categories_association"
-    id = db.Column(db.Integer, primary_key=True)
-    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
-    category_id = db.Column(db.Integer, db.ForeignKey("businesscategories.id"))
+    def __str__(self):
+        return f"Category({self.category_name}, {self.description})"
 
 
 class Business(db.Model):
@@ -45,17 +34,23 @@ class Business(db.Model):
     city = db.Column(db.String(30), nullable=False)
     location = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text, nullable=True)
-    password = db.Column(db.String(250), nullable=False)
+    password = db.Column(db.String(250), nullable=True)
     google_map = db.Column(db.String(300), nullable=True)
     active = db.Column(db.Boolean, default=False)
     verified = db.Column(db.Boolean, default=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    parent_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
+    weekend_opening = db.Column(db.Time)
+    weekend_closing = db.Column(db.Time)
+    weekday_opening = db.Column(db.Time)
+    weekday_closing = db.Column(db.Time)
     updated_on = db.Column(db.DateTime)
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
-    services = db.relationship("Service", secondary='services_businesses_association',  backref="businesses",
-                               lazy="dynamic"
-                               )
+    rating = db.Column(db.Float, default=0)
+    category_id = db.Column(db.Integer, db.ForeignKey("business_categories.id"))
+    services = db.relationship("Service",  backref="business", lazy="dynamic", cascade='all, delete-orphan')
+    branches = db.relationship("Business", backref=db.backref("parent", remote_side=[id]))  # Business branch
     inventory = db.relationship("Inventory", backref="business", lazy="dynamic", cascade='all, delete-orphan')
     expense_accounts = db.relationship("ExpenseAccount", backref="business", lazy="dynamic", cascade='all, '
                                                                                                      'delete-orphan')
@@ -65,21 +60,38 @@ class Business(db.Model):
     sales = db.relationship("Sale", backref="business", lazy="dynamic", cascade="all, delete-orphan")
     appointments = db.relationship("Appointment", backref="business", lazy="dynamic", cascade="all, delete-orphan")
     clients = db.relationship('Client', secondary='businesses_clients_association', backref='service_providers')
+    expenses = db.relationship("Expense", backref="business", lazy="dynamic", cascade="all, delete-orphan")
+    reviews = db.relationship("Review", backref="business", lazy="dynamic", cascade="all, delete-orphan")
+    gallery = db.relationship("BusinessGallery", backref="business", lazy="dynamic", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"Business({self.business_name}, {self.slug})"
 
 
-class BusinessCategory(db.Model):
-    """Business Categories"""
-    __tablename__ = "businesscategories"
+class BusinessGallery(db.Model):
+    """Business Gallery Images"""
+    __tablename__ = "businessgallery"
 
     id = db.Column(db.Integer, primary_key=True)
-    category_name = db.Column(db.String(100), nullable=False)
-    businesses = db.relationship("Business", backref="category", lazy="dynamic", cascade="all, delete-orphan")
+    image_url = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
 
-    def __str__(self):
-        return f"Category({self.category_name}, {self.description})"
+    def __repr__(self):
+        return self.image_url
+
+
+class ServiceCategories(db.Model):
+    """
+        Services Categories for pre-defined categories
+    """
+    __table_name__ = "service_categories"
+    id = db.Column(db.Integer, primary_key=True)
+    category_name = db.Column(db.String(30))
+    services = db.relationship("Service", backref="category", lazy="dynamic")
+
+    def __repr__(self):
+        return f"ServiceCategory({self.category_name})"
 
 
 class Service(db.Model):
@@ -88,12 +100,17 @@ class Service(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     service = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Integer)
     description = db.Column(db.Text, nullable=True)
+    estimated_service_time = db.Column(db.String(100), nullable=True)
+    service_image = db.Column(db.String(100), nullable=True)
+    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
+    service_category = db.Column(db.Integer, db.ForeignKey("service_categories.id",  ondelete='SET NULL'))
     sales = db.relationship("Sale", backref="service", lazy="dynamic")
-    appointments = db.relationship("Appointment", backref="service", lazy="dynamic")
+    appointments = db.relationship("Appointment",  backref="service", lazy="dynamic")
 
     def __str__(self):
-        return f"Services({self.service})"
+        return f"Services({self.service}, {self.price})"
 
 
 class Sale(db.Model):
@@ -135,6 +152,7 @@ class Expense(db.Model):
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime)
+    business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     expense_account = db.Column(db.Integer, db.ForeignKey("expenseaccounts.id", ondelete='SET NULL'))
 
     def __repr__(self):
@@ -162,15 +180,34 @@ class Staff(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     f_name = db.Column(db.String(20), nullable=False)
-    l_name = db.Column(db.String(20), nullable=False)
     phone = db.Column(db.String(15), nullable=False, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     role = db.Column(db.String(20), nullable=False)
     public_id = db.Column(db.String(15), nullable=False, unique=True)
     employer_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
+    appointments = db.relationship("Appointment", backref="staff", lazy="dynamic", )
+    availability = db.relationship("StaffAvailability", backref="staff", lazy="dynamic", cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"Staff({self.f_name}, {self.l_name})"
+
+
+class StaffAvailability(db.Model):
+    """
+        Staff availability schedules
+        Stores dates and times when the the staff might not be available, maybe leave or other
+    """
+    __tablename__ = "staff_availability"
+
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    day_of_week = db.Column(db.Integer, nullable=False)
+    staff_id = db.Column(db.Integer, db.ForeignKey("staff.id"))
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+
+    def __repr__(self):
+        return f"StaffAvailability({self.date}, {self.day_of_week})"
 
 
 class Inventory(db.Model):
@@ -204,19 +241,21 @@ class Rating(db.Model):
 
 
 class Client(db.Model):
-    """Clients table"""
+    """Clients table for the businesses' clients"""
     __tablename__ = "clients"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.String(15), nullable=False, unique=True)
-    password = db.Column(db.String(300), nullable=False)
+    phone = db.Column(db.String(15), nullable=False)
+    password = db.Column(db.String(300), nullable=True)
     verified = db.Column(db.Boolean, default=False)
     queued_for_deletion = db.Column(db.Boolean, default=False)
     otp = db.Column(db.String(200), nullable=True)
     otp_expiration = db.Column(db.DateTime, nullable=True)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    dob = db.Column(db.Date, nullable=True)
+    profile_image = db.Column(db.String(200), nullable=True)
     notifications = db.relationship("ClientNotification", backref="client", lazy="dynamic", cascade="all, "
                                                                                                     "delete-orphan")
     reviews = db.relationship("Review", backref="client", lazy="dynamic", cascade="all, delete-orphan")
@@ -267,6 +306,7 @@ class Review(db.Model):
     message = db.Column(db.Text, nullable=True)
     reviewed_at = db.Column(db.DateTime, default=datetime.utcnow)
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id"))
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id"))
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
 
     def __repr__(self):
@@ -284,10 +324,12 @@ class Appointment(db.Model):
     cancelled = db.Column(db.Boolean, default=False)
     comment = db.Column(db.Text, nullable=True)
     create_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notification_mode = db.Column(db.String(100), nullable=True)  # Mode of notification for upcoming appointments
+    review = db.relationship("Review", backref="appointment", uselist=False)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     staff_id = db.Column(db.Integer, db.ForeignKey("staff.id", ondelete='SET NULL'))
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id", ondelete='SET NULL'))
-    service_id = db.Column(db.Integer, db.ForeignKey("services.id", ondelete='SET NULL'))
+    service_id = db.Column(db.ForeignKey("services.id", ondelete='SET NULL'))
 
     def __repr__(self):
         return f"Appointment({self.date}, {self.time}, {self.comment})"

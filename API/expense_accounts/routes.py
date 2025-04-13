@@ -31,7 +31,7 @@ def create_expense_account(business):
         db.session.add(new_account)
     db.session.commit()
 
-    return jsonify({"message": "Account has been created"}), 200
+    return jsonify({"message": "Accounts have been created"}), 200
 
 
 @accounts_blueprint.route("/delete/<int:account_id>", methods=["DELETE"])

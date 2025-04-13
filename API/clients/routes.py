@@ -1,11 +1,15 @@
 from flask import jsonify, request, Blueprint
-from API.models import Client, ClientDeleted
-from API.lib.data_serializer import serialize_client
-from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required
+from sqlalchemy import func
+
+from API.models import Client, ClientDeleted, Appointment
+from API.lib.data_serializer import serialize_client, serialize_appointment
+from API.lib.utils import save_response_image
+from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required, business_login_required
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import json
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
 
@@ -21,27 +25,39 @@ def client_signup():
     email = payload["email"].strip().lower()
     phone = payload["phone"]
     name = payload["name"].strip().title()
-
-    # Check for existence of user with same email or phone number
-    email_exists = Client.query.filter_by(email=email).first()
-    if email_exists:
-        return jsonify({"message": "Email already exists!"}), 409
-
-    phone_exists = Client.query.filter_by(phone=phone).first()
-    if phone_exists:
-        return jsonify({"message": "Phone number already exists!"}), 409
-
+    otp, otp_hash = generate_otp()
     # Hash the password
     password_hash = bcrypt.generate_password_hash(payload["password"].strip()).decode("utf-8")
 
-    otp, otp_hash = generate_otp()
+    # Check for existence of user with same email or phone number and are not web users who haven't signup
+    email_exists = Client.query.filter_by(email=email).first()
+    phone_exists = Client.query.filter_by(phone=phone).first()
+
+    if email_exists or phone_exists:
+        if email_exists and email_exists.name and email_exists.password:
+            return jsonify({"message": "Email already exists!"}), 409
+
+        if phone_exists and phone_exists.name and phone_exists.password:
+            return jsonify({"message": "Phone number already exists!"}), 409
+
+        client = email_exists or phone_exists
+        client.email = email
+        client.phone = phone
+        client.name = name
+        client.password = password_hash
+        client.otp = otp_hash
+        client.otp_expiration = datetime.now() + timedelta(minutes=30)
+        db.session.commit()
+
+        send_otp(recipient=email, otp=otp, name=name)
+
     client = Client(
         name=name,
         email=email,
         phone=phone,
         password=password_hash,
         otp=otp_hash,
-        otp_expiration=datetime.now() + timedelta(minutes=5)
+        otp_expiration=datetime.now() + timedelta(minutes=30)
     )
     db.session.add(client)
     db.session.commit()
@@ -139,14 +155,14 @@ def client_login():
 
     client = Client.query.filter_by(email=auth.username.strip().lower()).first()
 
-    if client.queued_for_deletion:
-        return jsonify({"message": "Can't Log In. You requested account deletion"}), 400
-
     if not client:
-        return jsonify({"message": "Incorrect Email or Password"}), 404
+        return jsonify({"message": "Incorrect Email or Password"}), 401
 
     if not bcrypt.check_password_hash(client.password, auth.password.strip()):
         return jsonify({"message": "Incorrect Email or Password"}), 401
+
+    if client.queued_for_deletion:
+        return jsonify({"message": "Can't Log In. You requested account deletion"}), 400
 
     token_expiry_time = datetime.utcnow() + timedelta(days=30)
     token = generate_token(expiry=token_expiry_time, username=client.email)
@@ -163,16 +179,19 @@ def request_password_reset():
         Token valid: 30min
         :return: 200, 404
     """
-    payload = request.get_json()
-    email = payload["email"].strip().lower()
-    client = Client.query.filter_by(email=email).first()
+    payload: dict = request.get_json()
+    email: str = payload["email"].strip().lower()
+    client: Client = Client.query.filter_by(email=email).first()
     if not client:
         return jsonify({"message": "Password reset failed"}), 404
 
-    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
-
-    token = generate_token(expiry=token_expiry_time, username=client.email)
-    sent_client_reset_token(recipient=client.email, token=token, name=client.name)
+    token_expiry_time: datetime = datetime.utcnow() + timedelta(minutes=30)
+    token: str = generate_token(expiry=token_expiry_time, username=client.email)
+    sent_client_reset_token(
+        recipient=client.email,
+        url=f"https://www.pamba.africa/client-reset/{token}",
+        name=client.name
+    )
 
     return jsonify({"message": "Token sent to your email"}), 200
 
@@ -229,22 +248,35 @@ def update_profile(client):
     """
         Allow clients to update their profile
         :param client: Client currently logged in
-        :return: 409, 200
+        :return: 409, 400, 200
     """
-    payload = request.get_json()
-    email = payload["email"].strip().lower()
-    phone = payload["phone"].strip()
+    payload: dict = json.loads(request.form.get("payload"))
+    email: str = payload.get("email").strip().lower()
+    phone: str = payload.get("phone").strip()
+    files = request.files
 
-    email_taken = Client.query.filter_by(email=email).first()
-    phone_taken = Client.query.filter_by(phone=phone).first()
+    if "image" not in files:
+        return jsonify({"message": "No image uploaded"}), 400
+
+    try:
+        dob: date = datetime.strptime(payload.get("dob"), "%d-%m-%Y")
+    except ValueError:
+        return jsonify({"message": "Invalid Date Format"}), 400
+
+    email_taken: Client = Client.query.filter_by(email=email).first()
+    phone_taken: Client = Client.query.filter_by(phone=phone).first()
 
     if email_taken and email_taken.id != client.id:
         return jsonify({"message": "Email already exists"}), 409
     if phone_taken and phone_taken.id != client.id:
         return jsonify({"message": "Phone already taken"}), 409
 
+    image_name = save_response_image(files.get("image"))
+
     client.email = email
     client.phone = phone
+    client.dob = dob
+    client.profile_image = image_name
     db.session.commit()
 
     return jsonify({"message": "Update Successful", "client": serialize_client(client)}), 200
@@ -277,3 +309,61 @@ def resend_verification_otp():
     return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
 
 
+@clients_blueprint.route("/business-clients", methods=["GET"])
+@business_login_required
+def fetch_business_clients(business):
+    """
+        Fetch all clients associated with a certain business
+        :param business: Logged in business
+        :return: 200
+    """
+    lifetime_number_of_clients: int = 0
+    all_clients: list = []
+    all_appointments: list = []
+    year: int = 2024
+    yearly_appointments: dict = {}
+
+    appointments = business.appointments.filter_by(cancelled=False).order_by(Appointment.date.desc()).all()
+    for appointment in appointments:
+        all_appointments.append(serialize_appointment(appointment))
+        client = appointment.client
+        lifetime_number_of_clients += 1
+        all_clients.append(serialize_client(client))
+
+        if appointment.date.year == year:
+            month = appointment.date.strftime("%b")
+            if month in yearly_appointments.keys():
+                yearly_appointments[month] += 1
+            else:
+                yearly_appointments[month] = 1
+
+    client_appointment_counts = db.session.query(Client.id, func.count(Appointment.id)) \
+        .join(Appointment) \
+        .group_by(Client.id) \
+        .having(func.count(Appointment.id) > 1) \
+        .all()
+    returning_clients = len(client_appointment_counts)
+
+    monthly_appointments: list = [{month: count} for month, count in yearly_appointments.items()]
+
+    return jsonify(
+        {
+            "message": "Success",
+            "lifetime_client_number_of_clients": lifetime_number_of_clients,
+            "all_clients": all_clients,
+            "all_appointments": monthly_appointments,
+            "returning_clients": returning_clients
+        }
+    ), 200
+
+
+@clients_blueprint.route("/retrieve", methods=["GET"])
+@client_login_required
+def retrieve_client(client: Client):
+    """
+        Retrieve Client Profile
+        :param client: Client Object
+        :return: 404, 200
+    """
+
+    return jsonify(({"client": serialize_client(client)})), 200

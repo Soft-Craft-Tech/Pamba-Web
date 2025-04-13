@@ -1,5 +1,5 @@
 from flask import jsonify, request, Blueprint
-from API import db, bcrypt
+from API import db
 from API.lib.auth import business_login_required
 from API.lib.data_serializer import serialize_expenses
 from API.models import Expense, ExpenseAccount
@@ -33,7 +33,8 @@ def record_expenses(business):
         expense=expense,
         amount=amount,
         description=description,
-        expense_account=account_id
+        expense_account=account_id,
+        business_id=business.id
     )
 
     db.session.add(new_expense)
@@ -51,11 +52,6 @@ def delete_expense(business, expense_id):
         :param expense_id: ID of expense to be deleted
         :return: 404, 400, 200
     """
-    payload = request.get_json()
-    password = payload["password"].strip()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect password"}), 400
 
     expense = Expense.query.get(expense_id)
     if not expense:
@@ -81,10 +77,6 @@ def update_expense(business, expense_id):
     amount = payload["expenseAmount"]
     description = payload["description"].strip().capitalize()
     account_id = payload["accountID"]
-    password = payload["password"].strip()
-
-    if not bcrypt.check_password_hash(business.password, password):
-        return jsonify({"message": "Incorrect Password"}), 400
 
     expense_record = Expense.query.get(expense_id)
     if not expense_record:
@@ -92,8 +84,8 @@ def update_expense(business, expense_id):
 
     expense_record.expense = expense
     expense_record.amount = amount
-    expense_record.description = description,
-    expense_record.account_id = account_id
+    expense_record.description = description
+    expense_record.expense_account = account_id
     expense_record.modified_at = datetime.utcnow()
     db.session.commit()
 
@@ -109,12 +101,10 @@ def fetch_business_expenses(business):
         :return: 400, 200
     """
     all_expenses = []
-    accounts = [account.id for account in business.expense_accounts.all()]
-    if len(accounts) > 0:
-        expenses = Expense.query.filter(Expense.expense_account.in_(accounts)).all()
-
-        for expense in expenses:
-            all_expenses.append(serialize_expenses(expense))
+    for expense in business.expenses.order_by(Expense.created_at.desc()).all():
+        serialized_expense = serialize_expenses(expense)
+        serialized_expense["category"] = expense.account.account_name
+        all_expenses.append(serialized_expense)
 
     return jsonify({"expenses": all_expenses}), 200
 
@@ -137,3 +127,4 @@ def fetch_single_expense(business, expense_id):
         return jsonify({"message": "Not Allowed"}), 403
 
     return jsonify({"expense": serialize_expenses(expense)}), 200
+

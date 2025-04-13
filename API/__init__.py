@@ -15,6 +15,7 @@ cors = CORS()
 
 
 def create_app():
+
     app = Flask(__name__)
     app.config.from_object(Config)
 
@@ -37,6 +38,8 @@ def create_app():
     from API.staff.routes import staff_blueprint
     from API.services.routes import services_blueprint
     from API.admin.routes import admin_blueprint
+    from API.messaging.routes import messaging_blueprint
+    from API.gallery.routes import gallery_blueprint
 
     app.register_blueprint(clients_blueprint)
     app.register_blueprint(appointment_blueprint)
@@ -51,5 +54,7 @@ def create_app():
     app.register_blueprint(staff_blueprint)
     app.register_blueprint(services_blueprint)
     app.register_blueprint(admin_blueprint)
+    app.register_blueprint(messaging_blueprint)
+    app.register_blueprint(gallery_blueprint)
 
     return app

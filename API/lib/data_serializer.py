@@ -13,7 +13,9 @@ def serialize_client(client):
         "name": fields.String,
         "email": fields.String,
         "phone": fields.String,
-        "verified": fields.Boolean
+        "verified": fields.Boolean,
+        "dob": fields.DateTime(dt_format='iso8601'),
+        "profile_image": fields.String
     }
 
     return marshal(client, client_fields)
@@ -28,18 +30,22 @@ def serialize_business(business):
     business_fields = {
         "id": fields.Integer,
         "business_name": fields.String,
-        "category": fields.String,
         "slug": fields.String,
         "email": fields.String,
         "phone": fields.String,
         "city": fields.String,
         "location": fields.String,
         "description": fields.String,
-        "google_map": fields.Url,
+        "google_map": fields.String,
         "active": fields.Boolean,
         "verified": fields.Boolean,
         "join_date": fields.DateTime(dt_format='iso8601'),
-        "profile_img": fields.String
+        "rating": fields.String,
+        "profile_img": fields.String,
+        "weekday_opening": fields.String,
+        "weekday_closing": fields.String,
+        "weekend_opening": fields.String,
+        "weekend_closing": fields.String
     }
 
     return marshal(business, business_fields)
@@ -58,7 +64,8 @@ def serialize_appointment(appointment):
         "cancelled": fields.Boolean,
         "comment": fields.String,
         "create_at": fields.DateTime(dt_format='iso8601'),
-        "completed": fields.Boolean
+        "completed": fields.Boolean,
+        "service_id": fields.Integer
     }
 
     return marshal(appointment, appointment_fields)
@@ -88,6 +95,7 @@ def serialize_sale(sale):
         :return: JSON serialized sale record
     """
     sales_fields = {
+        "id": fields.Integer,
         "payment_method": fields.String,
         "description": fields.String,
         "date_created": fields.DateTime(dt_format='iso8601')
@@ -120,7 +128,12 @@ def serialize_service(service):
     service_fields = {
         "id": fields.Integer,
         "service": fields.String,
-        "description": fields.String
+        "description": fields.String,
+        "business_id": fields.Integer,
+        "service_category": fields.Integer,
+        "price": fields.Integer,
+        "estimated_service_time": fields.Float,
+        "service_image": fields.String
     }
 
     return marshal(service, service_fields)
@@ -186,10 +199,55 @@ def serialize_staff(staff):
     staff_fields = {
         "id": fields.Integer,
         "f_name": fields.String,
-        "l_name": fields.String,
         "phone": fields.String,
         "created_at": fields.DateTime(dt_format='iso8601'),
         "role": fields.String,
         "public_id": fields.String
     }
     return marshal(staff, staff_fields)
+
+
+def serialize_business_category(category):
+    """
+        Serialize Business Category
+        :param category: Category object
+        :return:Json
+    """
+    category_fields = {
+        "id": fields.Integer,
+        "category_name": fields.String
+    }
+
+    return marshal(category, category_fields)
+
+
+def serialize_availability(availability):
+    """
+        Serialize staff availability
+        :param availability: Availability Object
+        :return: JSON serialized object
+    """
+    availability_fields = {
+        "id": fields.Integer,
+        "date": fields.DateTime(dt_format='iso8601'),
+        "day_of_week": fields.Integer,
+        "start_time": fields.String,
+        "end_time": fields.String
+    }
+    return marshal(availability, availability_fields)
+
+
+def serialize_gallery(gallery):
+    """
+        Serialize Gallery
+        :param gallery: Gallery DB Object
+        :return: Serialized gallery object
+    """
+    gallery_fields = {
+        "id": fields.Integer,
+        "created_at": fields.DateTime(dt_format='iso8601'),
+        "image_url": fields.String,
+        "business_id": fields.Integer
+    }
+
+    return marshal(gallery, gallery_fields)

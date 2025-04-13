@@ -1,9 +1,17 @@
-from API.models import Appointment, Service, Staff
+from typing import Union, Optional, Any
+
+from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
-from API.lib.auth import client_login_required, business_login_required
-from API.lib.data_serializer import serialize_appointment
+from API.lib.auth import client_login_required, business_login_required, verify_api_key
+from API.lib.data_serializer import serialize_appointment, serialize_client
+from API.lib.sendSMS import send_sms
+from API.lib.utils import check_staff_availability
 from API import db, bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta, time, date
+from API.lib.SMS_messages import reschedule_appointment_composer, new_appointment_notification_message, \
+    appointment_remainder_message
+from API.lib.checkBusinessClosed import check_business_closed
+from API.lib.send_mail import appointment_confirmation_email, send_ask_for_review_mail
 
 appointment_blueprint = Blueprint("appointments", __name__, url_prefix="/API/appointments")
 
@@ -12,40 +20,199 @@ appointment_blueprint = Blueprint("appointments", __name__, url_prefix="/API/app
 @client_login_required
 def book_appointment(client):
     """
-        Book Appointment
+        Book Appointment from the mobile application
         :param client: Logged in client
-        :return: 200
+        :return: 200, 403, 404
     """
-    payload = request.get_json()
-    date = datetime.strptime(payload["date"], '%d-%m-%Y')
-    time = datetime.strptime(payload["time"], '%H:%M').time()
-    comment = payload["comment"].strip()
-    business_id = payload["provider"]
-    service = payload["service"]
+    payload: dict = request.get_json()
+    appointment_date: date = datetime.strptime(payload.get("date"), '%d-%m-%Y')
+    appointment_time: time = datetime.strptime(payload.get("time"), '%H:%M').time()
+    comment: str = payload.get("comment").strip()
+    service: int = payload.get("service")
+    staff_id: int = payload.get("staff", "")
+
+    service: Service = Service.query.filter_by(id=service).first()
+    if not service:
+        return jsonify({"message": "Service not found"}), 404
 
     if not client.verified:
         return jsonify({"message": "Please, verify your account."}), 403
-    new_appointment = Appointment(
-        date=date,
-        time=time,
+
+    if staff_id:
+        staff: Staff = Staff.query.get(staff_id)
+        if not staff:
+            return jsonify({"message": "Staff you booked with doesn't exist"}), 404
+        overlap: bool = check_staff_availability(
+            staff=staff,
+            appointment_date=appointment_date,
+            appointment_time=appointment_time,
+            service=service
+        )
+        if overlap:
+            return jsonify({
+                "message": "The Staff you selected is already booked at this time. "
+                           "Please book with a different staff or let us assign you someone"
+            }), 400
+
+    business: Business = service.business
+
+    # Check whether the business will be closed for the hours booked.
+    open_status = check_business_closed(appointment_time, appointment_date, business)
+    if not open_status:
+        return jsonify({"message": "Our premises are not open at the picked time and day"}), 400
+
+    new_appointment: Appointment = Appointment(
+        date=appointment_date,
+        time=appointment_time,
         comment=comment,
-        business_id=business_id,
-        client_id=client.id
+        business_id=business.id,
+        client_id=client.id,
+        staff_id=staff_id if staff_id else None,
+        service_id=service.id
     )
+
     # Avoid Booking multiple appointments scheduled at the same time
-    appointment = Appointment.query.filter_by(date=date, time=time, client_id=client.id, cancelled=False).first()
+    appointment: Appointment = Appointment.query\
+        .filter_by(date=appointment_date, time=appointment_time, client_id=client.id, cancelled=False).first()
     if appointment:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
-    service = Service.query.filter_by(id=service).first()
-    if not service:
-        return jsonify({"message": "Service not found"}), 404
-    new_appointment.service_id = service.id
     db.session.add(new_appointment)
     db.session.commit()
+
     # Send email or notification when a new appointment is scheduled
+    appointment_confirmation_email(
+        client_name=client.name.split()[0],
+        date=appointment_date,
+        time=appointment_time,
+        business_name=business.business_name,
+        business_directions=business.google_map,
+        business_location=business.location,
+        recipient=client.email
+    )
+
+    # Send SMS notification
+    appointment_message = new_appointment_notification_message(
+        name=client.name.split()[0],
+        time_=appointment_time.strftime("%H:%M"),
+        date_=appointment_date.strftime("%d-%B-%Y"),
+        service=service.service,
+        business=business.business_name
+    )
+    send_sms(client.phone, appointment_message)
 
     return jsonify({"message": "Booking Successful"}), 200
+
+
+@appointment_blueprint.route("/book/web-appointments", methods=["POST"])
+@verify_api_key
+def book_appointment_on_web():
+    """
+        Book appointment from the web without Auth
+        :return: 200, 404
+    """
+    payload = request.get_json()
+
+    try:
+        appointment_date: date = datetime.strptime(payload["date"], '%d-%m-%Y').date()
+        appointment_time: time = datetime.strptime(payload["time"], '%H:%M').time()
+    except ValueError:
+        return jsonify({"message": "Invalid Time/Date format"}), 400
+
+    comment: str = payload.get("comment").strip()
+    business_id: int = payload.get("business")
+    service_id: int = payload.get("service")
+    staff_id: int = payload.get("staff", "")
+    email: str = payload.get("email").strip().lower()
+    phone: str = payload.get("phone").strip()
+    name: str = payload.get("name").strip().title()
+    notification_mode: str = payload.get("notification").lower()
+    today_date: date = datetime.today().date()
+    current_time: time = datetime.today().time()
+
+    if appointment_date < today_date:
+        return jsonify({"message": "Can't book an appointment for a past date"}), 400
+    if appointment_date == today_date and appointment_time < current_time:
+        return jsonify({"message": "You can't book an appointment for a past time"}), 400
+
+    service: Service = Service.query.get(service_id)
+    if not service:
+        return jsonify({"message": "The service you are booking is unavailable"}), 404
+
+    business: Business = Business.query.get(business_id)
+    if not business:
+        return jsonify({"message": "Business not found"}), 404
+
+    # Check whether the business will be closed for the hours booked.
+    open_status = check_business_closed(appointment_time, appointment_date, business)
+    if not open_status:
+        return jsonify({"message": "Our premises are not open at the selected time and day"}), 400
+
+    # Check staff availability.
+    if staff_id:
+        staff: Staff = Staff.query.get(staff_id)
+        if not staff:
+            return jsonify({"message": "Staff you booked with doesn't exist"}), 404
+        overlap: bool = check_staff_availability(
+            staff=staff,
+            appointment_date=appointment_date,
+            appointment_time=appointment_time,
+            service=service
+        )
+        if overlap:
+            return jsonify({
+                "message": "The Staff you selected is already booked at this time. "
+                           "Please book with a different staff or let us assign you someone"
+            }), 400
+
+    client: Client = Client.query.filter_by(email=email).first()
+
+    # If the client is not a mobile user or hasn't booked an appointment before
+    if not client:
+        client = Client(
+            email=email,
+            phone=phone,
+            name=name
+        )
+        db.session.add(client)
+        db.session.commit()
+
+    # Create the new Appointment.
+    appointment: Appointment = Appointment(
+        date=appointment_date,
+        time=appointment_time,
+        comment=comment,
+        notification_mode=notification_mode,
+        business_id=business.id,
+        staff_id=staff_id if staff_id else None,
+        client_id=client.id,
+        service_id=service.id
+    )
+    db.session.add(appointment)
+    db.session.commit()
+
+    # Send email or notification when a new appointment is scheduled
+    appointment_confirmation_email(
+        client_name=name.split()[0] if name != "" else None,
+        date=appointment_date,
+        time=appointment_time,
+        business_name=business.business_name,
+        business_directions=business.google_map,
+        business_location=business.location,
+        recipient=client.email
+    )
+
+    # SMS Notification
+    notification_message: str = new_appointment_notification_message(
+        name=name.split()[0] if name != "" else None,
+        time_=appointment_time,
+        date_=appointment_date,
+        service=service.service,
+        business=business.business_name
+    )
+    send_sms(phone=phone, message=notification_message)
+
+    return jsonify({"message": "Appointment Booked Successfully"}), 201
 
 
 @appointment_blueprint.route("/reschedule/<int:appointment_id>", methods=["PUT"])
@@ -58,10 +225,20 @@ def reschedule_appointment(client, appointment_id):
         :return: 200
     """
 
-    payload = request.get_json()
-    date = datetime.strptime(payload["date"], '%d-%m-%Y')
-    time = datetime.strptime(payload["time"], '%H:%M').time()
-    appointment = Appointment.query.get(appointment_id)
+    payload: Any = request.get_json()
+    appointment_date: datetime = datetime.strptime(payload["date"], '%d-%m-%Y')
+    appointment_time: time = datetime.strptime(payload["time"], '%H:%M').time()
+    notification_method: str = payload.get("notification", "")
+    comment: str = payload.get("comment", "")
+    staff_id: Union[str, int] = payload.get("staff_id", "")
+    staff: Optional[Staff] = None
+
+    appointment: Appointment = Appointment.query.get(appointment_id)
+
+    if staff_id != "":
+        staff = Staff.query.get(staff_id)
+        if not staff:
+            return jsonify({"message": "This staff doesn't exist"}), 404
 
     if not appointment:
         return jsonify({"message": "Appointment doesn't exist"}), 404
@@ -73,14 +250,28 @@ def reschedule_appointment(client, appointment_id):
         return jsonify({"message": "Appointment already completed."}), 400
 
     # Avoid Booking multiple appointments scheduled at the same time
-    appointments_booked_same_time = Appointment.query\
-        .filter_by(date=date, time=time, client_id=client.id, cancelled=False).first()
+    appointments_booked_same_time: Appointment = Appointment.query \
+        .filter_by(date=appointment_date, time=appointment_time, client_id=client.id, cancelled=False).first()
     if appointments_booked_same_time:
         return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
-    appointment.time = time
-    appointment.date = date
+    appointment.time = appointment_time
+    appointment.date = appointment_date
+    appointment.staff_id = staff.id if staff else appointment.staff_id
+    appointment.comment = comment if comment != "" else appointment.comment
+    appointment.notification_mode = notification_method if notification_method != "" else appointment.notification_mode
     db.session.commit()
+
+    client: Client = appointment.client
+    message: str = reschedule_appointment_composer(
+        name=client.name.split()[0],
+        time_=appointment_time,
+        date_=appointment_date.strftime("%d-%b-%Y"),
+        service=appointment.service.service,
+        business=appointment.business.business_name
+    )
+
+    send_sms(appointment.client.phone, message)
 
     return jsonify({"message": "Appointment has been rescheduled"}), 200
 
@@ -123,10 +314,11 @@ def my_appointments(client):
         :param client:
         :return:
     """
-    appointments = Appointment.query.filter_by(client_id=client.id).order_by(Appointment.date.desc()).all()
-    cancelled_appointments = []
-    upcoming_appointments = []
-    previous_appointments = []
+    appointments: list = Appointment.query.filter_by(client_id=client.id).order_by(Appointment.date.desc()).all()
+    cancelled_appointments: list = []
+    upcoming_appointments: list = []
+    previous_appointments: list = []
+    today: date = datetime.today().date()
 
     if not appointments:
         return jsonify({"message": "No appointments"}), 404
@@ -140,21 +332,18 @@ def my_appointments(client):
         serialized_appointment["mapUrl"] = appointment.business.google_map
         if appointment.cancelled:
             cancelled_appointments.append(serialized_appointment)
-        if appointment.completed:
+        if appointment.completed or today > appointment.date and not appointment.cancelled:
             previous_appointments.append(serialized_appointment)
-        else:
-            if not appointment.cancelled:
-                upcoming_appointments.append(serialized_appointment)
 
-    sorted_previous = sorted(previous_appointments, key=lambda x: x['id'])
+        if not appointment.cancelled and not appointment.completed and today < appointment.date:
+            upcoming_appointments.append(serialized_appointment)
 
     return jsonify(
         {
             "message": "Success",
             "cancelled": cancelled_appointments,
             "upcoming": upcoming_appointments,
-            "previous": previous_appointments,
-            "last": sorted_previous[-1] if len(sorted_previous) > 0 else None
+            "previous": previous_appointments
         }
     ), 200
 
@@ -200,14 +389,115 @@ def assign_appointment(business, appointment_id):
 @business_login_required
 def fetch_business_appointments(business):
     """
-        Fetch all appointments booked with the logged-in business
+        Fetch all appointments booked with the logged-in business. Exc: Cancelled and Completed
         :param business: Logged-in
         :return: 200
     """
-    appointments = Appointment.query.filter_by(business_id=business.id).all()
-    all_appointments = []
+    today: datetime = datetime.today()
+    appointments: list = business.appointments \
+        .order_by(Appointment.date.desc(), Appointment.time.desc()) \
+        .filter(~Appointment.cancelled).all()
+
+    all_appointments: list = []
 
     for appointment in appointments:
-        all_appointments.append(serialize_appointment(appointment))
+        combined_datetime: datetime = datetime.combine(appointment.date, appointment.time)
+        appointment_duration: int = int(float(appointment.service.estimated_service_time) * 60)
+        appointment_ends: datetime = combined_datetime + timedelta(minutes=appointment_duration)
+        staff: str = ""
 
-    return jsonify({"appointment": all_appointments}), 200
+        if appointment.staff:
+            staff = appointment.staff.f_name
+
+        serialized_appointment = serialize_appointment(appointment)
+        serialized_appointment["start"] = combined_datetime.strftime("%Y-%m-%d %H:%M")
+        serialized_appointment["end"] = appointment_ends.strftime("%Y-%m-%d %H:%M")
+        serialized_appointment["people"] = [appointment.client.name]
+        serialized_appointment["title"] = f"{appointment.service.service} by {staff if staff else 'Unassigned'}"
+        serialized_appointment["calendarId"] = "past" if appointment_ends < today else "upcoming"
+        all_appointments.append(serialized_appointment)
+
+    return jsonify({"appointments": all_appointments}), 200
+
+
+@appointment_blueprint.route("/end_appointment/<int:appointment_id>", methods=["PUT"])
+@business_login_required
+def end_appointment(business, appointment_id):
+    """
+        End Appointment when completed
+        Trigger a notification for appointment Review.
+        :param business: Logged in Business.
+        :param appointment_id: ID of appointment being ended
+        :return: 200, 400.
+    """
+    today = datetime.today()
+    appointment = Appointment.query.get(appointment_id)
+
+    if appointment.business_id != business.id:
+        return jsonify({"message": "Not Allowed"}), 400
+
+    # Can't end completed Appointment.
+    if appointment.completed:
+        return jsonify({"message": "Appointment already completed"}), 400
+
+    # Can't end future appointment.
+    if appointment.date > today.date() or (appointment.date == today.date() and appointment.time > today.time()):
+        return jsonify({"message": "You can't end a future appointment"}), 400
+
+    appointment.completed = True
+    db.session.commit()
+
+    # Send a notification with the review link
+    send_ask_for_review_mail(
+        url=f"https://www.pamba.africa/reviews/new/{appointment.id}",
+        business_name=business.business_name,
+        name=appointment.client.name,
+        recipient=appointment.client.email
+    )
+
+    return jsonify({"message": "Appointment Ended", "appointment": serialize_appointment(appointment)}), 200
+
+
+@appointment_blueprint.route("/<int:appointment_id>", methods=["GET"])
+def fetch_single_appointment(appointment_id):
+    """
+        Fetch single appointment
+        :param appointment_id:
+        :return:
+    """
+    appointment = Appointment.query.get(appointment_id)
+
+    if not appointment:
+        return jsonify({"message": "Not found"}), 404
+
+    return jsonify({"appointment": serialize_appointment(appointment)}), 200
+
+
+@appointment_blueprint.route("/send_reminder", methods=["GET"])
+@verify_api_key
+def send_appointment_reminder():
+    """
+        Send reminder for upcoming appointments
+        Reminder can be sent via SMS or whatsapp
+        :return:
+    """
+    today: date = datetime.today().date()
+    appointments: list = Appointment.query.filter(Appointment.date == today, ~Appointment.cancelled, ~Appointment.completed)\
+        .all()
+
+    unsent_reminders: int = 0
+    for appointment in appointments:
+        client: Client = appointment.client
+        message: str = appointment_remainder_message(
+            business=appointment.business.business_name,
+            date_=appointment.date,
+            time_=appointment.time.strftime("%H:%M"),
+            name=client.name.split()[0],
+            service=appointment.service.service
+        )
+
+        response = send_sms(phone=client.phone, message=message)
+        if response.status_code != 200:
+            unsent_reminders += 1
+
+    return jsonify({"message": f"Sent successfully", "unsuccessful": unsent_reminders}), 200
