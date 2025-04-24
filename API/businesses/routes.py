@@ -74,7 +74,6 @@ def business_signup():
         )
         db.session.add(business)
         db.session.commit()
-        # What if we only commit after the activation email is sent successfully? Ask Kariuki
 
         # Activation Token
         token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
