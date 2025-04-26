@@ -19,6 +19,7 @@ def add_staff(business):
         :return: 409, 400, 201
     """
     try:
+        # TODO: decorator to make sure business is verified
         payload = request.get_json()
         f_name = payload["f_name"].strip().title()
         phone = payload["phone"]
@@ -255,7 +256,6 @@ def add_staff_unavailability(business, staff_id):
                 except ValueError:
                     return jsonify({"message": "Invalid time format in period. Use HH:MM (00:00-23:59)"}), 400
 
-                # Validate time range
                 if start_time >= end_time:
                     return jsonify({"message": "End time must be after start time in period"}), 400
 
