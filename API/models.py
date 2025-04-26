@@ -32,10 +32,8 @@ class Business(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     phone = db.Column(db.String(15), nullable=False, unique=True)
     city = db.Column(db.String(30), nullable=False)
-    location = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text, nullable=True)
     password = db.Column(db.String(250), nullable=True)
-    google_map = db.Column(db.String(300), nullable=True)
     active = db.Column(db.Boolean, default=False)
     verified = db.Column(db.Boolean, default=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -45,6 +43,13 @@ class Business(db.Model):
     weekday_opening = db.Column(db.Time)
     weekday_closing = db.Column(db.Time)
     updated_on = db.Column(db.DateTime)
+    
+    # Location Data
+    place_id = db.Column(db.String(100), nullable=True)
+    formatted_address = db.Column(db.String(300), nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+
     # profile Image link with cloudinary.
     profile_img = db.Column(db.String, nullable=True)
     rating = db.Column(db.Float, default=0)
