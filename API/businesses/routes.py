@@ -12,7 +12,7 @@ from API.lib.data_serializer import (serialize_business,
                                      serialize_review, serialize_appointment, serialize_business_category,
                                      serialize_sale, serialize_expenses)
 from API.lib.rating_calculator import calculate_ratings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")
 
@@ -26,15 +26,22 @@ def business_signup():
     """
     try:
         payload = request.get_json()
+        location_obj = payload["location"]
         name = payload["name"].strip().title()
         category = payload["category"]
         email = payload["email"].strip().lower()
         phone = payload["phone"]
         city = payload["city"].strip().title()
-        location = payload["location"].strip().title()
-        google_map = payload["mapUrl"].strip()
+        place_id = location_obj.get("place_id")
+        formatted_address = location_obj.get("formatted_address", "").strip()
+        geometry = location_obj.get("geometry", {}).get("location", {})
+        latitude = geometry.get("lat", 0.0)
+        longitude = geometry.get("lng", 0.0)
         hashed_password = bcrypt.generate_password_hash(payload["password"].strip()).decode("utf-8")
         slug = slugify(name)
+
+        if not formatted_address or latitude == 0.0 or longitude == 0.0:
+            return jsonify({"message": "Invalid location data provided"}), 400
 
         # Check if email and phone number already exists
         existing_email = Business.query.filter_by(email=email).first()
@@ -67,23 +74,22 @@ def business_signup():
             email=email,
             phone=phone,
             city=city,
-            location=location,
-            google_map=google_map,
+            place_id=place_id,
+            formatted_address=formatted_address,
+            latitude=latitude,
+            longitude=longitude,
             password=hashed_password,
             category_id=category_id
         )
         db.session.add(business)
         db.session.commit()
 
-        # Activation Token
-        token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+    # Activation Token
+        token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         token = generate_token(expiry=token_expiry_time, username=business.slug)
 
         # Send mail
-        try:
-            business_account_activation_email(recipient=business.email, token=token, name=business.business_name)
-        except Exception:
-            return jsonify(f"Failed to Send activation emaail")
+        business_account_activation_email(recipient=business.email, token=token, name=business.business_name)
 
         return jsonify(
             {
