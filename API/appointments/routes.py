@@ -3,7 +3,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from API.models import Appointment, Service, Staff, Client, Business
 from flask import Blueprint, request, jsonify
-from API.lib.auth import client_login_required, business_login_required, verify_api_key
+from API.lib.auth import (
+    client_login_required,
+    business_login_required,
+    verify_api_key,
+    business_verification_required)
 from API.lib.data_serializer import serialize_appointment, serialize_client
 from API.lib.sendSMS import send_sms
 from API.lib.utils import check_staff_availability
@@ -107,7 +111,7 @@ def book_appointment(client):
         return jsonify({"message": f"Missing required field: {str(e)}"}), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": "An unexpected error occurred. Please try again later."}), 400
+        return jsonify({"message": f"An unexpected error occurred. Please try again later. {str(e)}"}), 400
 
 
 @appointment_blueprint.route("/book/web-appointments", methods=["POST"])
@@ -374,6 +378,7 @@ def my_appointments(client):
 
 @appointment_blueprint.route("/assign-appointment/<int:appointment_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def assign_appointment(business, appointment_id):
     """
         Assign an appointment to a member of staff to handle
@@ -414,6 +419,7 @@ def assign_appointment(business, appointment_id):
 
 @appointment_blueprint.route("/business-appointments", methods=["GET"])
 @business_login_required
+@business_verification_required
 def fetch_business_appointments(business):
     """
         Fetch all appointments booked with the logged-in business. Exc: Cancelled and Completed
@@ -449,6 +455,7 @@ def fetch_business_appointments(business):
 
 @appointment_blueprint.route("/end_appointment/<int:appointment_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def end_appointment(business, appointment_id):
     """
         End Appointment when completed

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, date
 from API.models import Sale, Service
 from flask import Blueprint, jsonify, request
 from API import db
-from API.lib.auth import business_login_required
+from API.lib.auth import business_login_required, business_verification_required
 from API.lib.data_serializer import serialize_sale
 
 sales_blueprint = Blueprint("sales", __name__, url_prefix="/API/sales")
@@ -10,6 +10,7 @@ sales_blueprint = Blueprint("sales", __name__, url_prefix="/API/sales")
 
 @sales_blueprint.route("/add-sale", methods=["POST"])
 @business_login_required
+@business_verification_required
 def record_sale(business):
     """
         Record new Sales
@@ -20,9 +21,6 @@ def record_sale(business):
     payment_method = payload["paymentMethod"].strip()
     description = payload["description"].strip()
     service_id = payload["serviceId"]
-
-    if not business.active:
-        return jsonify({"message": "You need to activate your account first."}), 400
 
     business_services = [service.id for service in business.services.all()]
     if service_id not in business_services:
@@ -43,6 +41,7 @@ def record_sale(business):
 
 @sales_blueprint.route("/all", methods=["GET"])
 @business_login_required
+@business_verification_required
 def fetch_all_business_sales(business):
     """
         Fetch all the sales for a given business
@@ -64,6 +63,7 @@ def fetch_all_business_sales(business):
 
 @sales_blueprint.route("/delete/<int:sale_id>", methods=["DELETE"])
 @business_login_required
+@business_verification_required
 def delete_sale(business, sale_id):
     """
         Delete a sale
@@ -88,6 +88,7 @@ def delete_sale(business, sale_id):
 
 @sales_blueprint.route("/analysis", methods=["GET"])
 @business_login_required
+@business_verification_required
 def revenue_analytics(business):
     """
         Business Revenue Analysis
@@ -130,6 +131,7 @@ def revenue_analytics(business):
 
 @sales_blueprint.route("/edit/<int:sale_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def edit_sale(business, sale_id):
     """
         Edit a sale

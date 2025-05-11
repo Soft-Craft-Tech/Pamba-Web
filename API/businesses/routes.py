@@ -4,7 +4,12 @@ from API.models import (
 )
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
-from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token
+from API.lib.auth import (
+    business_login_required,
+    verify_api_key, 
+    generate_token, 
+    decode_token,
+    business_verification_required)
 from API.lib.slugify import slugify
 from API.lib.send_mail import business_account_activation_email, send_reset_email
 from API.lib.data_serializer import (serialize_business,
@@ -149,7 +154,7 @@ def login():
     if not bcrypt.check_password_hash(business.password, auth.password.strip()):
         return jsonify({"message": "Incorrect Email or Password"}), 401
 
-    token_expiry_time = datetime.utcnow() + timedelta(days=1)
+    token_expiry_time = datetime.now(timezone.utc) + timedelta(days=1)
     token = generate_token(expiry=token_expiry_time, username=business.slug)
 
     return jsonify({"message": "Login Successful", "client": serialize_business(business), "authToken": token}), 200
@@ -170,7 +175,7 @@ def request_password_reset():
     if not business:
         return jsonify({"message": "Email doesn't exist"}), 404
 
-    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+    token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
     token = generate_token(expiry=token_expiry_time, username=business.slug)
     send_reset_email(recipient=business.email, token=token, name=business.business_name)
 
@@ -219,7 +224,7 @@ def resend_account_activation_token(business):
         if business.active:
             return jsonify({"message": "Account already activated"}), 400
 
-        token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+        token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         token = generate_token(expiry=token_expiry_time, username=business.slug)
         business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
 
@@ -227,8 +232,8 @@ def resend_account_activation_token(business):
             "message": "Account activation token has been sent to your email",
             "activationToken": token
         }), 200
-    except Exception:
-        return jsonify({"message": "Failed to send activation email due to an unexpected issue"}), 400
+    except Exception as e:
+        return jsonify({f"message": f"Failed to send activation email due to an unexpected issue: {str(e)}"}), 400
     
 @business_blueprint.route("/update", methods=["PUT"])
 @business_login_required
@@ -314,6 +319,7 @@ def change_password(business):
 
 @business_blueprint.route("/assign-services", methods=["POST"])
 @business_login_required
+@business_verification_required
 def assign_services(business: Business):
     """
         Assign services being offered by business logged in.
@@ -354,6 +360,7 @@ def assign_services(business: Business):
 
 @business_blueprint.route("/remove-service", methods=["POST"])
 @business_login_required
+@business_verification_required
 def remove_service(business):
     """
         Remove a services from the business
@@ -462,6 +469,7 @@ def fetch_business(slug):
 
 @business_blueprint.route("/analysis", methods=["GET"])
 @business_login_required
+@business_verification_required
 def get_business_analytics(business):
     """
         Business analysis for the Business Dashboard Page
@@ -560,6 +568,7 @@ def service_businesses(service_id):
 
 @business_blueprint.route("/upload-profile-img", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def upload_profile_img(business):
     """
         Allow businesses to upload the profile image
@@ -581,6 +590,7 @@ def upload_profile_img(business):
 
 @business_blueprint.route("/update-description", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def update_description(business):
     """
         Add the Business Description to the Business
@@ -657,6 +667,7 @@ def fetch_business_categories():
 
 @business_blueprint.route("/business-hours", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def add_business_hours(business):
     """
         Add the business Operating hours

@@ -1,6 +1,6 @@
 from flask import jsonify, request, Blueprint
 from API import db, bcrypt
-from API.lib.auth import business_login_required
+from API.lib.auth import business_login_required, business_verification_required
 from API.models import ExpenseAccount
 from API.lib.data_serializer import serialize_account
 
@@ -9,6 +9,7 @@ accounts_blueprint = Blueprint("accounts", __name__, url_prefix="/API/accounts")
 
 @accounts_blueprint.route("/create-account", methods=["POST"])
 @business_login_required
+@business_verification_required
 def create_expense_account(business):
     """
         Create expense accounts for the business
@@ -36,6 +37,7 @@ def create_expense_account(business):
 
 @accounts_blueprint.route("/delete/<int:account_id>", methods=["DELETE"])
 @business_login_required
+@business_verification_required
 def delete_account(business, account_id):
     """
         Delete business's expense account
@@ -64,6 +66,7 @@ def delete_account(business, account_id):
 
 @accounts_blueprint.route("/update/<int:account_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def update_account(business, account_id):
     """
         Update Expense account
@@ -100,6 +103,7 @@ def update_account(business, account_id):
 
 @accounts_blueprint.route("/all", methods=["GET"])
 @business_login_required
+@business_verification_required
 def fetch_all_business_account(business):
     """
         Fetch all accounts for the logged in business

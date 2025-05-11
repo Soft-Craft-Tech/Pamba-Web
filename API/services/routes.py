@@ -2,10 +2,9 @@ import datetime
 
 from flask import jsonify, Blueprint, request
 from API.models import ServiceCategories, Service, Business
-from API.lib.auth import verify_api_key
+from API.lib.auth import verify_api_key, business_verification_required,business_login_required
 from API.lib.data_serializer import serialize_service, serialize_staff, serialize_business
 from API import db
-from API.lib.auth import business_login_required
 
 services_blueprint = Blueprint("services", __name__, url_prefix="/API/services")
 
@@ -84,6 +83,7 @@ def retrieve_service(service_id):
 
 @services_blueprint.route("/update/<int:service_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def update_service(business: Business, service_id: int):
     """
         Update the service
@@ -121,6 +121,7 @@ def update_service(business: Business, service_id: int):
 
 @services_blueprint.route("/delete/<int:service_id>", methods=["DELETE"])
 @business_login_required
+@business_verification_required
 def delete_service(business: Business, service_id: int):
     """
         Delete Service
