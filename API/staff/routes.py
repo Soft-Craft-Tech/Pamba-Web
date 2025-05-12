@@ -2,7 +2,7 @@ from API import db
 from API.lib.utils import add_decimal_hours_to_time
 from API.models import Staff, Appointment, StaffAvailability, Business
 from flask import jsonify, Blueprint, request
-from API.lib.auth import business_login_required, verify_api_key
+from API.lib.auth import business_login_required, verify_api_key, business_verification_required
 from API.lib.data_serializer import serialize_staff
 import secrets
 from datetime import datetime
@@ -12,6 +12,7 @@ staff_blueprint = Blueprint("staff", __name__, url_prefix="/API/staff")
 
 @staff_blueprint.route("/create_staff", methods=["POST"])
 @business_login_required
+@business_verification_required
 def add_staff(business):
     """
         Create new staff by the business owner
@@ -60,6 +61,7 @@ def add_staff(business):
 
 @staff_blueprint.route("/delete-staff/<int:staff_id>", methods=["DELETE"])
 @business_login_required
+@business_verification_required
 def delete_staff(business, staff_id):
     """
         Delete Staff
@@ -85,6 +87,7 @@ def delete_staff(business, staff_id):
 
 @staff_blueprint.route("/update-staff/<int:staff_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def update_staff(business, staff_id):
     """
         Update the staff info
@@ -201,6 +204,7 @@ def fetch_staff_unavailability(staff_id):
 
 @staff_blueprint.route("/create-unavailability/<int:staff_id>", methods=["POST"])
 @business_login_required
+@business_verification_required
 def add_staff_unavailability(business, staff_id):
     """
         Add staff unavailability periods to prevent booking.
