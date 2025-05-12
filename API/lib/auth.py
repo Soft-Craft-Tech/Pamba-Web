@@ -25,6 +25,13 @@ def verify_api_key(func):
         return func(*args, **kwargs)
     return decorated
 
+def business_verification_required(func):
+    @wraps(func)
+    def decorated(business, *args, **kwargs):
+        if business.active == False:
+            return jsonify({"message": "Business is not active"}), 401
+        return func(business, *args, **kwargs)
+    return decorated
 
 def generate_token(expiry, username):
     """
