@@ -89,13 +89,15 @@ def book_appointment(client):
         db.session.commit()
 
         appointment_confirmation_email(
-            client_name=client.name.split()[0],
-            date=appointment_date,
-            time=appointment_time,
-            business_name=business.business_name,
-            business_directions=business.google_map,
-            business_location=business.location,
-            recipient=client.email
+        client_name=client.name.split()[0],
+        date=appointment_date,
+        time=appointment_time,
+        business_name=business.business_name,
+        business_address=business.formatted_address,
+        latitude=business.latitude,
+        longitude=business.longitude,
+        place_id=business.place_id,
+        recipient=client.email
         )
 
         appointment_message = new_appointment_notification_message(
@@ -209,12 +211,14 @@ def book_appointment_on_web():
 
         try:
             appointment_confirmation_email(
-                client_name=name.split()[0] if name else None,
+                client_name=client.name.split()[0],
                 date=appointment_date,
                 time=appointment_time,
                 business_name=business.business_name,
-                business_directions=business.google_map,
-                business_location=business.location,
+                business_address=business.formatted_address,
+                latitude=business.latitude,
+                longitude=business.longitude,
+                place_id=business.place_id,
                 recipient=client.email
             )
 
@@ -356,8 +360,9 @@ def my_appointments(client):
         serialized_appointment["imgUrl"] = appointment.business.profile_img
         serialized_appointment["phone"] = appointment.business.phone
         serialized_appointment["name"] = appointment.business.business_name
-        serialized_appointment["description"] = appointment.business.location
-        serialized_appointment["mapUrl"] = appointment.business.google_map
+        serialized_appointment["description"] = appointment.business.formatted_address
+        serialized_appointment["placeId"] = appointment.business.place_id
+        serialized_appointment["directions"] = f"https://www.google.com/maps/dir/?api=1&destination={appointment.business.latitude},{appointment.business.longitude}&place_id={appointment.business.place_id}"
         if appointment.cancelled:
             cancelled_appointments.append(serialized_appointment)
         if appointment.completed or today > appointment.date and not appointment.cancelled:
