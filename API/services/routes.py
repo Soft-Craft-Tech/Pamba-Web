@@ -71,9 +71,16 @@ def retrieve_service(service_id):
     serialized_service["weekendOpening"] = business.weekend_opening.strftime("%H:%M")
     serialized_service["weekendClosing"] = business.weekend_closing.strftime("%H:%M")
     serialized_service["slug"] = business.slug
-    serialized_service["location"] = business.location
     serialized_service["phone"] = business.phone
-    serialized_service["directions"] = business.google_map
+    serialized_service["formatted_address"] = business.formatted_address
+    serialized_service["latitude"] = business.latitude
+    serialized_service["longitude"] = business.longitude
+    serialized_service["place_id"] = business.place_id
+    if business.latitude and business.longitude and business.place_id:
+        serialized_service["directions"] = f"https://www.google.com/maps/search/?api=1&query={business.latitude},{business.longitude}&query_place_id={business.place_id}"
+    else:
+        serialized_service["directions"] = None
+
 
     staff: list = service.business.staff.all()
     # serialized_staff: list = [serialize_staff(staff) for staff in all_staff]
