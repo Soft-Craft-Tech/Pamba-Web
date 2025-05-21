@@ -8,7 +8,7 @@ from API.lib.auth import verify_api_key, generate_token, decode_token, client_lo
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, UTC
 import json
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
@@ -21,51 +21,53 @@ def client_signup():
         Signup new client
         :return: 200, 409
     """
-    payload = request.get_json()
-    email = payload["email"].strip().lower()
-    phone = payload["phone"]
-    name = payload["name"].strip().title()
-    otp, otp_hash = generate_otp()
-    # Hash the password
-    password_hash = bcrypt.generate_password_hash(payload["password"].strip()).decode("utf-8")
+    try:
+        payload = request.get_json()
+        email = payload["email"].strip().lower()
+        phone = payload["phone"]
+        name = payload["name"].strip().title()
+        otp, otp_hash = generate_otp()
+        password_hash = bcrypt.generate_password_hash(payload["password"].strip()).decode("utf-8")
 
-    # Check for existence of user with same email or phone number and are not web users who haven't signup
-    email_exists = Client.query.filter_by(email=email).first()
-    phone_exists = Client.query.filter_by(phone=phone).first()
+        email_exists = Client.query.filter_by(email=email).first()
+        phone_exists = Client.query.filter_by(phone=phone).first()
 
-    if email_exists or phone_exists:
-        if email_exists and email_exists.name and email_exists.password:
-            return jsonify({"message": "Email already exists!"}), 409
+        if email_exists or phone_exists:
+            if email_exists and email_exists.name and email_exists.password:
+                return jsonify({"message": "Email already exists!"}), 409
 
-        if phone_exists and phone_exists.name and phone_exists.password:
-            return jsonify({"message": "Phone number already exists!"}), 409
+            if phone_exists and phone_exists.name and phone_exists.password:
+                return jsonify({"message": "Phone number already exists!"}), 409
 
-        client = email_exists or phone_exists
-        client.email = email
-        client.phone = phone
-        client.name = name
-        client.password = password_hash
-        client.otp = otp_hash
-        client.otp_expiration = datetime.now() + timedelta(minutes=30)
+            client = email_exists or phone_exists
+            client.email = email
+            client.phone = phone
+            client.name = name
+            client.password = password_hash
+            client.otp = otp_hash
+            client.otp_expiration = datetime.now() + timedelta(minutes=30)
+            db.session.commit()
+
+            send_otp(recipient=email, otp=otp, name=name)
+
+        client = Client(
+            name=name,
+            email=email,
+            phone=phone,
+            password=password_hash,
+            otp=otp_hash,
+            otp_expiration=datetime.now() + timedelta(minutes=30)
+        )
+        db.session.add(client)
         db.session.commit()
-
         send_otp(recipient=email, otp=otp, name=name)
-
-    client = Client(
-        name=name,
-        email=email,
-        phone=phone,
-        password=password_hash,
-        otp=otp_hash,
-        otp_expiration=datetime.now() + timedelta(minutes=30)
-    )
-    db.session.add(client)
-    db.session.commit()
-
-    # Send Email
-    send_otp(recipient=email, otp=otp, name=name)
-
-    return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email}), 200
+        return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email}), 200
+    except KeyError as e:
+        return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
+    except AttributeError:
+        return jsonify({"message": "Invalid payload: JSON format required"}), 400
+    except Exception:
+        return jsonify({"message": "Failed to create business due to an unexpected issue"}), 400
 
 
 @clients_blueprint.route("/verify-otp", methods=["POST"])
@@ -121,7 +123,7 @@ def request_account_deletion():
     if client.queued_for_deletion:
         queued_for_delete = ClientDeleted.query.filter_by(email=client.email).first()
         request_date = queued_for_delete.request_date
-        days = (datetime.utcnow() - request_date).days
+        days = (datetime.now(UTC)   - request_date).days
         remaining_days = 30 - days
         return jsonify(
             {"message": f"Deletion request was sent on {request_date.date()}. {remaining_days} days remaining."}
@@ -132,13 +134,15 @@ def request_account_deletion():
         phone=client.phone,
         delete_reason=reason
     )
-    db.session.add(delete_request)
-    db.session.commit()
+    try:
+        db.session.add(delete_request)
+        db.session.commit()
 
-    client.queued_for_deletion = True
-    db.session.commit()
-
-    return jsonify({"message": "We are sorry to see you leave. Your data will be deleted in 30 days"}), 200
+        client.queued_for_deletion = True
+        db.session.commit()
+        return jsonify({"message": "We are sorry to see you leave. Your data will be deleted in 30 days"}), 200
+    except Exception:
+        return jsonfy({"message": "Failed to delete account due to an unexpected issue"}), 400
 
 
 @clients_blueprint.route("/login", methods=["POST"])
@@ -213,12 +217,15 @@ def reset_password(token):
     client = Client.query.filter_by(email=decoded_info["username"]).first()
     if not client:
         return jsonify({"message": "Not Found"}), 404
-    new_password = payload["password"]
-    new_password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
-    client.password = new_password_hash
-    db.session.commit()
+    try:
+        new_password = payload["password"]
+        new_password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        client.password = new_password_hash
+        db.session.commit()
 
-    return jsonify({"message": "Reset Successful"}), 200
+        return jsonify({"message": "Reset Successful"}), 200
+    except Exception:
+        return jsonify({"message": "Error Resetting Password"})
 
 
 @clients_blueprint.route("/change-password", methods=["POST"])
@@ -234,12 +241,15 @@ def change_password(client):
     new_password = payload["newPassword"]
 
     if bcrypt.check_password_hash(client.password, old_password):
-        new_password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
-        client.password = new_password_hash
-        db.session.commit()
-        return jsonify({"message": "Password changed"}), 200
+        try:
+            new_password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+            client.password = new_password_hash
+            db.session.commit()
+            return jsonify({"message": "Password changed"}), 200
+        except:
+            return jsonify({"messsage": "Failed to change password"}), 400
     else:
-        return jsonify({"message": "Old Password Incorrect"}), 401
+        return jsonify({"message": "Old Password Incorrect"}), 400
 
 
 @clients_blueprint.route("/update-profile", methods=["POST"])
@@ -297,16 +307,18 @@ def resend_verification_otp():
 
     if client.verified:
         return jsonify({"message": "Your account is already verified"}), 400
+    try:
+        otp, otp_hash = generate_otp()
+        client.otp = otp_hash,
+        client.otp_expiration = datetime.now() + timedelta(minutes=5)
+        db.session.commit()
 
-    otp, otp_hash = generate_otp()
-    client.otp = otp_hash,
-    client.otp_expiration = datetime.now() + timedelta(minutes=5)
-    db.session.commit()
-
-    # Send Email
-    send_otp(recipient=email, otp=otp, name=client.name)
-    masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
-    return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
+        # Send Email
+        send_otp(recipient=email, otp=otp, name=client.name)
+        masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
+        return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
+    except Exception:
+        return jsonify({"message":"Failed to send OTP"}), 400
 
 
 @clients_blueprint.route("/business-clients", methods=["GET"])

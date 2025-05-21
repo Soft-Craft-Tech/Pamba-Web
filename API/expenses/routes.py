@@ -1,6 +1,6 @@
 from flask import jsonify, request, Blueprint
 from API import db
-from API.lib.auth import business_login_required
+from API.lib.auth import business_login_required, business_verification_required
 from API.lib.data_serializer import serialize_expenses
 from API.models import Expense, ExpenseAccount
 from datetime import datetime
@@ -10,6 +10,7 @@ expenses_blueprint = Blueprint("expenses", __name__, url_prefix="/API/expenses")
 
 @expenses_blueprint.route("/record-expense", methods=["POST"])
 @business_login_required
+@business_verification_required
 def record_expenses(business):
     """
         Record new expenses
@@ -45,6 +46,7 @@ def record_expenses(business):
 
 @expenses_blueprint.route("/delete-expense/<int:expense_id>", methods=["DELETE"])
 @business_login_required
+@business_verification_required
 def delete_expense(business, expense_id):
     """
         Delete expense with given id
@@ -65,6 +67,7 @@ def delete_expense(business, expense_id):
 
 @expenses_blueprint.route("/update-expense/<int:expense_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def update_expense(business, expense_id):
     """
         Update an expense
@@ -94,6 +97,7 @@ def update_expense(business, expense_id):
 
 @expenses_blueprint.route("/my-expenses", methods=["GET"])
 @business_login_required
+@business_verification_required
 def fetch_business_expenses(business):
     """
         Fetch Expenses for the current logged in business.
@@ -111,6 +115,7 @@ def fetch_business_expenses(business):
 
 @expenses_blueprint.route("/expense/<int:expense_id>", methods=["GET"])
 @business_login_required
+@business_verification_required
 def fetch_single_expense(business, expense_id):
     """
         Fetcha single expense given expense_ID

@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from API.lib.auth import verify_api_key, business_login_required
+from API.lib.auth import verify_api_key, business_login_required, business_verification_required
 from API.models import Business, BusinessGallery
 from API.lib.data_serializer import serialize_gallery
 from API import db
@@ -29,6 +29,7 @@ def fetch_business_gallery(slug):
 
 @gallery_blueprint.route("/add", methods=["POST"])
 @business_login_required
+@business_verification_required
 def add_gallery_image(business):
     """
         Add Images to business Gallery

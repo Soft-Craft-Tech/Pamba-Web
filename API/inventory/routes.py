@@ -1,7 +1,7 @@
 from API import db, bcrypt
 from flask import jsonify, Blueprint, request
-from API.models import Inventory
-from API.lib.auth import business_login_required
+from API.models import Business, Inventory
+from API.lib.auth import business_login_required, business_verification_required
 from API.lib.data_serializer import serialize_inventory
 from datetime import datetime
 
@@ -10,6 +10,7 @@ inventory_blueprint = Blueprint("inventory", __name__, url_prefix="/API/inventor
 
 @inventory_blueprint.route("/record-inventory", methods=["POST"])
 @business_login_required
+@business_verification_required
 def record_inventory(business):
     """
         Record new inventory
@@ -31,6 +32,7 @@ def record_inventory(business):
 
 @inventory_blueprint.route("/delete-inventory/<int:inventory_id>", methods=["DELETE"])
 @business_login_required
+@business_verification_required
 def delete_inventory(business, inventory_id):
     """
         Delete Inventory with ID
@@ -53,6 +55,7 @@ def delete_inventory(business, inventory_id):
 
 @inventory_blueprint.route("/update-status/<int:inventory_id>", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def update_inventory_status(business, inventory_id):
     """
         Update the inventory level.
