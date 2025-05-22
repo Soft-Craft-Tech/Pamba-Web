@@ -28,7 +28,7 @@ def verify_api_key(func):
 def business_verification_required(func):
     @wraps(func)
     def decorated(business, *args, **kwargs):
-        if business.active == False:
+        if not business.verified:
             return jsonify({"message": "Business is not active"}), 401
         return func(business, *args, **kwargs)
     return decorated

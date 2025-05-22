@@ -129,7 +129,7 @@ def activate_account(token):
         return jsonify({"message": "Not Found"}), 404
     if business.active:
         return jsonify({"message": "Account already active"}), 400
-    business.active = True
+    business.verified = True
     db.session.commit()
     return jsonify({"message": "Success", "username": business.slug}), 200
 
