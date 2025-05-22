@@ -57,27 +57,35 @@ def business_account_activation_email(recipient: str, token: str, name: str) -> 
     mail.send(message)
 
 
-def appointment_confirmation_email(client_name, date, time, business_location, business_name, business_directions, recipient):
+def appointment_confirmation_email(
+    client_name,
+    date,
+    time,
+    business_name,
+    business_address,
+    latitude,                 
+    longitude,               
+    place_id,
+    recipient
+):
     """
-        Send email notification for successful appointment booking
-        :param recipient: Client email
-        :param client_name: Name of the client
-        :param date: Appointment Date
-        :param time: Appointment Time
-        :param business_location: Business Location
-        :param business_name: Name of the Business
-        :param business_directions: Direction to the Business Location
-        :return:
+    Send email notification for successful appointment booking
     """
+    # Construct Google Maps Directions URL
+    if latitude and longitude and place_id:
+        directions_url = f"https://www.google.com/maps/search/?api=1&query={latitude},{longitude}&query_place_id={place_id}"
+    else:
+        directions_url = "Location not available"
+
     message = Message("Pamba - New Appointment", sender="pamba.africa", recipients=[recipient])
     message.html = render_template(
         "confirmAppointment.html",
         name=client_name if client_name else None,
         appointment_date=date,
         appointment_time=time,
-        business_location=business_location,
         business_name=business_name,
-        business_direction=business_directions
+        business_address=business_address,
+        business_direction=directions_url
     )
     mail.send(message)
 

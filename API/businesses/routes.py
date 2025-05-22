@@ -4,7 +4,12 @@ from API.models import (
 )
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
-from API.lib.auth import business_login_required, verify_api_key, generate_token, decode_token
+from API.lib.auth import (
+    business_login_required,
+    verify_api_key, 
+    generate_token, 
+    decode_token,
+    business_verification_required)
 from API.lib.slugify import slugify
 from API.lib.send_mail import business_account_activation_email, send_reset_email
 from API.lib.data_serializer import (serialize_business,
@@ -149,7 +154,7 @@ def login():
     if not bcrypt.check_password_hash(business.password, auth.password.strip()):
         return jsonify({"message": "Incorrect Email or Password"}), 401
 
-    token_expiry_time = datetime.utcnow() + timedelta(days=1)
+    token_expiry_time = datetime.now(timezone.utc) + timedelta(days=1)
     token = generate_token(expiry=token_expiry_time, username=business.slug)
 
     return jsonify({"message": "Login Successful", "client": serialize_business(business), "authToken": token}), 200
@@ -170,7 +175,7 @@ def request_password_reset():
     if not business:
         return jsonify({"message": "Email doesn't exist"}), 404
 
-    token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+    token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
     token = generate_token(expiry=token_expiry_time, username=business.slug)
     send_reset_email(recipient=business.email, token=token, name=business.business_name)
 
@@ -219,7 +224,7 @@ def resend_account_activation_token(business):
         if business.active:
             return jsonify({"message": "Account already activated"}), 400
 
-        token_expiry_time = datetime.utcnow() + timedelta(minutes=30)
+        token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         token = generate_token(expiry=token_expiry_time, username=business.slug)
         business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
 
@@ -227,8 +232,8 @@ def resend_account_activation_token(business):
             "message": "Account activation token has been sent to your email",
             "activationToken": token
         }), 200
-    except Exception:
-        return jsonify({"message": "Failed to send activation email due to an unexpected issue"}), 400
+    except Exception as e:
+        return jsonify({f"message": f"Failed to send activation email due to an unexpected issue: {str(e)}"}), 400
     
 @business_blueprint.route("/update", methods=["PUT"])
 @business_login_required
@@ -244,10 +249,14 @@ def update_profile(business):
         email: str = payload.get("email").strip().lower()
         phone: str = payload.get("phone").strip()
         city: str = payload.get("city").strip().title()
-        location: str = payload.get("location").strip().title()
         description: str = payload.get("description")
-        google_map: str = payload.get("mapUrl").strip()
         password: str = payload.get("password").strip()
+        location_obj = payload.get("location")
+        formatted_address = location_obj.get("formatted_address", "").strip()
+        geometry = location_obj.get("geometry", {}).get("location", {})
+        latitude = geometry.get("lat", 0.0)
+        longitude = geometry.get("lng", 0.0)
+        place_id = location_obj.get("place_id")
         slug: str = business.slug if business.business_name == name else slugify(name)
 
         if not bcrypt.check_password_hash(business.password, password):
@@ -263,17 +272,19 @@ def update_profile(business):
         if existing_phone and existing_phone.phone != business.phone:
             return jsonify({"message": "Phone number already exists"}), 409
 
-        token_expiry_time = datetime.utcnow() + timedelta(days=1)
+        token_expiry_time = datetime.now(timezone.utc) + timedelta(days=1)
         token = generate_token(expiry=token_expiry_time, username=slug)
 
         business.business_name = name
         business.email = email
         business.phone = phone
         business.city = city
-        business.location = location
-        business.google_map = google_map
         business.slug = slug
         business.description = description
+        business.formatted_address = formatted_address
+        business.latitude = latitude
+        business.longitude = longitude
+        business.place_id = place_id
         db.session.commit()
         return jsonify({"message": "Update Successful", "business": serialize_business(business), "authToken": token}), 200
 
@@ -314,6 +325,7 @@ def change_password(business):
 
 @business_blueprint.route("/assign-services", methods=["POST"])
 @business_login_required
+@business_verification_required
 def assign_services(business: Business):
     """
         Assign services being offered by business logged in.
@@ -354,6 +366,7 @@ def assign_services(business: Business):
 
 @business_blueprint.route("/remove-service", methods=["POST"])
 @business_login_required
+@business_verification_required
 def remove_service(business):
     """
         Remove a services from the business
@@ -427,14 +440,15 @@ def fetch_business(slug):
             business_name=business.business_name,
             category=business.category.category_name,
             id=business.id,
-            location=business.location,
             phone=business.phone,
-            google_map=business.google_map,
             description=business.description,
             imageUrl=business.profile_img,
             city=business.city,
             email=business.email,
-            rating=business.rating
+            rating=business.rating,
+            latitude=business.latitude,
+            longitude=business.longitude,
+            placeId=business.place_id
         )
 
         all_services = []
@@ -456,12 +470,13 @@ def fetch_business(slug):
                 "gallery": []
             }
         ), 200
-    except Exception:
-        return jsonify({"message": "Failed to fetch business due to an unexpected issue"}), 400
+    except Exception as e:
+        return jsonify({"message": f"Failed to fetch business due to an unexpected issue: {str(e)}"}), 400
 
 
 @business_blueprint.route("/analysis", methods=["GET"])
 @business_login_required
+@business_verification_required
 def get_business_analytics(business):
     """
         Business analysis for the Business Dashboard Page
@@ -545,11 +560,13 @@ def service_businesses(service_id):
                 name=business.business_name,
                 categories=[category.category_name for category in business.category],
                 city=business.city,
-                google_map=business.google_map,
                 id=business.id,
                 phone=business.phone,
-                location=business.location,
-                ratingsAverage=rating_score
+                ratingsAverage=rating_score,
+                latitude=business.latitude,
+                longitude=business.longitude,
+                place_id=business.place_id,
+                formatted_address=business.formatted_address
             )
             all_businesses.append(business_info)
 
@@ -560,6 +577,7 @@ def service_businesses(service_id):
 
 @business_blueprint.route("/upload-profile-img", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def upload_profile_img(business):
     """
         Allow businesses to upload the profile image
@@ -581,6 +599,7 @@ def upload_profile_img(business):
 
 @business_blueprint.route("/update-description", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def update_description(business):
     """
         Add the Business Description to the Business
@@ -657,6 +676,7 @@ def fetch_business_categories():
 
 @business_blueprint.route("/business-hours", methods=["PUT"])
 @business_login_required
+@business_verification_required
 def add_business_hours(business):
     """
         Add the business Operating hours
