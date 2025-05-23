@@ -1,5 +1,5 @@
 from API import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # Junction table for many-to-many relationship between Service and appointment
@@ -19,7 +19,7 @@ class BusinessCategory(db.Model):
     businesses = db.relationship("Business", backref="category", lazy="dynamic")
 
     def __str__(self):
-        return f"Category({self.category_name}, {self.description})"
+        return f"Category({self.category_name}"
 
 
 class Business(db.Model):
@@ -34,9 +34,9 @@ class Business(db.Model):
     city = db.Column(db.String(30), nullable=False)
     description = db.Column(db.Text, nullable=True)
     password = db.Column(db.String(250), nullable=True)
-    active = db.Column(db.Boolean, default=False)
+    active = db.Column(db.Boolean, default=True)
     verified = db.Column(db.Boolean, default=False)
-    join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    join_date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     parent_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     weekend_opening = db.Column(db.Time)
     weekend_closing = db.Column(db.Time)
@@ -79,7 +79,7 @@ class BusinessGallery(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     image_url = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
 
     def __repr__(self):
@@ -125,7 +125,7 @@ class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     payment_method = db.Column(db.String(30), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     service_id = db.Column(db.Integer, db.ForeignKey("services.id", ondelete='SET NULL'))
 
@@ -139,7 +139,7 @@ class ExpenseAccount(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     account_name = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.Text)
+    description = db.Column(db.Text, nullable=True)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     expense = db.relationship("Expense", backref="account", lazy="dynamic")
 
@@ -154,8 +154,8 @@ class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     expense = db.Column(db.String(100), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
-    description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    description = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     modified_at = db.Column(db.DateTime)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     expense_account = db.Column(db.Integer, db.ForeignKey("expenseaccounts.id", ondelete='SET NULL'))
@@ -172,7 +172,7 @@ class BusinessNotification(db.Model):
     title = db.Column(db.String(50), nullable=False)
     message = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, default=False)
-    sent_at = db.Column(db.DateTime, default=datetime.utcnow)
+    sent_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
 
     def __repr__(self):
@@ -186,7 +186,7 @@ class Staff(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     f_name = db.Column(db.String(20), nullable=False)
     phone = db.Column(db.String(15), nullable=False, unique=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     role = db.Column(db.String(20), nullable=False)
     public_id = db.Column(db.String(15), nullable=False, unique=True)
     employer_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
@@ -235,7 +235,7 @@ class Rating(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
-    rated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    rated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
 
     def __repr__(self):
@@ -258,7 +258,7 @@ class Client(db.Model):
     queued_for_deletion = db.Column(db.Boolean, default=False)
     otp = db.Column(db.String(200), nullable=True)
     otp_expiration = db.Column(db.DateTime, nullable=True)
-    join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    join_date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     dob = db.Column(db.Date, nullable=True)
     profile_image = db.Column(db.String(200), nullable=True)
     notifications = db.relationship("ClientNotification", backref="client", lazy="dynamic", cascade="all, "
@@ -277,7 +277,7 @@ class ClientNotification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    sent_at = db.Column(db.DateTime, default=datetime.utcnow)
+    sent_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id"))
 
     def __repr__(self):
@@ -294,7 +294,7 @@ class ClientDeleted(db.Model):
     email = db.Column(db.String(50))
     phone = db.Column(db.String(20))
     delete_reason = db.Column(db.Text)
-    request_date = db.Column(db.DateTime, default=datetime.utcnow)
+    request_date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"ClientDeleted({self.email}, {self.phone})"
@@ -309,7 +309,7 @@ class Review(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.Text, nullable=True)
-    reviewed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     client_id = db.Column(db.Integer, db.ForeignKey("clients.id"))
     appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id"))
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
@@ -328,7 +328,7 @@ class Appointment(db.Model):
     completed = db.Column(db.Boolean, default=False)
     cancelled = db.Column(db.Boolean, default=False)
     comment = db.Column(db.Text, nullable=True)
-    create_at = db.Column(db.DateTime, default=datetime.utcnow)
+    create_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     notification_mode = db.Column(db.String(100), nullable=True)  # Mode of notification for upcoming appointments
     review = db.relationship("Review", backref="appointment", uselist=False)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
