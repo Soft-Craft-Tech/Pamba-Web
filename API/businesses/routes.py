@@ -212,28 +212,28 @@ def reset_password(reset_token):
         return jsonify({"message": "Failed to reset password due to an unexpected issue"}), 400
 
 
-@business_blueprint.route("/resend-activation-token", methods=["POST"])
+@business_blueprint.route("/resend-activation-email", methods=["POST"])
 @business_login_required
 def resend_account_activation_token(business):
     """
         Resend account activation token for logged-in, unactivated businesses.
         Expected payload: {} (empty JSON body; no data required)
-        :return: 200 on success, 400 if already active or invalid request.
+        :return: 200 on success, 400 if already verfied or invalid request.
     """
     try:
-        if business.active:
-            return jsonify({"message": "Account already activated"}), 400
+        if business.verified:
+            return jsonify({"message": "Account already verified"}), 400
 
         token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         token = generate_token(expiry=token_expiry_time, username=business.slug)
         business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
 
         return jsonify({
-            "message": "Account activation token has been sent to your email",
+            "message": "Account verification email has been sent to your inbox",
             "activationToken": token
         }), 200
     except Exception as e:
-        return jsonify({f"message": f"Failed to send activation email due to an unexpected issue: {str(e)}"}), 400
+        return jsonify({f"message": f"Failed to send verfication email due to an unexpected issue: {str(e)}"}), 400
     
 @business_blueprint.route("/update", methods=["PUT"])
 @business_login_required
