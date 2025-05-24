@@ -401,15 +401,17 @@ def fetch_all_businesses():
         :return: 200
     """
     try:
-        businesses = Business.query.filter_by(active=True).all()
+        businesses = Business.query.filter_by(active=True, verified=True).all()
+        if not businesses:
+            return jsonify("Businesses not")
         all_businesses = []
         for business in businesses:
             business_data = serialize_business(business)
             business_data["reviews"] = len(business.reviews.all())
         all_businesses.append(business_data)
         return jsonify({"message": "Success", "businesses": all_businesses}), 200
-    except Exception:
-        return jsonify({"message": "Failed to fetch businesses due to an unexpected issue"}), 400
+    except Exception as e:
+        return jsonify(f"message: Failed to fetch businesses due to an unexpected issue: {e}"), 400
 
 
 @business_blueprint.route("/<string:slug>", methods=["GET"])
@@ -421,13 +423,10 @@ def fetch_business(slug):
         :return: 404, 200
     """
     try:
-        business = Business.query.filter_by(slug=slug).first()
+        business = Business.query.filter_by(slug=slug, active=True, verified=True).first()
 
         if not business:
             return jsonify({"message": "Business doesn't exist"}), 404
-
-        if not business.active:
-            return jsonify({"message": "Business not verified"}), 400
 
         ratings = Rating.query.filter_by(business_id=business.id).all()
         if ratings:
@@ -448,6 +447,7 @@ def fetch_business(slug):
             rating=business.rating,
             latitude=business.latitude,
             longitude=business.longitude,
+            formatted_address=business.formatted_address,
             placeId=business.place_id
         )
 
@@ -558,7 +558,7 @@ def service_businesses(service_id):
             rating_score = calculate_ratings(ratings=ratings, breakdown=False)
             business_info = dict(
                 name=business.business_name,
-                categories=[category.category_name for category in business.category],
+                categories=business.category.category_name,
                 city=business.city,
                 id=business.id,
                 phone=business.phone,
