@@ -32,7 +32,7 @@ class Business(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     phone = db.Column(db.String(15), nullable=False, unique=True)
     city = db.Column(db.String(30), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text)
     password = db.Column(db.String(250), nullable=True)
     active = db.Column(db.Boolean, default=True)
     verified = db.Column(db.Boolean, default=False)
@@ -106,7 +106,7 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     service = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Integer)
-    description = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text)
     estimated_service_time = db.Column(db.String(100), nullable=True)
     service_image = db.Column(db.String(100), nullable=True)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
@@ -124,7 +124,7 @@ class Sale(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     payment_method = db.Column(db.String(30), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text)
     date_created = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     service_id = db.Column(db.Integer, db.ForeignKey("services.id", ondelete='SET NULL'))
@@ -139,7 +139,7 @@ class ExpenseAccount(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     account_name = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text)
     business_id = db.Column(db.Integer, db.ForeignKey("businesses.id"))
     expense = db.relationship("Expense", backref="account", lazy="dynamic")
 
