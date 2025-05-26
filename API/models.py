@@ -43,6 +43,8 @@ class Business(db.Model):
     weekday_opening = db.Column(db.Time)
     weekday_closing = db.Column(db.Time)
     updated_on = db.Column(db.DateTime)
+    profile_completed = db.Column(db.Boolean, default=False)
+
     
     # Location Data
     place_id = db.Column(db.String(100), nullable=True)
