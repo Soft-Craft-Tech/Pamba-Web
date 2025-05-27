@@ -112,6 +112,40 @@ def business_signup():
         return jsonify({"message": "Failed to create business due to an unexpected issue"}), 400
 
 
+@business_blueprint.route("/resend-verification-token", methods=["POST"])
+@verify_api_key
+def resend_verification_token():
+    """
+        Resend account activation token for businesses.
+        Expected payload: {"email": "business_email"}
+        :return: 200 on success, 400 if already verified or invalid request.
+    """
+    try:
+        payload = request.get_json()
+        email = payload["email"].strip().lower()
+
+        business = Business.query.filter_by(email=email).first()
+        if not business:
+            return jsonify({"message": "Email doesn't exist"}), 404
+
+        if business.verified:
+            return jsonify({"message": "Account already verified"}), 400
+
+        token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
+        token = generate_token(expiry=token_expiry_time, username=business.slug)
+        business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
+
+        return jsonify({"message": "Account verification email has been sent to your inbox"}), 200
+    
+    except KeyError as e:
+        return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
+    except AttributeError:
+        return jsonify({"message": "Invalid payload: JSON format required"}), 400
+    except Exception:
+        return jsonify({"message": "Failed to create business due to an unexpected issue"}), 400
+
+
+
 @business_blueprint.route("/activate-account/<string:token>", methods=["POST"])
 @verify_api_key
 def activate_account(token):
