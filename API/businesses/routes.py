@@ -161,7 +161,7 @@ def activate_account(token):
     business = Business.query.filter_by(slug=decoded_data["username"]).first()
     if not business:
         return jsonify({"message": "Not Found"}), 404
-    if business.active:
+    if business.verified:
         return jsonify({"message": "Account already active"}), 400
     business.verified = True
     db.session.commit()
