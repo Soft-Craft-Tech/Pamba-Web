@@ -18,6 +18,7 @@ from API.lib.data_serializer import (serialize_business,
                                      serialize_sale, serialize_expenses)
 from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta, timezone
+from API.helpers import update_profile_completion
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")
 
@@ -108,8 +109,8 @@ def business_signup():
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
     except AttributeError:
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
-    except Exception:
-        return jsonify({"message": "Failed to create business due to an unexpected issue"}), 400
+    except Exception as e:
+        return jsonify(f"message: Failed to create business due to an unexpected issue{e}"), 400
 
 
 @business_blueprint.route("/resend-verification-token", methods=["POST"])
@@ -340,6 +341,7 @@ def update_profile(business):
         business.longitude = longitude
         business.place_id = place_id
         db.session.commit()
+        update_profile_completion(business)
         return jsonify({"message": "Update Successful", "business": serialize_business(business), "authToken": token}), 200
 
     except AttributeError:
@@ -410,12 +412,13 @@ def assign_services(business: Business):
             )
             db.session.add(service_to_add)
         db.session.commit()
+        update_profile_completion(business)
         return jsonify({"message": "Services have been Added"}), 201
     except AttributeError:
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
-    except Exception:
+    except Exception as e:
         db.session.rollback()
-        return jsonify({"message": "Failed to add services due to an unexpected issue"}), 400
+        return jsonify(f"message: Failed to add services due to an unexpected issue{e}"), 400
 
 
 @business_blueprint.route("/remove-service", methods=["POST"])
@@ -438,6 +441,7 @@ def remove_service(business):
 
         db.session.delete(service)
         db.session.commit()
+        update_profile_completion(business)
         return jsonify({"message": "Service removed"}), 200
     except KeyError as e:
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
@@ -502,7 +506,8 @@ def fetch_business(slug):
             latitude=business.latitude,
             longitude=business.longitude,
             formatted_address=business.formatted_address,
-            placeId=business.place_id
+            placeId=business.place_id,
+            profile_completed=business.profile_completed
         )
 
         all_services = []
@@ -647,6 +652,7 @@ def upload_profile_img(business):
 
     business.profile_img = image_url
     db.session.commit()
+    update_profile_completion(business)
 
     return jsonify({"message": "Success"}), 200
 
@@ -669,6 +675,8 @@ def update_description(business):
 
     business.description = description
     db.session.commit()
+    update_profile_completion(business)
+    print(business.profile_completed)
     return jsonify({"message": "Update Successful"}), 200
 
 
@@ -751,6 +759,7 @@ def add_business_hours(business):
         business.weekend_closing = weekend_closing
 
         db.session.commit()
+        update_profile_completion(business)
         return jsonify({"message": "Successful! Business hours added"}), 200
     except KeyError as e:
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
