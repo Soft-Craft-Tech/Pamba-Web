@@ -66,10 +66,10 @@ def retrieve_service(service_id):
     business: Business = service.business
     serialized_service["estimated_time_string"] = estimated_time_string
     serialized_service["business_name"] = business.business_name
-    serialized_service["weekdayOpening"] = business.weekday_opening.strftime("%H:%M")
-    serialized_service["weekdayClosing"] = business.weekday_closing.strftime("%H:%M")
-    serialized_service["weekendOpening"] = business.weekend_opening.strftime("%H:%M")
-    serialized_service["weekendClosing"] = business.weekend_closing.strftime("%H:%M")
+    serialized_service["weekdayOpening"] = business.weekday_opening.strftime("%H:%M") if business.weekday_opening else None
+    serialized_service["weekdayClosing"] = business.weekday_closing.strftime("%H:%M") if business.weekday_closing else None
+    serialized_service["weekendOpening"] = business.weekend_opening.strftime("%H:%M") if business.weekend_opening else None
+    serialized_service["weekendClosing"] = business.weekend_closing.strftime("%H:%M") if business.weekend_closing else None
     serialized_service["slug"] = business.slug
     serialized_service["phone"] = business.phone
     serialized_service["formatted_address"] = business.formatted_address
