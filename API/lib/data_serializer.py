@@ -47,7 +47,8 @@ def serialize_business(business):
         "weekday_opening": fields.String,
         "weekday_closing": fields.String,
         "weekend_opening": fields.String,
-        "weekend_closing": fields.String
+        "weekend_closing": fields.String,
+        "profile_completed":fields.Boolean
     }
 
     return marshal(business, business_fields)
