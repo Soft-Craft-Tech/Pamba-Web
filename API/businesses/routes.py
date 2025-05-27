@@ -168,6 +168,26 @@ def activate_account(token):
     return jsonify({"message": "Success", "username": business.slug}), 200
 
 
+@business_blueprint.route("/check-token-expiry", methods=["POST"])
+@verify_api_key
+def check_token_expiry():
+    """
+        Check if the token is expired or not
+        :return: 200, 400
+    """
+    payload = request.get_json()
+    token = payload.get("token")
+
+    if not token:
+        return jsonify({"message": "Token is required"}), 400
+
+    decoded_data = decode_token(token)
+
+    if not decoded_data:
+        return jsonify({"expired": True}), 200
+
+    return jsonify({"expired": False}), 200
+
 @business_blueprint.route("/login", methods=["POST"])
 @verify_api_key
 def login():
