@@ -56,6 +56,8 @@ def business_account_activation_email(recipient: str, token: str, name: str) -> 
     message.html = render_template("activatebusiness.html", name=name, url=url)
     mail.send(message)
 
+    # TODO Add error handler here.
+
 
 def appointment_confirmation_email(
     client_name,
