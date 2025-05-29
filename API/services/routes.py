@@ -31,8 +31,16 @@ def fetch_all_services():
         Fetch all services
         :return: 200
     """
-    services = db.session.query(Service, Business).order_by(Service.service) \
-        .join(Business, Service.business_id == Business.id).all()
+    services = db.session.query(Service, Business) \
+        .join(Business, Service.business_id == Business.id) \
+        .filter(
+            Business.active.is_(True),
+            Business.verified.is_(True),
+            Business.profile_completed.is_(True)
+        ) \
+        .order_by(Service.service) \
+        .all()
+        
     serialized_services = []
     for service, business in services:
         serialized = serialize_service(service)
