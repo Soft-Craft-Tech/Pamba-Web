@@ -90,7 +90,7 @@ def business_signup():
         db.session.add(business)
         db.session.commit()
 
-    # Activation Token
+        # Activation Token
         token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         token = generate_token(expiry=token_expiry_time, username=business.slug)
 
@@ -143,7 +143,7 @@ def resend_verification_token():
     except AttributeError:
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
     except Exception:
-        return jsonify({"message": "Failed to create business due to an unexpected issue"}), 400
+        return jsonify({"message": "Unable to send token"}), 400
 
 
 
@@ -680,7 +680,7 @@ def update_description(business):
     return jsonify({"message": "Update Successful"}), 200
 
 
-@business_blueprint.route("/profile-completion-status/", methods=["GET"])
+@business_blueprint.route("/profile-completion-status", methods=["GET"])
 @business_login_required
 def profile_completion_status(business):
     """
