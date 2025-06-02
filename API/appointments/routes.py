@@ -517,7 +517,7 @@ def end_appointment(business, appointment_id):
         except Exception as e:
             print(f"[ERROR] Failed to send review email: {e}")
             return jsonify({
-                "message": "Appointment ended but we encountered an error sending the review request email.",
+                "message": "Appointment ended but we encountered an error sending the review request email. Please check again later",
                 "appointment": serialize_appointment(appointment)
             }), 200
 
