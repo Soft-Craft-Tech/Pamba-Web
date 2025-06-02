@@ -60,13 +60,25 @@ def client_signup():
         )
         db.session.add(client)
         db.session.commit()
-        send_otp(recipient=email, otp=otp, name=name)
-        return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email}), 200
+        try:
+            send_otp(recipient=email, otp=otp, name=name)
+            return jsonify({
+                "message": "Signup Success. An OTP has been sent to your email.",
+                "email": email,
+                "client": serialize_client(client)
+                }), 200,
+        except Exception as e:   
+            print(f"[ERROR] Email sending failed: {e}")
+            return jsonify({
+                "message": "Your account has been created but we encountered an error sending the verfication OTP to your email. Please try again later",
+                "business": serialize_client(client),
+            }), 201
+
     except KeyError as e:
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
     except AttributeError:
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
-    except Exception:
+    except Exception as e:
         return jsonify({"message": "Failed to create business due to an unexpected issue"}), 400
 
 
@@ -191,14 +203,17 @@ def request_password_reset():
 
     token_expiry_time: datetime = datetime.utcnow() + timedelta(minutes=30)
     token: str = generate_token(expiry=token_expiry_time, username=client.email)
-    sent_client_reset_token(
-        recipient=client.email,
-        url=f"https://www.pamba.africa/client-reset/{token}",
-        name=client.name
-    )
-
-    return jsonify({"message": "Token sent to your email"}), 200
-
+    try:
+        sent_client_reset_token(
+            recipient=client.email,
+            url=f"https://www.pamba.africa/client-reset/{token}",
+            name=client.name
+        )
+        return jsonify({"message": "Token sent to your email"}), 200
+    except Exception as e:
+        print(f"[ERROR] Email sending failed: {e}")
+        return jsonify({"message": "We encountered an error sending the reset token to your email. Please try again later"})
+            
 
 @clients_blueprint.route("/reset-password/<string:token>", methods=["POST"])
 @verify_api_key
@@ -314,10 +329,15 @@ def resend_verification_otp():
         db.session.commit()
 
         # Send Email
-        send_otp(recipient=email, otp=otp, name=client.name)
-        masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
-        return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
-    except Exception:
+        try:
+            send_otp(recipient=email, otp=otp, name=client.name)
+            masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
+            return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
+        except Exception as e:
+            print(f"[ERROR] Email sending failed: {e}")
+            return jsonify({"message": "We encountered an error sending the verfication token to your email. Please try again later"})       
+    except Exception as e:
+        print(f"[ERROR] Failed to send OTP: {e}")
         return jsonify({"message":"Failed to send OTP"}), 400
 
 

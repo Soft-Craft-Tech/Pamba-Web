@@ -16,24 +16,32 @@ def create_review(appointment_id):
         :param appointment_id: ID of Appointment being reviewed.
         :return: 200
     """
+    try:
+        payload = request.get_json()
+        message = payload["message"].strip()
 
-    payload = request.get_json()
-    message = payload["message"].strip()
+        appointment = Appointment.query.get(appointment_id)
+        if not appointment:
+            return jsonify({"message": "Appointment doesn't exist"}), 404
 
-    appointment = Appointment.query.get(appointment_id)
-    if not appointment:
-        return jsonify({"message": "Appointment doesn't exist"}), 404
+        review = Review(
+            message=message,
+            business_id=appointment.business.id,
+            client_id=appointment.client_id,
+            appointment_id=appointment.id
+        )
+        db.session.add(review)
+        db.session.commit()
 
-    review = Review(
-        message=message,
-        business_id=appointment.business.id,
-        client_id=appointment.client_id,
-        appointment_id=appointment.id
-    )
-    db.session.add(review)
-    db.session.commit()
+        return jsonify({"message": "Review has been posted"}), 200
 
-    return jsonify({"message": "Review has been posted"}), 200
+    except KeyError:
+        return jsonify({"message": "Missing 'message' in the payload"}), 400
+    except AttributeError:
+        return jsonify({"message": "Invalid request format. Please send a valid JSON body."}), 400
+    except Exception as e:
+        print(f"[ERROR] Failed to post review: {e}")
+        return jsonify({"message": "Failed to post review due to an unexpected error"}), 200
 
 
 @reviews_blueprint.route("/all/<string:slug>", methods=["GET"])

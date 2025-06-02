@@ -87,18 +87,23 @@ def book_appointment(client):
 
         db.session.add(new_appointment)
         db.session.commit()
-
-        appointment_confirmation_email(
-        client_name=client.name.split()[0],
-        date=appointment_date,
-        time=appointment_time,
-        business_name=business.business_name,
-        business_address=business.formatted_address,
-        latitude=business.latitude,
-        longitude=business.longitude,
-        place_id=business.place_id,
-        recipient=client.email
-        )
+        try:
+            appointment_confirmation_email(
+            client_name=client.name.split()[0],
+            date=appointment_date,
+            time=appointment_time,
+            business_name=business.business_name,
+            business_address=business.formatted_address,
+            latitude=business.latitude,
+            longitude=business.longitude,
+            place_id=business.place_id,
+            recipient=client.email
+            )
+        except Exception as e:
+            print(f"[ERROR] Email sending failed: {e}")
+            return jsonify({"message": "Booking Successful but we encountered an error sending the appointment details to your email. Please check again later",
+            "appointment": serialize_appointment(appointment)
+            }), 200
 
         appointment_message = new_appointment_notification_message(
             name=client.name.split()[0],
@@ -107,8 +112,15 @@ def book_appointment(client):
             service=service.service,
             business=business.business_name
         )
-        send_sms(client.phone, appointment_message)
-        return jsonify({"message": "Booking Successful"}), 200
+        try:
+            send_sms(client.phone, appointment_message)
+            return jsonify({
+                "message": "Booking Successful",
+                "appointment": serialize_appointment(appointment)
+                }), 200
+        except Exception as e:
+            return jsonify({"message": "Booking Successful but we encountered an error sending the appointment SMS"})
+
     except KeyError as e:
         return jsonify({"message": f"Missing required field: {str(e)}"}), 400
     except Exception as e:
@@ -298,9 +310,12 @@ def reschedule_appointment(client, appointment_id):
             service=appointment.service.service,
             business=appointment.business.business_name
         )
-
-        send_sms(appointment.client.phone, message)
-        return jsonify({"message": "Appointment has been rescheduled"}), 200
+        try:
+            send_sms(appointment.client.phone, message)
+            return jsonify({"message": "Appointment has been rescheduled"}), 200
+        except Exception as e:
+            print(f"[ERROR] Failed to send SMS: {e}")
+            return jsonify({"message": "Appointment has been rescheduled, but failed to send notification SMS"}), 200
     except Exception:
         return jsonify ({"message": "Failed to reschedule due to an unexpected issue"}), 400
 
@@ -487,15 +502,25 @@ def end_appointment(business, appointment_id):
         appointment.completed = True
         db.session.commit()
 
-        # Send a notification with the review link
-        send_ask_for_review_mail(
-            url=f"https://www.pamba.africa/reviews/new/{appointment.id}",
-            business_name=business.business_name,
-            name=appointment.client.name,
-            recipient=appointment.client.email
-        )
+        try:
+            send_ask_for_review_mail(
+                url=f"https://www.pamba.africa/reviews/new/{appointment.id}",
+                business_name=business.business_name,
+                name=appointment.client.name,
+                recipient=appointment.client.email
+            )
+            return jsonify({
+                "message": "Appointment Ended. Review request sent.",
+                "appointment": serialize_appointment(appointment)
+            }), 200
 
-        return jsonify({"message": "Appointment Ended", "appointment": serialize_appointment(appointment)}), 200
+        except Exception as e:
+            print(f"[ERROR] Failed to send review email: {e}")
+            return jsonify({
+                "message": "Appointment ended but we encountered an error sending the review request email.",
+                "appointment": serialize_appointment(appointment)
+            }), 200
+
     except Exception:
         return jsonify({"message":"Failed to end appointment due to an unexpected issue"}), 400
 
@@ -523,23 +548,40 @@ def send_appointment_reminder():
         Reminder can be sent via SMS or whatsapp
         :return:
     """
-    today: date = datetime.today().date()
-    appointments: list = Appointment.query.filter(Appointment.date == today, ~Appointment.cancelled, ~Appointment.completed)\
-        .all()
+    try:
+        today: date = datetime.today().date()
+        appointments: list = Appointment.query.filter(
+            Appointment.date == today,
+            ~Appointment.cancelled,
+            ~Appointment.completed
+        ).all()
 
-    unsent_reminders: int = 0
-    for appointment in appointments:
-        client: Client = appointment.client
-        message: str = appointment_remainder_message(
-            business=appointment.business.business_name,
-            date_=appointment.date,
-            time_=appointment.time.strftime("%H:%M"),
-            name=client.name.split()[0],
-            service=appointment.service.service
-        )
+        unsent_reminders: int = 0
 
-        response = send_sms(phone=client.phone, message=message)
-        if response.status_code != 200:
-            unsent_reminders += 1
+        for appointment in appointments:
+            client: Client = appointment.client
+            message: str = appointment_remainder_message(
+                business=appointment.business.business_name,
+                date_=appointment.date,
+                time_=appointment.time.strftime("%H:%M"),
+                name=client.name.split()[0],
+                service=appointment.service.service
+            )
 
-    return jsonify({"message": f"Sent successfully", "unsuccessful": unsent_reminders}), 200
+            try:
+                response = send_sms(phone=client.phone, message=message)
+                if response.status_code != 200:
+                    unsent_reminders += 1
+            except Exception as e:
+                print(f"[ERROR] Failed to send SMS for appointment ID {appointment.id}: {e}")
+                unsent_reminders += 1
+
+        return jsonify({
+            "message": "Reminders processed",
+            "total_appointments": len(appointments),
+            "unsuccessful": unsent_reminders
+        }), 200
+
+    except Exception as e:
+        print(f"[FATAL ERROR] Reminder job failed: {e}")
+        return jsonify({"message": "Failed to process reminders due to an unexpected error"}), 200
