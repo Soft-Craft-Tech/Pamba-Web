@@ -110,7 +110,7 @@ def business_signup():
     except AttributeError:
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
     except Exception as e:
-        return jsonify(f"message: Failed to create business due to an unexpected issue{e}"), 400
+        return jsonify({"message": f"Failed to create business due to an unexpected issue{e}"}),
 
 
 @business_blueprint.route("/resend-verification-token", methods=["POST"])
