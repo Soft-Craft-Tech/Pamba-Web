@@ -47,7 +47,7 @@ class Business(db.Model):
 
     
     # Location Data
-    place_id = db.Column(db.String(100), nullable=True)
+    place_id = db.Column(db.String(1000), nullable=True)
     formatted_address = db.Column(db.String(300), nullable=True)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
