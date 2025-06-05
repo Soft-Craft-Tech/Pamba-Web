@@ -95,11 +95,11 @@ def business_signup():
         token = generate_token(expiry=token_expiry_time, username=business.slug)
 
         # Send mail
-        email_sent = business_account_activation_email(recipient=business.email, token=token, name=business.business_name)
+        business_account_activation_email(recipient=business.email, token=token, name=business.business_name)
 
         return jsonify(
             {
-                "message": "Successful! Account activation link set to your email" if email_sent else "Activation email not sent, please check after a while",
+                "message": "Successful! Account activation link set to your email",
                 "business": serialize_business(business),
                 "activationToken": token
             }
@@ -134,9 +134,9 @@ def resend_verification_token():
 
         token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         token = generate_token(expiry=token_expiry_time, username=business.slug)
-        email_sent = business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
+        business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
 
-        return jsonify({"message": "Account verification email has been sent to your inbox" if email_sent else  "Activation email not sent, please try again later"}), 200
+        return jsonify({"message": "Account verification email has been sent to your inbox"}), 200
     
     except KeyError as e:
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
@@ -144,6 +144,7 @@ def resend_verification_token():
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
     except Exception:
         return jsonify({"message": "Unable to send token"}), 400
+
 
 
 @business_blueprint.route("/activate-account/<string:token>", methods=["POST"])
@@ -188,7 +189,6 @@ def check_token_expiry():
 
     return jsonify({"expired": False}), 200
 
-
 @business_blueprint.route("/login", methods=["POST"])
 @verify_api_key
 def login():
@@ -232,9 +232,9 @@ def request_password_reset():
 
     token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
     token = generate_token(expiry=token_expiry_time, username=business.slug)
-    email_sent = send_reset_email(recipient=business.email, token=token, name=business.business_name)
+    send_reset_email(recipient=business.email, token=token, name=business.business_name)
 
-    return jsonify({"message": "Reset link has been sent to your email" if email_sent else "Password reset email not sent. Please check your inbox after a while"}), 200
+    return jsonify({"message": "Reset link has been sent to your email"}), 200
 
 
 @business_blueprint.route("/reset-password/<string:reset_token>", methods=["PUT"])
@@ -281,10 +281,10 @@ def resend_account_activation_token(business):
 
         token_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         token = generate_token(expiry=token_expiry_time, username=business.slug)
-        email_sent = business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
+        business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
 
         return jsonify({
-            "message": "Account verification email has been sent to your inbox" if email_sent else "Account verification email not sent. Please check your inbox after a while",
+            "message": "Account verification email has been sent to your inbox",
             "activationToken": token
         }), 200
     except Exception as e:

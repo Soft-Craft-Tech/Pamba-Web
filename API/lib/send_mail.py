@@ -11,14 +11,9 @@ def send_otp(recipient, otp, name):
         :param otp: OTP value
         :return: None
     """
-    try:
-        message = Message("[Action Required]: Verify Account - PAMBA", sender="pamba.africa", recipients=[recipient])
-        message.html = render_template("otp.html", name=name, code=otp)
-        mail.send(message)
-    except:
-        return False
-    else:
-        return True
+    message = Message("[Action Required]: Verify Account - PAMBA", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template("otp.html", name=name, code=otp)
+    mail.send(message)
 
 
 def send_reset_email(recipient, token, name):
@@ -29,15 +24,10 @@ def send_reset_email(recipient, token, name):
         :param name: User's name
         :return:
     """
-    try:
-        reset_url = f"https://www.pamba.africa/reset-password/{token}"
-        message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
-        message.html = render_template("reset.html", url=reset_url, name=name)
-        mail.send(message)
-    except Exception:
-        return False
-    else:
-        return True
+    reset_url = f"https://www.pamba.africa/reset-password/{token}"
+    message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template("reset.html", url=reset_url, name=name)
+    mail.send(message)
 
 
 def sent_client_reset_token(recipient: str, url: str, name: str) -> None:
@@ -48,14 +38,9 @@ def sent_client_reset_token(recipient: str, url: str, name: str) -> None:
         :param name: User's name
         :return: None
     """
-    try:
-        message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
-        message.html = render_template("clientReset.html", url=url, name=name)
-        mail.send(message)
-    except:
-        return False
-    else:
-        return True
+    message = Message("Reset Password - PAMBA", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template("clientReset.html", url=url, name=name)
+    mail.send(message)
 
 
 def business_account_activation_email(recipient: str, token: str, name: str) -> None:
@@ -66,15 +51,12 @@ def business_account_activation_email(recipient: str, token: str, name: str) -> 
         :param name: Business Name.
         :return:
     """
-    try:
-        url = f"https://www.pamba.africa/verify/{token}"
-        message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
-        message.html = render_template("activatebusiness.html", name=name, url=url)
-        mail.send(message)
-    except Exception:
-        return False
-    else:
-        return True
+    url = f"https://www.pamba.africa/verify/{token}"
+    message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template("activatebusiness.html", name=name, url=url)
+    mail.send(message)
+
+    # TODO Add error handler here.
 
 
 def appointment_confirmation_email(
@@ -97,22 +79,17 @@ def appointment_confirmation_email(
     else:
         directions_url = "Location not available"
 
-    try:
-        message = Message("Pamba - New Appointment", sender="pamba.africa", recipients=[recipient])
-        message.html = render_template(
-            "confirmAppointment.html",
-            name=client_name if client_name else None,
-            appointment_date=date,
-            appointment_time=time,
-            business_name=business_name,
-            business_address=business_address,
-            business_direction=directions_url
-        )
-        mail.send(message)
-    except Exception:
-        return False
-    else:
-        return True
+    message = Message("Pamba - New Appointment", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template(
+        "confirmAppointment.html",
+        name=client_name if client_name else None,
+        appointment_date=date,
+        appointment_time=time,
+        business_name=business_name,
+        business_address=business_address,
+        business_direction=directions_url
+    )
+    mail.send(message)
 
 
 def send_ask_for_review_mail(url, name, business_name, recipient):
@@ -124,17 +101,12 @@ def send_ask_for_review_mail(url, name, business_name, recipient):
         :param recipient: Client Email
         :return:
     """
-    try:
-        message = Message("Pamba - Review your Appointment", sender="pamba.africa", recipients=[recipient])
-        message.html = render_template(
-            "askForReview.html",
-            url=url,
-            name=name,
-            business_name=business_name
-        )
-        mail.send(message)
-    except Exception:
-        return False
-    else:
-        return True
+    message = Message("Pamba - Review your Appointment", sender="pamba.africa", recipients=[recipient])
+    message.html = render_template(
+        "askForReview.html",
+        url=url,
+        name=name,
+        business_name=business_name
+    )
+    mail.send(message)
 
