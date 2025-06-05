@@ -60,8 +60,10 @@ def client_signup():
         )
         db.session.add(client)
         db.session.commit()
-        send_otp(recipient=email, otp=otp, name=name)
-        return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email}), 200
+        otp_sent = send_otp(recipient=email, otp=otp, name=name)
+        return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email if otp_sent else "Signup successful. Please check your email for the OTP after a while",
+                        "Client": serialize_client(client)
+                        }), 200
     except KeyError as e:
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
     except AttributeError:
@@ -102,7 +104,9 @@ def verify_client_otp():
     client.otp_expiration = None
     db.session.commit()
 
-    return jsonify({"message": "Account activated", "client": serialize_client(client)}), 200
+    return jsonify({"message": "Account activated", 
+                    "client": serialize_client(client)
+                    }), 200
 
 
 @clients_blueprint.route("/delete-account", methods=["POST"])
@@ -191,13 +195,13 @@ def request_password_reset():
 
     token_expiry_time: datetime = datetime.utcnow() + timedelta(minutes=30)
     token: str = generate_token(expiry=token_expiry_time, username=client.email)
-    sent_client_reset_token(
+    token_sent = sent_client_reset_token(
         recipient=client.email,
         url=f"https://www.pamba.africa/client-reset/{token}",
         name=client.name
     )
 
-    return jsonify({"message": "Token sent to your email"}), 200
+    return jsonify({"message": "Token sent to your email" if token_sent else "Failed to send token to email. Please check your email after a while"}), 200
 
 
 @clients_blueprint.route("/reset-password/<string:token>", methods=["POST"])
@@ -314,9 +318,9 @@ def resend_verification_otp():
         db.session.commit()
 
         # Send Email
-        send_otp(recipient=email, otp=otp, name=client.name)
+        otp_sent = send_otp(recipient=email, otp=otp, name=client.name)
         masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
-        return jsonify({"message": f"OTP sent to: {masked_email}"}), 200
+        return jsonify({"message": f"OTP sent to: {masked_email}" if otp_sent else "Failure sending the OTP. Please try again after a while"}), 200
     except Exception:
         return jsonify({"message":"Failed to send OTP"}), 400
 

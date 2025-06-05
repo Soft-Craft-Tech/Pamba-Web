@@ -88,7 +88,7 @@ def book_appointment(client):
         db.session.add(new_appointment)
         db.session.commit()
 
-        appointment_confirmation_email(
+        email_sent = appointment_confirmation_email(
         client_name=client.name.split()[0],
         date=appointment_date,
         time=appointment_time,
@@ -108,7 +108,7 @@ def book_appointment(client):
             business=business.business_name
         )
         send_sms(client.phone, appointment_message)
-        return jsonify({"message": "Booking Successful"}), 200
+        return jsonify({"message": "Booking Successful. Check your email for confirmation details" if email_sent else "Booking Successful. Please check your email for confirmation details after a while"}), 200
     except KeyError as e:
         return jsonify({"message": f"Missing required field: {str(e)}"}), 400
     except Exception as e:
@@ -209,36 +209,29 @@ def book_appointment_on_web():
             db.session.rollback()
             return jsonify({"message": "A database error occurred", "error": str(db_err)}), 500
 
-        try:
-            appointment_confirmation_email(
-                client_name=client.name.split()[0],
-                date=appointment_date,
-                time=appointment_time,
-                business_name=business.business_name,
-                business_address=business.formatted_address,
-                latitude=business.latitude,
-                longitude=business.longitude,
-                place_id=business.place_id,
-                recipient=client.email
-            )
+        email_sent = appointment_confirmation_email(
+            client_name=client.name.split()[0],
+            date=appointment_date,
+            time=appointment_time,
+            business_name=business.business_name,
+            business_address=business.formatted_address,
+            latitude=business.latitude,
+            longitude=business.longitude,
+            place_id=business.place_id,
+            recipient=client.email
+        )
 
-            notification_message: str = new_appointment_notification_message(
-                name=name.split()[0] if name else None,
-                time_=appointment_time,
-                date_=appointment_date,
-                service=service.service,
-                business=business.business_name
-            )
-            send_sms(phone=phone, message=notification_message)
+        new_appointment_notification_message(
+            name=client.name.split()[0],
+            time_=appointment_time.strftime("%H:%M"),
+            date_=appointment_date.strftime("%d-%B-%Y"),
+            service=service.service,
+            business=business.business_name
+        )
 
-        except Exception as notify_err:
-            return jsonify({
-                "message": "Appointment booked but notification sending failed",
-                "error": str(notify_err)
-            }), 200
+        send_sms(client.phone, sms_message)
 
-        return jsonify({"message": "Appointment Booked Successfully"}), 201
-
+        return jsonify({"message": "Booking Successful. Check your email for confirmation details" if email_sent else "Booking Successful. Please check your email for confirmation details after a while"}), 200
     except Exception as e:
         return jsonify({"message": "Failed to book appointment due to unexpected error", "error": str(e)}), 400
 
@@ -488,14 +481,16 @@ def end_appointment(business, appointment_id):
         db.session.commit()
 
         # Send a notification with the review link
-        send_ask_for_review_mail(
+        email_sent = send_ask_for_review_mail(
             url=f"https://www.pamba.africa/reviews/new/{appointment.id}",
             business_name=business.business_name,
             name=appointment.client.name,
             recipient=appointment.client.email
         )
-
-        return jsonify({"message": "Appointment Ended", "appointment": serialize_appointment(appointment)}), 200
+        return jsonify({
+            "message": "Appointment ended. Review request email sent to the client." if email_sent else "Appointment ended, but failed to send review request email to the client.",
+            "appointment": serialize_appointment(appointment)
+            }), 200
     except Exception:
         return jsonify({"message":"Failed to end appointment due to an unexpected issue"}), 400
 
