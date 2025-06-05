@@ -70,7 +70,7 @@ def business_account_activation_email(recipient: str, token: str, name: str) -> 
         url = f"https://www.pamba.africa/verify/{token}"
         message = Message("[Action Required]: Activate your Pamba account", sender="pamba.africa", recipients=[recipient])
         message.html = render_template("activatebusiness.html", name=name, url=url)
-        mail.send(messagge)
+        mail.send(message)
     except Exception:
         return False
     else:
