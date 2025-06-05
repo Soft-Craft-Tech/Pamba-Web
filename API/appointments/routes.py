@@ -221,7 +221,7 @@ def book_appointment_on_web():
             recipient=client.email
         )
 
-        new_appointment_notification_message(
+        sms_message = new_appointment_notification_message(
             name=client.name.split()[0],
             time_=appointment_time.strftime("%H:%M"),
             date_=appointment_date.strftime("%d-%B-%Y"),
