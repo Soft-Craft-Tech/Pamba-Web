@@ -1,5 +1,6 @@
 # created by virtualenv automatically
 /env
+celerybeat-schedule
 /.idea
 .env
 /venv

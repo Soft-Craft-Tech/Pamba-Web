@@ -1,0 +1,63 @@
+services:
+  web_app:
+    build: .
+    container_name: pamba-web
+    command: flask run --host=0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - pamba-net
+    restart: unless-stopped
+
+  celery_worker:
+    build: .
+    container_name: pamba-celery-worker
+    command: celery -A API.celery worker --loglevel=info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - pamba-net
+    restart: unless-stopped
+
+  celery_beat:
+    build: .
+    container_name: pamba-celery-beat
+    command: celery -A API.celery beat --loglevel=debug
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - celery_worker
+    networks:
+      - pamba-net
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: pamba-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pamba-net
+    restart: unless-stopped
+
+networks:
+  pamba-net:
+    driver: bridge
+
+volumes:
+  redis_data:
