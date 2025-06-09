@@ -459,7 +459,7 @@ def fetch_all_businesses():
         :return: 200
     """
     try:
-        businesses = Business.query.filter_by(active=True, verified=True).all()
+        businesses = Business.query.filter_by(active=True, verified=True, profile_completed=True).all()
         if not businesses:
             return jsonify("Businesses not")
         all_businesses = []
@@ -481,7 +481,7 @@ def fetch_business(slug):
         :return: 404, 200
     """
     try:
-        business = Business.query.filter_by(slug=slug, active=True, verified=True).first()
+        business = Business.query.filter_by(slug=slug, active=True, verified=True, profile_completed=True).first()
 
         if not business:
             return jsonify({"message": "Business doesn't exist"}), 404
