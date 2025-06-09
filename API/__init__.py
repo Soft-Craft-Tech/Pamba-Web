@@ -26,7 +26,6 @@ def make_celery(app):
         result_serializer=Config.CELERY_RESULT_SERIALIZER,
         timezone=Config.CELERY_TIMEZONE,
         enable_utc=Config.CELERY_ENABLE_UTC,
-        beat_schedule_filename=Config.CELERY_BEAT_SCHEDULE_FILENAME,
         beat_schedule=Config.CELERY_BEAT_SCHEDULE
     )
 
