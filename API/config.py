@@ -20,7 +20,6 @@ class Config:
     CELERY_RESULT_SERIALIZER = 'json'
     CELERY_TIMEZONE = 'Africa/Nairobi'
     CELERY_ENABLE_UTC = False
-    CELERY_BEAT_SCHEDULE_FILENAME = 'celerybeat-schedule'
     CELERY_BEAT_SCHEDULE = {
         'resend-failed-notifications-every-30-minutes': {
             'task': 'CRON.celery_tasks.resend_failed_notifications',
