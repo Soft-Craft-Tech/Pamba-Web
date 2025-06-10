@@ -340,3 +340,20 @@ class Appointment(db.Model):
 
     def __repr__(self):
         return f"Appointment({self.date}, {self.time}, {self.comment})"
+
+
+class FailedNotification(db.Model):
+    __tablename__ = 'failed_notifications'
+    
+    id = db.Column(db.String(36), primary_key=True)  
+    recipient = db.Column(db.String(255), nullable=False)
+    notification_type = db.Column(db.String(50), nullable=False)  
+    message_params = db.Column(db.JSON, nullable=False) 
+    error_message = db.Column(db.Text, nullable=True)
+    retry_count = db.Column(db.Integer, default=0)
+    max_retries = db.Column(db.Integer, default=3)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f"<FailedNotification {self.notification_type} for {self.recipient}>"
