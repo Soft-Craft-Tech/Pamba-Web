@@ -90,8 +90,8 @@ def book_appointment(client):
 
         email_sent = appointment_confirmation_email(
         client_name=client.name.split()[0],
-        date=appointment_date,
-        time=appointment_time,
+        appointment_date=date.today(),   
+        appointment_time=datetime.now().time(),  
         business_name=business.business_name,
         business_address=business.formatted_address,
         latitude=business.latitude,
@@ -491,7 +491,7 @@ def end_appointment(business, appointment_id):
             "message": "Appointment ended. Review request email sent to the client." if email_sent else "Appointment ended, but failed to send review request email to the client.",
             "appointment": serialize_appointment(appointment)
             }), 200
-    except Exception:
+    except Exception as e:
         return jsonify({"message":"Failed to end appointment due to an unexpected issue"}), 400
 
 
