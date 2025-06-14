@@ -4,6 +4,7 @@ from API.models import (
 )
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
+from flasgger import swag_from
 from API.lib.auth import (
     business_login_required,
     verify_api_key, 
@@ -19,6 +20,7 @@ from API.lib.data_serializer import (serialize_business,
 from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta, timezone
 from API.helpers import update_profile_completion
+from API.swaggerUI.endpoints_definitions.businesses_docs import ACCOUNT_ACTIVATION
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")
 
@@ -148,6 +150,7 @@ def resend_verification_token():
 
 @business_blueprint.route("/activate-account/<string:token>", methods=["POST"])
 @verify_api_key
+@swag_from(ACCOUNT_ACTIVATION)
 def activate_account(token):
     """
         Activate businesses accounts
