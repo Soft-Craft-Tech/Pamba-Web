@@ -469,7 +469,7 @@ def fetch_all_businesses():
         for business in businesses:
             business_data = serialize_business(business)
             business_data["reviews"] = len(business.reviews.all())
-        all_businesses.append(business_data)
+            all_businesses.append(business_data)
         return jsonify({"message": "Success", "businesses": all_businesses}), 200
     except Exception as e:
         return jsonify(f"message: Failed to fetch businesses due to an unexpected issue: {e}"), 400
