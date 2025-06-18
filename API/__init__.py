@@ -12,6 +12,8 @@ mail = Mail()
 bcrypt = Bcrypt()
 migrate = Migrate()
 cors = CORS()
+from flasgger import Swagger
+from API.swaggerUI.swagger_config import swagger_config, swagger_template
 
 def make_celery(app):
     celery = Celery(
@@ -46,9 +48,10 @@ def create_app():
     mail.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app, supports_credentials=True)
-
+    
     celery = make_celery(app)
     app.extensions['celery'] = celery
+    Swagger(app, config=swagger_config, template=swagger_template)
 
     from API.clients.routes import clients_blueprint
     from API.appointments.routes import appointment_blueprint
