@@ -4,6 +4,7 @@ from API.models import (
 )
 from flask import Blueprint, jsonify, request
 from API import db, bcrypt
+from flasgger import swag_from
 from API.lib.auth import (
     business_login_required,
     verify_api_key, 
@@ -19,6 +20,7 @@ from API.lib.data_serializer import (serialize_business,
 from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta, timezone
 from API.helpers import update_profile_completion
+from API.swaggerUI.endpoints_definitions.businesses_docs import ACCOUNT_ACTIVATION
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")
 
@@ -99,7 +101,7 @@ def business_signup():
 
         return jsonify(
             {
-                "message": "Successful! Account activation link set to your email" if email_sent else "Activation email not sent, please check after a while",
+                "message": "Successful! Account activation link set to your email" if email_sent else "Activation email not sent, please try again",
                 "business": serialize_business(business),
                 "activationToken": token
             }
@@ -136,7 +138,7 @@ def resend_verification_token():
         token = generate_token(expiry=token_expiry_time, username=business.slug)
         email_sent = business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
 
-        return jsonify({"message": "Account verification email has been sent to your inbox" if email_sent else  "Activation email not sent, please try again later"}), 200
+        return jsonify({"message": "Account verification email has been sent to your inbox" if email_sent else  "Activation email not sent, please try again"}), 200
     
     except KeyError as e:
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
@@ -148,6 +150,7 @@ def resend_verification_token():
 
 @business_blueprint.route("/activate-account/<string:token>", methods=["POST"])
 @verify_api_key
+@swag_from(ACCOUNT_ACTIVATION)
 def activate_account(token):
     """
         Activate businesses accounts
@@ -234,7 +237,7 @@ def request_password_reset():
     token = generate_token(expiry=token_expiry_time, username=business.slug)
     email_sent = send_reset_email(recipient=business.email, token=token, name=business.business_name)
 
-    return jsonify({"message": "Reset link has been sent to your email" if email_sent else "Password reset email not sent. Please check your inbox after a while"}), 200
+    return jsonify({"message": "Reset link has been sent to your email" if email_sent else "Password reset email not sent. Please try again"}), 200
 
 
 @business_blueprint.route("/reset-password/<string:reset_token>", methods=["PUT"])
@@ -284,7 +287,7 @@ def resend_account_activation_token(business):
         email_sent = business_account_activation_email(token=token, recipient=business.email, name=business.business_name)
 
         return jsonify({
-            "message": "Account verification email has been sent to your inbox" if email_sent else "Account verification email not sent. Please check your inbox after a while",
+            "message": "Account verification email has been sent to your inbox" if email_sent else "Account verification email not sent. Please try again",
             "activationToken": token
         }), 200
     except Exception as e:
@@ -459,14 +462,14 @@ def fetch_all_businesses():
         :return: 200
     """
     try:
-        businesses = Business.query.filter_by(active=True, verified=True).all()
+        businesses = Business.query.filter_by(active=True, verified=True, profile_completed=True).all()
         if not businesses:
             return jsonify("Businesses not")
         all_businesses = []
         for business in businesses:
             business_data = serialize_business(business)
             business_data["reviews"] = len(business.reviews.all())
-        all_businesses.append(business_data)
+            all_businesses.append(business_data)
         return jsonify({"message": "Success", "businesses": all_businesses}), 200
     except Exception as e:
         return jsonify(f"message: Failed to fetch businesses due to an unexpected issue: {e}"), 400
@@ -481,7 +484,7 @@ def fetch_business(slug):
         :return: 404, 200
     """
     try:
-        business = Business.query.filter_by(slug=slug, active=True, verified=True).first()
+        business = Business.query.filter_by(slug=slug, active=True, verified=True, profile_completed=True).first()
 
         if not business:
             return jsonify({"message": "Business doesn't exist"}), 404

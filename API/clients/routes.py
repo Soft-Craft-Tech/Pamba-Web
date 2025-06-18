@@ -8,7 +8,7 @@ from API.lib.auth import verify_api_key, generate_token, decode_token, client_lo
 from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
-from datetime import datetime, timedelta, date, UTC
+from datetime import datetime, timedelta, date, UTC, timezone
 import json
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
@@ -61,7 +61,7 @@ def client_signup():
         db.session.add(client)
         db.session.commit()
         otp_sent = send_otp(recipient=email, otp=otp, name=name)
-        return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email if otp_sent else "Signup successful. Please check your email for the OTP after a while",
+        return jsonify({"message": "Signup Success. An OTP has been sent to your email.", "email": email if otp_sent else "Signup successful. Please try again",
                         "Client": serialize_client(client)
                         }), 200
     except KeyError as e:
@@ -146,7 +146,7 @@ def request_account_deletion():
         db.session.commit()
         return jsonify({"message": "We are sorry to see you leave. Your data will be deleted in 30 days"}), 200
     except Exception:
-        return jsonfy({"message": "Failed to delete account due to an unexpected issue"}), 400
+        return jsonify({"message": "Failed to delete account due to an unexpected issue"}), 400
 
 
 @clients_blueprint.route("/login", methods=["POST"])
@@ -172,7 +172,7 @@ def client_login():
     if client.queued_for_deletion:
         return jsonify({"message": "Can't Log In. You requested account deletion"}), 400
 
-    token_expiry_time = datetime.utcnow() + timedelta(days=30)
+    token_expiry_time = datetime.now(timezone.utc) + timedelta(days=30)
     token = generate_token(expiry=token_expiry_time, username=client.email)
 
     return jsonify({"message": "Login Successful", "client": serialize_client(client), "authToken": token}), 200
@@ -320,7 +320,7 @@ def resend_verification_otp():
         # Send Email
         otp_sent = send_otp(recipient=email, otp=otp, name=client.name)
         masked_email = f"{email[:3]}*****{email.split('@')[-1]}"
-        return jsonify({"message": f"OTP sent to: {masked_email}" if otp_sent else "Failure sending the OTP. Please try again after a while"}), 200
+        return jsonify({"message": f"OTP sent to: {masked_email}" if otp_sent else "Failure sending the OTP. Please try again"}), 200
     except Exception:
         return jsonify({"message":"Failed to send OTP"}), 400
 

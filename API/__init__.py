@@ -1,3 +1,4 @@
+from celery import Celery
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -6,16 +7,39 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from API.config import Config
 
-
 db = SQLAlchemy()
 mail = Mail()
 bcrypt = Bcrypt()
 migrate = Migrate()
 cors = CORS()
+from flasgger import Swagger
+from API.swaggerUI.swagger_config import swagger_config, swagger_template
 
+def make_celery(app):
+    celery = Celery(
+        app.import_name,
+        broker=Config.CELERY_BROKER_URL,
+        backend=Config.CELERY_RESULT_BACKEND,
+        include=['CRON.celery_tasks']
+    )
+    celery.conf.update(
+        task_serializer=Config.CELERY_TASK_SERIALIZER,
+        accept_content=Config.CELERY_ACCEPT_CONTENT,
+        result_serializer=Config.CELERY_RESULT_SERIALIZER,
+        timezone=Config.CELERY_TIMEZONE,
+        enable_utc=Config.CELERY_ENABLE_UTC,
+        beat_schedule=Config.CELERY_BEAT_SCHEDULE
+    )
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
 
 def create_app():
-
     app = Flask(__name__)
     app.config.from_object(Config)
 
@@ -24,6 +48,10 @@ def create_app():
     mail.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app, supports_credentials=True)
+    
+    celery = make_celery(app)
+    app.extensions['celery'] = celery
+    Swagger(app, config=swagger_config, template=swagger_template)
 
     from API.clients.routes import clients_blueprint
     from API.appointments.routes import appointment_blueprint
@@ -58,3 +86,5 @@ def create_app():
     app.register_blueprint(gallery_blueprint)
 
     return app
+
+celery = make_celery(create_app())
