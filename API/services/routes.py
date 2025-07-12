@@ -112,7 +112,6 @@ def update_service(business: Business, service_id: int):
     description: str = payload.get("description", "").strip()
     estimated_service_time: float = payload.get("estimatedTime", "")
     service_category: int = payload.get("category", "")
-    service_image: str = payload.get("imageURL", "")
 
     service: Service = Service.query.get(service_id)
 
@@ -127,7 +126,6 @@ def update_service(business: Business, service_id: int):
     service.description = description if description != "" else service.description
     service.estimated_service_time = estimated_service_time if estimated_service_time != "" else service.estimated_service_time
     service.service_category = service_category if service_category != "" else service.service_category
-    service.service_image = service_image if service_image != "" else service.service_image
 
     db.session.commit()
 
