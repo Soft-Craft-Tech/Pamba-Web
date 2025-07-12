@@ -411,7 +411,6 @@ def assign_services(business: Business):
                 description=service["description"].strip(),
                 estimated_service_time=parsedestimatedtime,
                 service_category=service["category"],
-                service_image=service["imageURL"],
                 business_id=business.id
             )
             db.session.add(service_to_add)
