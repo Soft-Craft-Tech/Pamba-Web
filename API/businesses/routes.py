@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from API.models import (
     Business, Service, Rating, Review, BusinessCategory,
     ServiceCategories
@@ -798,3 +799,86 @@ def fetch_business_services(slug):
         ), 200
     except Exception:
         return jsonify({"message": "Failed to fetch business services due to an unexpected issue"}), 400
+
+
+@business_blueprint.route("/search-business-location", methods=["POST"])
+@verify_api_key
+def search_businesses_by_location_and_service():
+    """
+        Search for businesses by location and service.
+        This endpoint allows users to find businesses based on a specific service that they offer and location.
+        It expects a JSON payload with the following structure:
+        {
+            "service": "Service Name",
+            "latitude": 0.0,
+            "longitude": 0.0,
+        }
+        :return: 200
+    """
+    payload = request.get_json()
+    service_name = payload.get("service")
+    latitude = payload.get("latitude")
+    longitude = payload.get("longitude")
+    radius = 6 * 1000
+
+    if not service_name or latitude is None or longitude is None:
+        return jsonify({"message": "'service', 'latitude', and 'longitude' are required."}), 400
+
+    try:
+        # Fetch the service
+        service = Service.query.filter_by(service=service_name).first()
+        if not service:
+            return jsonify({"message": "Service not found"}), 404
+
+        query = text(f"""
+            SELECT b.id, b.name, b.latitude, b.longitude,
+                   (6371 * 
+                    ACOS(
+                        COS(RADIANS(:latitude)) * COS(RADIANS(b.latitude)) *
+                        COS(RADIANS(b.longitude) - RADIANS(:longitude)) +
+                        SIN(RADIANS(:latitude)) * SIN(RADIANS(b.latitude))
+                    )) AS distance
+            FROM businesses b
+            JOIN service_businesses sb ON b.id = sb.business_id
+            WHERE sb.service_id = :service_id
+              AND b.active = TRUE
+              AND b.verified = TRUE
+              AND b.profile_completed = TRUE
+            HAVING distance <= :radius
+            ORDER BY distance
+        """)
+
+        # Execute query
+        result = db.session.execute(
+            query, {
+                "latitude": latitude,
+                "longitude": longitude,
+                "radius": radius / 1000,
+                "service_id": service.id
+            }
+        )
+
+        # Process results
+        businesses = result.fetchall()
+        if not businesses:
+            return jsonify({"message": "No businesses found for the specified service and location"}), 404
+
+        # Serialize businesses
+        all_businesses = []
+        for business in businesses:
+            business_data = {
+                "id": business.id,
+                "name": business.business_name,
+                "latitude": business.latitude,
+                "longitude": business.longitude,
+            }
+
+            # Add additional info
+            business_obj = Business.query.get(business.id)
+            business_data["reviews"] = len(business_obj.reviews.all())
+            all_businesses.append(business_data)
+
+        return jsonify({"businesses": all_businesses}), 200
+
+    except Exception as e:
+        return jsonify({"message": f"An error occurred: {str(e)}"}), 500

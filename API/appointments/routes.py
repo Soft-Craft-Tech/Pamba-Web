@@ -211,7 +211,7 @@ def book_appointment_on_web():
 
         email_sent = appointment_confirmation_email(
             client_name=client.name.split()[0],
-            date=appointment_date,
+            appointment_date=appointment_date,
             time=appointment_time,
             business_name=business.business_name,
             business_address=business.formatted_address,
