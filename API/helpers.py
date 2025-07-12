@@ -16,13 +16,11 @@ def update_profile_completion(business):
     try:
         business = db.session.merge(business) 
         services = Service.query.options(joinedload(Service.business)).filter_by(business_id=business.id).all()
-        accounts = business.expense_accounts.options(joinedload(ExpenseAccount.business)).all()
         
         if (
             bool(business.profile_img) and
             bool(business.description) and
             len(services) > 0 and
-            len(accounts) > 0 and
             bool(business.weekday_opening) and
             bool(business.weekday_closing) and
             bool(business.weekend_opening) and
