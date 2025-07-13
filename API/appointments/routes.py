@@ -139,6 +139,7 @@ def book_appointment_on_web():
         email: str = payload.get("email", "").strip().lower()
         phone: str = payload.get("phone", "").strip()
         name: str = payload.get("name", "").strip().title()
+        gender: str = payload.get("gender", "").strip().title()
         notification_mode: str = payload.get("notification", "").lower()
 
         if not (business_id and service_id and email and phone and name and notification_mode):
@@ -187,7 +188,8 @@ def book_appointment_on_web():
                 client = Client(
                     email=email,
                     phone=phone,
-                    name=name
+                    name=name,
+                    gender=gender
                 )
                 db.session.add(client)
                 db.session.commit()
@@ -294,7 +296,7 @@ def reschedule_appointment(appointment_id):
 
 
 @appointment_blueprint.route("/cancel/<int:appointment_id>", methods=["PUT"])
-def cancel_appointment(client, appointment_id):
+def cancel_appointment(appointment_id):
     """
         Cancel appointment
         :param appointment_id: ID of the appointment being cancelled
