@@ -237,12 +237,11 @@ def book_appointment_on_web():
 
 
 @appointment_blueprint.route("/reschedule/<int:appointment_id>", methods=["PUT"])
-def reschedule_appointment(client, appointment_id):
+def reschedule_appointment(appointment_id):
     """
         Client reschedule appointment.
-        :param client: Client
-        :param appointment_id: ID of appointment being rescheduled
-        :return: 200
+        :param appointment_id: ID of appointment being rescheduled.
+        :return: 200.
     """
     try:
         payload: Any = request.get_json()
@@ -263,15 +262,12 @@ def reschedule_appointment(client, appointment_id):
         if not appointment:
             return jsonify({"message": "Appointment doesn't exist"}), 404
 
-        if appointment.client_id != client.id:
-            return jsonify({"message": "Not allowed"}), 403
-
         if appointment.completed:
             return jsonify({"message": "Appointment already completed."}), 400
 
         # Avoid Booking multiple appointments scheduled at the same time
         appointments_booked_same_time: Appointment = Appointment.query \
-            .filter_by(date=appointment_date, time=appointment_time, client_id=client.id, cancelled=False).first()
+            .filter_by(date=appointment_date, time=appointment_time, client_id=appointment.client_id, cancelled=False).first()
         if appointments_booked_same_time:
             return jsonify({"message": "You have another appointment scheduled at this time."}), 400
 
