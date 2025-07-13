@@ -294,11 +294,9 @@ def reschedule_appointment(appointment_id):
 
 
 @appointment_blueprint.route("/cancel/<int:appointment_id>", methods=["PUT"])
-@client_login_required
 def cancel_appointment(client, appointment_id):
     """
         Cancel appointment
-        :param client: Logged in client
         :param appointment_id: ID of the appointment being cancelled
         :return: 200, 401
     """
@@ -309,9 +307,6 @@ def cancel_appointment(client, appointment_id):
 
         if not appointment:
             return jsonify({"message": "Appointment not Found"}), 404
-
-        if appointment.client_id != client.id:
-            return jsonify({"message": "Not allowed"}), 403
 
         if appointment.completed:
             return jsonify({"message": "Appointment already completed."}), 400
