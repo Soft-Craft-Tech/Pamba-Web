@@ -237,7 +237,6 @@ def book_appointment_on_web():
 
 
 @appointment_blueprint.route("/reschedule/<int:appointment_id>", methods=["PUT"])
-@client_login_required
 def reschedule_appointment(client, appointment_id):
     """
         Client reschedule appointment.

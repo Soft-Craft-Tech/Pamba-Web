@@ -336,7 +336,7 @@ def fetch_business_clients(business):
     lifetime_number_of_clients: int = 0
     all_clients: list = []
     all_appointments: list = []
-    year: int = 2024
+    year: int = 2024 # TODO: FIXXXXXXXXXXXXXX
     yearly_appointments: dict = {}
 
     appointments = business.appointments.filter_by(cancelled=False).order_by(Appointment.date.desc()).all()
