@@ -333,18 +333,13 @@ def fetch_business_clients(business):
         :param business: Logged in business
         :return: 200
     """
-    lifetime_number_of_clients: int = 0
-    all_clients: list = []
     all_appointments: list = []
-    year: int = 2024
+    year: int = datetime.now().year
     yearly_appointments: dict = {}
 
     appointments = business.appointments.filter_by(cancelled=False).order_by(Appointment.date.desc()).all()
     for appointment in appointments:
         all_appointments.append(serialize_appointment(appointment))
-        client = appointment.client
-        lifetime_number_of_clients += 1
-        all_clients.append(serialize_client(client))
 
         if appointment.date.year == year:
             month = appointment.date.strftime("%b")
@@ -362,11 +357,19 @@ def fetch_business_clients(business):
 
     monthly_appointments: list = [{month: count} for month, count in yearly_appointments.items()]
 
+    business_unique_client = (
+        db.session.query(Client)
+        .join(Appointment)
+        .filter(Appointment.business_id == business.id)
+        .distinct()
+        .all()
+    )
+
     return jsonify(
         {
             "message": "Success",
-            "lifetime_client_number_of_clients": lifetime_number_of_clients,
-            "all_clients": all_clients,
+            "lifetime_client_number_of_clients": len(business_unique_client),
+            "all_clients": serialize_client(business_unique_client),
             "all_appointments": monthly_appointments,
             "returning_clients": returning_clients
         }
