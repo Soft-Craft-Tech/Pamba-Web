@@ -8,7 +8,7 @@ from API.lib.auth import (
     business_login_required,
     verify_api_key,
     business_verification_required)
-from API.lib.data_serializer import serialize_appointment, serialize_client
+from API.lib.data_serializer import serialize_appointment, serialize_service
 from API.lib.sendSMS import send_sms
 from API.lib.utils import check_staff_availability
 from API import db, bcrypt
@@ -32,64 +32,95 @@ def book_appointment(client):
     try:
         payload: dict = request.get_json()
 
-        appointment_date: date = datetime.strptime(payload.get("date"), '%d-%m-%Y')
-        appointment_time: time = datetime.strptime(payload.get("time"), '%H:%M').time()
+        try:
+            appointment_date: date = datetime.strptime(payload["date"], '%d-%m-%Y').date()
+            appointment_time: time = datetime.strptime(payload["time"], '%H:%M').time()
+        except (ValueError, KeyError):
+            return jsonify({"message": "Invalid or missing Time/Date format"}), 400
+        
         comment: str = payload.get("comment", "").strip()
-        service_id: int = payload.get("service")
+        services = payload.get("services", [])
         staff_id: int = payload.get("staff", "")
-
-        if not service_id:
-            return jsonify({"message": "Service ID is required."}), 400
-
-        service: Service = Service.query.filter_by(id=service_id).first()
-        if not service:
-            return jsonify({"message": "Service not found"}), 404
+        
+        today_date: date = datetime.today().date()
+        current_time: time = datetime.today().time()
+        if appointment_date < today_date:
+            return jsonify({"message": "Can't book an appointment for a past date"}), 400
+        if appointment_date == today_date and appointment_time < current_time:
+            return jsonify({"message": "You can't book an appointment for a past time"}), 400
+        
+        if not services:
+            return jsonify({"message": "No services booked"}), 400
 
         if not client.verified:
             return jsonify({"message": "Please, verify your account."}), 403
+        
+        fetched_services = []
+        business = None
+        for service_id in services:
+            service = Service.query.filter_by(id=service_id).first()
+            if not service:
+                return jsonify({"message": f"Service ID {service_id} not found."}), 404
+            if not business:
+                business = service.business
+            elif service.business.id != business.id:
+                return jsonify({"message": "All selected services must belong to the same business."}), 400
+            fetched_services.append(service)
 
+        staff = None 
         if staff_id:
             staff: Staff = Staff.query.get(staff_id)
             if not staff:
                 return jsonify({"message": "Staff you booked with doesn't exist"}), 404
-            overlap: bool = check_staff_availability(
-                staff=staff,
-                appointment_date=appointment_date,
-                appointment_time=appointment_time,
-                service=service
-            )
-            if overlap:
-                return jsonify({
-                    "message": "The Staff you selected is already booked at this time."
-                }), 400
-
+            
         business: Business = service.business
-
         open_status = check_business_closed(appointment_time, appointment_date, business)
+
         if not open_status:
             return jsonify({"message": "Our premises are not open at the picked time and day"}), 400
-
-        new_appointment: Appointment = Appointment(
+        
+        existing_appt = Appointment.query.filter_by(
             date=appointment_date,
             time=appointment_time,
-            comment=comment,
-            business_id=business.id,
             client_id=client.id,
-            staff_id=staff_id if staff_id else None,
-            service_id=service.id
-        )
+            cancelled=False
+        ).first()
 
-        # Avoid Booking multiple appointments scheduled at the same time
-        appointment: Appointment = Appointment.query\
-            .filter_by(date=appointment_date, time=appointment_time, client_id=client.id, cancelled=False).first()
-        if appointment:
-            return jsonify({"message": "You have another appointment scheduled at this time."}), 400
+        if existing_appt:
+            return jsonify({"message": "You already have an appointment scheduled at this time."}), 400
 
-        db.session.add(new_appointment)
+        booked_services = []
+        for service in fetched_services:
+            if staff:
+                overlap = check_staff_availability(
+                    staff=staff,
+                    appointment_date=appointment_date,
+                    appointment_time=appointment_time,
+                    service=service
+                )
+                if overlap:
+                    return jsonify({
+                        "message": f"{staff.name} is already booked for {service.service} at that time."
+                    }), 400
+                
+            new_appointment: Appointment = Appointment(
+                date=appointment_date,
+                time=appointment_time,
+                comment=comment,
+                business_id=business.id,
+                client_id=client.id,
+                staff_id=staff_id if staff_id else None,
+                service_id=service.id
+            )
+
+            db.session.add(new_appointment)
+            booked_services.append(service.service) 
         db.session.commit()
 
+        service_names = ", ".join(booked_services)
         email_sent = appointment_confirmation_email(
         client_name=client.name.split()[0],
+        service = service_names,
         appointment_date=date.today(),   
         appointment_time=datetime.now().time(),  
         business_name=business.business_name,
@@ -104,7 +135,7 @@ def book_appointment(client):
             name=client.name.split()[0],
             time_=appointment_time.strftime("%H:%M"),
             date_=appointment_date.strftime("%d-%B-%Y"),
-            service=service.service,
+            service=service_names,
             business=business.business_name
         )
         send_sms(client.phone, appointment_message)
@@ -134,7 +165,7 @@ def book_appointment_on_web():
 
         comment: str = payload.get("comment", "").strip()
         business_id: int = payload.get("business")
-        service_id: int = payload.get("service")
+        services = payload.get("services", [])
         staff_id: int = payload.get("staff", "")
         email: str = payload.get("email", "").strip().lower()
         phone: str = payload.get("phone", "").strip()
@@ -142,7 +173,7 @@ def book_appointment_on_web():
         gender: str = payload.get("gender", "").strip().title()
         notification_mode: str = payload.get("notification", "").lower()
 
-        if not (business_id and service_id and email and phone and name and notification_mode):
+        if not (business_id and services and email and phone and name and notification_mode):
             return jsonify({"message": "Missing required fields"}), 400
 
         today_date: date = datetime.today().date()
@@ -153,9 +184,8 @@ def book_appointment_on_web():
         if appointment_date == today_date and appointment_time < current_time:
             return jsonify({"message": "You can't book an appointment for a past time"}), 400
 
-        service: Service = Service.query.get(service_id)
-        if not service:
-            return jsonify({"message": "The service you are booking is unavailable"}), 404
+        if not services:
+            return jsonify({"message": "No services booked"}), 404
 
         business: Business = Business.query.get(business_id)
         if not business:
@@ -165,23 +195,29 @@ def book_appointment_on_web():
         if not open_status:
             return jsonify({"message": "Our premises are not open at the selected time and day"}), 400
 
+        fetched_services = []
+        for service_id in services:
+            service = Service.query.filter_by(id=service_id).first()
+            if not service:
+                return jsonify({"message": f"Service ID {service_id} not found"}), 404
+            if service.business_id != business_id:
+                return jsonify({"message": "All services must belong to the same business"}), 400
+            fetched_services.append(service)
+
+        staff = None
         if staff_id:
             staff: Staff = Staff.query.get(staff_id)
             if not staff:
                 return jsonify({"message": "Staff you booked with doesn't exist"}), 404
-            overlap: bool = check_staff_availability(
-                staff=staff,
-                appointment_date=appointment_date,
-                appointment_time=appointment_time,
-                service=service
-            )
-            if overlap:
-                return jsonify({
-                    "message": "The Staff you selected is already booked at this time. "
-                               "Please book with a different staff or let us assign you someone"
-                }), 400
+            
+        existing_appt = Appointment.query.filter_by(
+            date=appointment_date,
+            time=appointment_time,
+            cancelled=False
+        ).first()
+        if existing_appt:
+            return jsonify({"message": "You already have an appointment scheduled at this time."}), 400
 
-        # Database operations (client creation and appointment booking)
         try:
             client: Client = Client.query.filter_by(email=email).first()
             if not client:
@@ -193,28 +229,48 @@ def book_appointment_on_web():
                 )
                 db.session.add(client)
                 db.session.commit()
+                
+            booked_services = []
+            for service in fetched_services:
+                if staff:
+                    overlap = check_staff_availability(
+                        staff=staff,
+                        appointment_date=appointment_date,
+                        appointment_time=appointment_time,
+                        service=service
+                    )
+                    if overlap:
+                        return jsonify({
+                            "message": f"{staff.name} is already booked for {service.service} at that time."
+                        }), 400
+                appointment: Appointment = Appointment(
+                    date=appointment_date,
+                    time=appointment_time,
+                    comment=comment,
+                    notification_mode=notification_mode,
+                    business_id=business.id,
+                    staff_id=staff_id if staff_id else None,
+                    client_id=client.id,
+                    service_id=service.id
+                )
+                db.session.add(appointment)
+                booked_services.append(service.service)
 
-            appointment: Appointment = Appointment(
-                date=appointment_date,
-                time=appointment_time,
-                comment=comment,
-                notification_mode=notification_mode,
-                business_id=business.id,
-                staff_id=staff_id if staff_id else None,
-                client_id=client.id,
-                service_id=service.id
-            )
-            db.session.add(appointment)
             db.session.commit()
 
         except SQLAlchemyError as db_err:
             db.session.rollback()
             return jsonify({"message": "A database error occurred", "error": str(db_err)}), 500
-
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"message": "A database error occurred", "error": str(e)}), 500
+        
+        service_names = ", ".join(booked_services)
         email_sent = appointment_confirmation_email(
             client_name=client.name.split()[0],
             appointment_date=appointment_date,
             appointment_time=appointment_time,
+            service=service_names,
             business_name=business.business_name,
             business_address=business.formatted_address,
             latitude=business.latitude,
@@ -227,7 +283,7 @@ def book_appointment_on_web():
             name=client.name.split()[0],
             time_=appointment_time.strftime("%H:%M"),
             date_=appointment_date.strftime("%d-%B-%Y"),
-            service=service.service,
+            service=service_names,
             business=business.business_name
         )
 
@@ -424,8 +480,9 @@ def fetch_business_appointments(business):
     all_appointments: list = []
 
     for appointment in appointments:
+        service = appointment.service
         combined_datetime: datetime = datetime.combine(appointment.date, appointment.time)
-        appointment_duration: int = int(float(appointment.service.estimated_service_time) * 60)
+        appointment_duration: int = int(float(service.estimated_service_time) * 60)
         appointment_ends: datetime = combined_datetime + timedelta(minutes=appointment_duration)
         staff: str = ""
 
@@ -433,6 +490,9 @@ def fetch_business_appointments(business):
             staff = appointment.staff.f_name
 
         serialized_appointment = serialize_appointment(appointment)
+        serialized_appointment.pop("service_id", None)
+
+        serialized_appointment["service"] = serialize_service(appointment.service)
         serialized_appointment["start"] = combined_datetime.strftime("%Y-%m-%d %H:%M")
         serialized_appointment["end"] = appointment_ends.strftime("%Y-%m-%d %H:%M")
         serialized_appointment["people"] = [appointment.client.name]
