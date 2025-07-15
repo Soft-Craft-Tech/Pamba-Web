@@ -8,7 +8,7 @@ from API.lib.auth import (
     business_login_required,
     verify_api_key,
     business_verification_required)
-from API.lib.data_serializer import serialize_appointment, serialize_client
+from API.lib.data_serializer import serialize_appointment, serialize_service
 from API.lib.sendSMS import send_sms
 from API.lib.utils import check_staff_availability
 from API import db, bcrypt
@@ -488,8 +488,9 @@ def fetch_business_appointments(business):
     all_appointments: list = []
 
     for appointment in appointments:
+        service = appointment.service
         combined_datetime: datetime = datetime.combine(appointment.date, appointment.time)
-        appointment_duration: int = int(float(appointment.service.estimated_service_time) * 60)
+        appointment_duration: int = int(float(service.estimated_service_time) * 60)
         appointment_ends: datetime = combined_datetime + timedelta(minutes=appointment_duration)
         staff: str = ""
 
@@ -497,6 +498,9 @@ def fetch_business_appointments(business):
             staff = appointment.staff.f_name
 
         serialized_appointment = serialize_appointment(appointment)
+        serialized_appointment.pop("service_id", None)
+
+        serialized_appointment["service"] = serialize_service(appointment.service)
         serialized_appointment["start"] = combined_datetime.strftime("%Y-%m-%d %H:%M")
         serialized_appointment["end"] = appointment_ends.strftime("%Y-%m-%d %H:%M")
         serialized_appointment["people"] = [appointment.client.name]
