@@ -241,7 +241,7 @@ def book_appointment_on_web():
                     )
                     if overlap:
                         return jsonify({
-                            "message": f"{staff.name} is already booked for {service.service} at that time."
+                            "message": f"{staff.f_name} is already booked for {service.service} at that time."
                         }), 400
                 appointment: Appointment = Appointment(
                     date=appointment_date,
