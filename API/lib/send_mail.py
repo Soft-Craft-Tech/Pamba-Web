@@ -101,7 +101,6 @@ def business_account_activation_email(recipient: str, token: str, name: str) -> 
 
 def appointment_confirmation_email(
     client_name,
-    service,
     appointment_date,
     appointment_time,
     business_name,
@@ -128,7 +127,6 @@ def appointment_confirmation_email(
         message.html = render_template(
             "confirmAppointment.html",
             name=client_name if client_name else None,
-            service=service,
             appointment_date=date_str,
             appointment_time=time_str,
             business_name=business_name,
