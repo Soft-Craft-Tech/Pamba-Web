@@ -1,7 +1,7 @@
 from flask import jsonify, request, Blueprint
 from sqlalchemy import func
 
-from API.models import Client, ClientDeleted, Appointment
+from API.models import Client, ClientDeleted, Appointment, Gender
 from API.lib.data_serializer import serialize_client, serialize_appointment
 from API.lib.utils import save_response_image
 from API.lib.auth import verify_api_key, generate_token, decode_token, client_login_required, business_login_required
@@ -386,3 +386,86 @@ def retrieve_client(client: Client):
     """
 
     return jsonify(({"client": serialize_client(client)})), 200
+
+@clients_blueprint.route("/business-clients", methods=["POST"])
+@business_login_required
+def add_business_clients(business):
+    """
+    Allow a business to add a new client (name, email, phone, gender).
+    Prevent duplicates and associate the client with the business.
+    """
+    try:
+        payload = request.get_json()
+        name = payload.get("name", "").strip().title()
+        email = payload.get("email", "").strip().lower()
+        phone = payload.get("phone", "").strip()
+        gender_str = payload.get("gender", "").strip()
+
+        if not all([name, email, phone, gender_str]):
+            return jsonify({"message": "All fields (name, email, phone, gender) are required"}), 400
+
+        gender = next((g for g in Gender if g.value.lower() == gender_str.lower()), None)
+        if not gender:
+            return jsonify({"message": f"Gender must be one of {[g.value for g in Gender]}"}), 400
+
+        if Client.query.filter((Client.email == email) | (Client.phone == phone)).first():
+            return jsonify({"message": "Client with this email or phone already exists"}), 409
+
+        new_client = Client(
+            name=name,
+            email=email,
+            phone=phone,
+            gender=gender  
+        )
+        db.session.add(new_client)
+
+        business.clients.append(new_client)
+        db.session.commit()
+        return jsonify({"message": "Client added successfully", "client": serialize_client(new_client)}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Failed to add client", "error": str(e)}), 500
+
+
+@clients_blueprint.route("/business-clients/<int:client_id>", methods=["PUT"])
+@business_login_required
+def edit_business_clients(business, client_id):
+    """
+    Allow a business to edit a client's details (name, email, phone, gender).
+    """
+    try:
+        payload = request.get_json()
+        client = Client.query.get(client_id)
+
+        if not client or client not in business.clients:
+            return jsonify({"message": "Client not found or not associated with your business"}), 404
+
+        name = payload.get("name", client.name).strip().title()
+        email = payload.get("email", client.email).strip().lower()
+        phone = payload.get("phone", client.phone).strip()
+        gender_str = payload.get("gender", client.gender.value if client.gender else "").strip()
+
+        if not all([name, email, phone, gender_str]):
+            return jsonify({"message": "All fields (name, email, phone, gender) are required"}), 400
+
+        gender = next((g for g in Gender if g.value.lower() == gender_str.lower()), None)
+        if not gender:
+            return jsonify({"message": f"Gender must be one of {[g.value for g in Gender]}"}), 400
+
+        email_exists = Client.query.filter(Client.email == email, Client.id != client.id).first()
+        phone_exists = Client.query.filter(Client.phone == phone, Client.id != client.id).first()
+        if email_exists or phone_exists:
+            return jsonify({"message": "Email or phone already in use by another client"}), 409
+
+        client.name = name
+        client.email = email
+        client.phone = phone
+        client.gender = gender
+
+        db.session.commit()
+        return jsonify({"message": "Client updated successfully", "client": serialize_client(client)}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Failed to update client", "error": str(e)}), 500
