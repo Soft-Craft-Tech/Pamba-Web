@@ -495,7 +495,7 @@ def fetch_business_appointments(business):
         serialized_appointment["service"] = serialize_service(appointment.service)
         serialized_appointment["start"] = combined_datetime.strftime("%Y-%m-%d %H:%M")
         serialized_appointment["end"] = appointment_ends.strftime("%Y-%m-%d %H:%M")
-        serialized_appointment["people"] = [appointment.client]
+        serialized_appointment["people"] = [appointment.client.name]
         serialized_appointment["title"] = f"{appointment.service.service} by {staff if staff else 'Unassigned'}"
         serialized_appointment["calendarId"] = "past" if appointment_ends < today else "upcoming"
         serialized_appointment["client"] = serialize_client(appointment.client)
