@@ -21,12 +21,36 @@ from API.lib.data_serializer import (serialize_business,
 from API.lib.rating_calculator import calculate_ratings
 from datetime import datetime, timedelta, timezone
 from API.helpers import update_profile_completion
-from API.swaggerUI.endpoints_definitions.businesses_docs import ACCOUNT_ACTIVATION
+from API.swaggerUI.endpoints_definitions.businesses_docs import (
+    ACCOUNT_ACTIVATION,
+    BUSINESS_SIGNUP,
+    RESEND_VERIFICATION_TOKEN,
+    CHECK_TOKEN_EXPIRY,
+    LOGIN,
+    REQUEST_PASSWORD_RESET,
+    RESET_PASSWORD,
+    UPDATE_PROFILE,
+    CHANGE_PASSWORD,
+    ASSIGN_SERVICES,
+    REMOVE_SERVICE,
+    FETCH_ALL_BUSINESSES,
+    FETCH_BUSINESS,
+    GET_BUSINESS_ANALYTICS,
+    SERVICE_BUSINESSES,
+    UPLOAD_PROFILE_IMG,
+    UPDATE_DESCRIPTION,
+    PROFILE_COMPLETION_STATUS,
+    FETCH_BUSINESS_CATEGORIES,
+    ADD_BUSINESS_HOURS,
+    FETCH_BUSINESS_SERVICES,
+    SEARCH_BUSINESSES_BY_LOCATION_AND_SERVICE
+)
 
 business_blueprint = Blueprint("businesses", __name__, url_prefix="/API/businesses")
 
 
 @business_blueprint.route("/signup", methods=["POST"])
+@swag_from(BUSINESS_SIGNUP)
 @verify_api_key
 def business_signup():
     """
@@ -117,6 +141,7 @@ def business_signup():
 
 
 @business_blueprint.route("/resend-verification-token", methods=["POST"])
+@swag_from(RESEND_VERIFICATION_TOKEN)
 @verify_api_key
 def resend_verification_token():
     """
@@ -173,6 +198,7 @@ def activate_account(token):
 
 
 @business_blueprint.route("/check-token-expiry", methods=["POST"])
+@swag_from(CHECK_TOKEN_EXPIRY)
 @verify_api_key
 def check_token_expiry():
     """
@@ -194,6 +220,7 @@ def check_token_expiry():
 
 
 @business_blueprint.route("/login", methods=["POST"])
+@swag_from(LOGIN)
 @verify_api_key
 def login():
     """
@@ -220,6 +247,7 @@ def login():
 
 
 @business_blueprint.route("/request-password-reset", methods=["POST"])
+@swag_from(REQUEST_PASSWORD_RESET)
 @verify_api_key
 def request_password_reset():
     """
@@ -242,6 +270,7 @@ def request_password_reset():
 
 
 @business_blueprint.route("/reset-password/<string:reset_token>", methods=["PUT"])
+@swag_from(RESET_PASSWORD)
 @verify_api_key
 def reset_password(reset_token):
     """
@@ -272,6 +301,7 @@ def reset_password(reset_token):
 
 
 @business_blueprint.route("/resend-activation-email", methods=["POST"])
+@swag_from(RESEND_VERIFICATION_TOKEN)
 @business_login_required
 def resend_account_activation_token(business):
     """
@@ -295,6 +325,7 @@ def resend_account_activation_token(business):
         return jsonify({f"message": f"Failed to send verfication email due to an unexpected issue: {str(e)}"}), 400
     
 @business_blueprint.route("/update", methods=["PUT"])
+@swag_from(UPDATE_PROFILE)
 @business_login_required
 def update_profile(business):
     """
@@ -356,6 +387,7 @@ def update_profile(business):
 
 
 @business_blueprint.route("/change-password", methods=["PUT"])
+@swag_from(CHANGE_PASSWORD)
 @business_login_required
 def change_password(business):
     """
@@ -384,6 +416,7 @@ def change_password(business):
 
 
 @business_blueprint.route("/assign-services", methods=["POST"])
+@swag_from(ASSIGN_SERVICES)
 @business_login_required
 @business_verification_required
 def assign_services(business: Business):
@@ -425,6 +458,7 @@ def assign_services(business: Business):
 
 
 @business_blueprint.route("/remove-service", methods=["POST"])
+@swag_from(REMOVE_SERVICE)
 @business_login_required
 @business_verification_required
 def remove_service(business):
@@ -455,6 +489,7 @@ def remove_service(business):
 
 
 @business_blueprint.route("/all-businesses", methods=["GET"])
+@swag_from(FETCH_ALL_BUSINESSES)
 @verify_api_key
 def fetch_all_businesses():
     """
@@ -476,6 +511,7 @@ def fetch_all_businesses():
 
 
 @business_blueprint.route("/<string:slug>", methods=["GET"])
+@swag_from(FETCH_BUSINESS)
 @verify_api_key
 def fetch_business(slug):
     """
@@ -537,6 +573,7 @@ def fetch_business(slug):
 
 
 @business_blueprint.route("/analysis", methods=["GET"])
+@swag_from(GET_BUSINESS_ANALYTICS)
 @business_login_required
 @business_verification_required
 def get_business_analytics(business):
@@ -601,6 +638,7 @@ def get_business_analytics(business):
 
 
 @business_blueprint.route("/service-businesses/<int:service_id>", methods=["GET"])
+@swag_from(SERVICE_BUSINESSES)
 @verify_api_key
 def service_businesses(service_id):
     """
@@ -638,6 +676,7 @@ def service_businesses(service_id):
 
 
 @business_blueprint.route("/upload-profile-img", methods=["PUT"])
+@swag_from(UPLOAD_PROFILE_IMG)
 @business_login_required
 @business_verification_required
 def upload_profile_img(business):
@@ -661,6 +700,7 @@ def upload_profile_img(business):
 
 
 @business_blueprint.route("/update-description", methods=["PUT"])
+@swag_from(UPDATE_DESCRIPTION)
 @business_login_required
 @business_verification_required
 def update_description(business):
@@ -684,6 +724,7 @@ def update_description(business):
 
 
 @business_blueprint.route("/profile-completion-status", methods=["GET"])
+@swag_from(PROFILE_COMPLETION_STATUS)
 @business_login_required
 def profile_completion_status(business):
     """
@@ -722,6 +763,7 @@ def profile_completion_status(business):
 
 
 @business_blueprint.route("/fetch-business-categories", methods=["GET"])
+@swag_from(FETCH_BUSINESS_CATEGORIES)
 @verify_api_key
 def fetch_business_categories():
     """
@@ -740,6 +782,7 @@ def fetch_business_categories():
 
 
 @business_blueprint.route("/business-hours", methods=["PUT"])
+@swag_from(ADD_BUSINESS_HOURS)
 @business_login_required
 @business_verification_required
 def add_business_hours(business):
@@ -773,6 +816,7 @@ def add_business_hours(business):
 
 
 @business_blueprint.route("/business-services/<string:slug>", methods=["GET"])
+@swag_from(FETCH_BUSINESS_SERVICES)
 @verify_api_key
 def fetch_business_services(slug):
     """
@@ -801,6 +845,7 @@ def fetch_business_services(slug):
 
 
 @business_blueprint.route("/search-business-location", methods=["POST"])
+@swag_from(SEARCH_BUSINESSES_BY_LOCATION_AND_SERVICE)
 @verify_api_key
 def search_businesses_by_location_and_service():
     """

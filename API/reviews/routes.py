@@ -1,14 +1,18 @@
 from flask import jsonify, request, Blueprint
-import time
+from flasgger import swag_from
 from API.lib.data_serializer import serialize_review
 from API.models import Review, Appointment, Business
 from API import db
 from API.lib.auth import verify_api_key
-
+from API.swaggerUI.endpoints_definitions.review_docs import (
+    CREATE_REVIEW,
+    LIST_REVIEWS
+)
 reviews_blueprint = Blueprint("reviews", __name__, url_prefix="/API/reviews")
 
 
 @reviews_blueprint.route("/create/<int:appointment_id>", methods=["POST"])
+@swag_from(CREATE_REVIEW)
 @verify_api_key
 def create_review(appointment_id):
     """
@@ -37,6 +41,7 @@ def create_review(appointment_id):
 
 
 @reviews_blueprint.route("/all/<string:slug>", methods=["GET"])
+@swag_from(LIST_REVIEWS)
 @verify_api_key
 def list_reviews(slug):
     """

@@ -1,14 +1,24 @@
 from datetime import datetime, timedelta, date
 from API.models import Sale, Service
 from flask import Blueprint, jsonify, request
+from flasgger import swag_from
 from API import db
 from API.lib.auth import business_login_required, business_verification_required
 from API.lib.data_serializer import serialize_sale
+from API.swaggerUI.endpoints_definitions.sales_docs import (
+    RECORD_SALE,
+    FETCH_ALL_BUSINESS_SALES,
+    DELETE_SALE,
+    REVENUE_ANALYTICS,
+    EDIT_SALE
+)
+
 
 sales_blueprint = Blueprint("sales", __name__, url_prefix="/API/sales")
 
 
 @sales_blueprint.route("/add-sale", methods=["POST"])
+@swag_from(RECORD_SALE)
 @business_login_required
 @business_verification_required
 def record_sale(business):
@@ -40,6 +50,7 @@ def record_sale(business):
 
 
 @sales_blueprint.route("/all", methods=["GET"])
+@swag_from(FETCH_ALL_BUSINESS_SALES)
 @business_login_required
 @business_verification_required
 def fetch_all_business_sales(business):
@@ -62,6 +73,7 @@ def fetch_all_business_sales(business):
 
 
 @sales_blueprint.route("/delete/<int:sale_id>", methods=["DELETE"])
+@swag_from(DELETE_SALE)
 @business_login_required
 @business_verification_required
 def delete_sale(business, sale_id):
@@ -87,6 +99,7 @@ def delete_sale(business, sale_id):
 
 
 @sales_blueprint.route("/analysis", methods=["GET"])
+@swag_from(REVENUE_ANALYTICS)
 @business_login_required
 @business_verification_required
 def revenue_analytics(business):
@@ -130,6 +143,7 @@ def revenue_analytics(business):
 
 
 @sales_blueprint.route("/edit/<int:sale_id>", methods=["PUT"])
+@swag_from(EDIT_SALE)
 @business_login_required
 @business_verification_required
 def edit_sale(business, sale_id):

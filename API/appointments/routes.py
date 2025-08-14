@@ -2,6 +2,7 @@ from typing import Union, Optional, Any
 from sqlalchemy.exc import SQLAlchemyError
 
 from API.models import Appointment, Service, Staff, Client, Business
+from flasgger import swag_from
 from flask import Blueprint, request, jsonify
 from API.lib.auth import (
     client_login_required,
@@ -17,11 +18,25 @@ from API.lib.SMS_messages import reschedule_appointment_composer, new_appointmen
     appointment_remainder_message
 from API.lib.checkBusinessClosed import check_business_closed
 from API.lib.send_mail import appointment_confirmation_email, send_ask_for_review_mail
+from API.swaggerUI.endpoints_definitions.appointment_docs import (
+    BOOK_APPOINTMENT,
+    BOOK_APPOINTMENT_ON_WEB,
+    RESCHEDULE_APPOINTMENT,
+    CANCEL_APPOINTMENT,
+    MY_APPOINTMENTS,
+    ASSIGN_APPOINTMENT,
+    FETCH_BUSINESS_APPOINTMENTS,
+    END_APPOINTMENT,
+    FETCH_SINGLE_APPOINTMENT,
+    SEND_APPOINTMENT_REMINDER
+)
+
 
 appointment_blueprint = Blueprint("appointments", __name__, url_prefix="/API/appointments")
 
 
 @appointment_blueprint.route("/book", methods=["POST"])
+@swag_from(BOOK_APPOINTMENT)
 @client_login_required
 def book_appointment(client):
     """
@@ -117,6 +132,7 @@ def book_appointment(client):
 
 
 @appointment_blueprint.route("/book/web-appointments", methods=["POST"])
+@swag_from(BOOK_APPOINTMENT_ON_WEB)
 @verify_api_key
 def book_appointment_on_web():
     """
@@ -237,6 +253,7 @@ def book_appointment_on_web():
 
 
 @appointment_blueprint.route("/reschedule/<int:appointment_id>", methods=["PUT"])
+@swag_from(RESCHEDULE_APPOINTMENT)
 @client_login_required
 def reschedule_appointment(client, appointment_id):
     """
@@ -299,6 +316,7 @@ def reschedule_appointment(client, appointment_id):
 
 
 @appointment_blueprint.route("/cancel/<int:appointment_id>", methods=["PUT"])
+@swag_from(CANCEL_APPOINTMENT)
 @client_login_required
 def cancel_appointment(client, appointment_id):
     """
@@ -332,6 +350,7 @@ def cancel_appointment(client, appointment_id):
 
 
 @appointment_blueprint.route("/my-appointments", methods=["GET"])
+@swag_from(MY_APPOINTMENTS)
 @client_login_required
 def my_appointments(client):
     """
@@ -375,6 +394,7 @@ def my_appointments(client):
 
 
 @appointment_blueprint.route("/assign-appointment/<int:appointment_id>", methods=["PUT"])
+@swag_from(ASSIGN_APPOINTMENT)
 @business_login_required
 @business_verification_required
 def assign_appointment(business, appointment_id):
@@ -416,6 +436,7 @@ def assign_appointment(business, appointment_id):
 
 
 @appointment_blueprint.route("/business-appointments", methods=["GET"])
+@swag_from(FETCH_BUSINESS_APPOINTMENTS)
 @business_login_required
 @business_verification_required
 def fetch_business_appointments(business):
@@ -452,6 +473,7 @@ def fetch_business_appointments(business):
 
 
 @appointment_blueprint.route("/end_appointment/<int:appointment_id>", methods=["PUT"])
+@swag_from(END_APPOINTMENT)
 @business_login_required
 @business_verification_required
 def end_appointment(business, appointment_id):
@@ -496,6 +518,7 @@ def end_appointment(business, appointment_id):
 
 
 @appointment_blueprint.route("/<int:appointment_id>", methods=["GET"])
+@swag_from(FETCH_SINGLE_APPOINTMENT)
 def fetch_single_appointment(appointment_id):
     """
         Fetch single appointment
@@ -511,6 +534,7 @@ def fetch_single_appointment(appointment_id):
 
 
 @appointment_blueprint.route("/send_reminder", methods=["GET"])
+@swag_from(SEND_APPOINTMENT_REMINDER)
 @verify_api_key
 def send_appointment_reminder():
     """

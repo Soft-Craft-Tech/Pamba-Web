@@ -1,13 +1,22 @@
 from flask import jsonify, request, Blueprint
+from flasgger import swag_from
 from API import db, bcrypt
 from API.lib.auth import business_login_required, business_verification_required
 from API.models import ExpenseAccount
 from API.lib.data_serializer import serialize_account
+from API.swaggerUI.endpoints_definitions.expense_accounts_docs import (
+    CREATE_EXPENSE_ACCOUNT,
+    DELETE_ACCOUNT,
+    UPDATE_ACCOUNT,
+    FETCH_ALL_BUSINESS_ACCOUNTS
+)
+
 
 accounts_blueprint = Blueprint("accounts", __name__, url_prefix="/API/accounts")
 
 
 @accounts_blueprint.route("/create-account", methods=["POST"])
+@swag_from(CREATE_EXPENSE_ACCOUNT)
 @business_login_required
 @business_verification_required
 def create_expense_account(business):
@@ -36,6 +45,7 @@ def create_expense_account(business):
 
 
 @accounts_blueprint.route("/delete/<int:account_id>", methods=["DELETE"])
+@swag_from(DELETE_ACCOUNT)
 @business_login_required
 @business_verification_required
 def delete_account(business, account_id):
@@ -65,6 +75,7 @@ def delete_account(business, account_id):
 
 
 @accounts_blueprint.route("/update/<int:account_id>", methods=["PUT"])
+@swag_from(UPDATE_ACCOUNT)
 @business_login_required
 @business_verification_required
 def update_account(business, account_id):
@@ -102,6 +113,7 @@ def update_account(business, account_id):
 
 
 @accounts_blueprint.route("/all", methods=["GET"])
+@swag_from(FETCH_ALL_BUSINESS_ACCOUNTS)
 @business_login_required
 @business_verification_required
 def fetch_all_business_account(business):
