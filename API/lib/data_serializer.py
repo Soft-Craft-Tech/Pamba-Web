@@ -14,6 +14,8 @@ def serialize_client(client):
         "email": fields.String,
         "phone": fields.String,
         "verified": fields.Boolean,
+        "gender": fields.String,
+        "join_date": fields.DateTime(dt_format='iso8601'),
         "dob": fields.DateTime(dt_format='iso8601'),
         "profile_image": fields.String
     }

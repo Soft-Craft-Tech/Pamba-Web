@@ -859,20 +859,25 @@ def search_businesses_by_location_and_service():
         }
         :return: 200
     """
+    # Search by service category only if the cordinates are not provided.
+    # Search by service category and location if the cordinates are provided.
+    # Search by coordinates only if the service category is not provided.
     payload = request.get_json()
-    service_name = payload.get("service")
+    service_category = payload.get("service_category")
     latitude = payload.get("latitude")
     longitude = payload.get("longitude")
     radius = 6 * 1000
 
-    if not service_name or latitude is None or longitude is None:
+    if not service_category or latitude is None or longitude is None:
         return jsonify({"message": "'service', 'latitude', and 'longitude' are required."}), 400
 
     try:
         # Fetch the service
-        service = Service.query.filter_by(service=service_name).first()
-        if not service:
-            return jsonify({"message": "Service not found"}), 404
+        if service_category:
+            category = Service.query.get(service_category)
+            if not category:
+                return jsonify({"message": "Service not found"}), 404
+        
 
         query = text(f"""
             SELECT b.id, b.name, b.latitude, b.longitude,

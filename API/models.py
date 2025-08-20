@@ -1,5 +1,6 @@
 from API import db
 from datetime import datetime, timezone
+import enum
 
 
 # Junction table for many-to-many relationship between Service and appointment
@@ -247,6 +248,11 @@ class Rating(db.Model):
 # ------------------------------------------------------------- CLIENTS ---------------------------------------------
 
 
+class Gender(enum.Enum):
+    MALE = "Male"
+    FEMALE = "Female"
+    OTHER = "Other"
+
 class Client(db.Model):
     """Clients table for the businesses' clients"""
     __tablename__ = "clients"
@@ -255,6 +261,7 @@ class Client(db.Model):
     name = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(100), nullable=False, unique=True)
     phone = db.Column(db.String(15), nullable=False)
+    gender = db.Column(db.Enum(Gender, name="gender_enum"), nullable=True)
     password = db.Column(db.String(300), nullable=True)
     verified = db.Column(db.Boolean, default=False)
     queued_for_deletion = db.Column(db.Boolean, default=False)
