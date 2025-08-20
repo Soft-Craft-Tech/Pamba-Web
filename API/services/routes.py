@@ -1,15 +1,24 @@
 import datetime
 
 from flask import jsonify, Blueprint, request
+from flasgger import swag_from
 from API.models import ServiceCategories, Service, Business
 from API.lib.auth import verify_api_key, business_verification_required,business_login_required
 from API.lib.data_serializer import serialize_service, serialize_staff, serialize_business
 from API import db
+from API.swaggerUI.endpoints_definitions.services_docs import (
+    FETCH_SERVICE_CATEGORIES,
+    FETCH_ALL_SERVICES,
+    RETRIEVE_SERVICE,
+    UPDATE_SERVICE,
+    DELETE_SERVICE
+)
 
 services_blueprint = Blueprint("services", __name__, url_prefix="/API/services")
 
 
 @services_blueprint.route("/categories", methods=["GET"])
+@swag_from(FETCH_SERVICE_CATEGORIES)
 @verify_api_key
 def fetch_service_categories():
     """
@@ -25,6 +34,7 @@ def fetch_service_categories():
 
 
 @services_blueprint.route("/all", methods=["GET"])
+@swag_from(FETCH_ALL_SERVICES)
 @verify_api_key
 def fetch_all_services():
     """
@@ -51,6 +61,7 @@ def fetch_all_services():
 
 
 @services_blueprint.route("/retrieve/<int:service_id>", methods=["GET"])
+@swag_from(RETRIEVE_SERVICE)
 @verify_api_key
 def retrieve_service(service_id):
     """
@@ -97,6 +108,7 @@ def retrieve_service(service_id):
 
 
 @services_blueprint.route("/update/<int:service_id>", methods=["PUT"])
+@swag_from(UPDATE_SERVICE)
 @business_login_required
 @business_verification_required
 def update_service(business: Business, service_id: int):
@@ -133,6 +145,7 @@ def update_service(business: Business, service_id: int):
 
 
 @services_blueprint.route("/delete/<int:service_id>", methods=["DELETE"])
+@swag_from(DELETE_SERVICE)
 @business_login_required
 @business_verification_required
 def delete_service(business: Business, service_id: int):

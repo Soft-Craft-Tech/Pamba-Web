@@ -1,13 +1,20 @@
 from flask import Blueprint, jsonify, request
+from flasgger import swag_from
 from API.lib.auth import verify_api_key, business_login_required, business_verification_required
 from API.models import Business, BusinessGallery
 from API.lib.data_serializer import serialize_gallery
 from API import db
+from API.swaggerUI.endpoints_definitions.gallery_docs import (
+    FETCH_BUSINESS_GALLERY,
+    ADD_GALLERY_IMAGE,
+    DELETE_GALLERY_IMAGE
+)
 
 gallery_blueprint = Blueprint("gallery", __name__, url_prefix="/API/gallery")
 
 
 @gallery_blueprint.route("/<string:slug>", methods=["GET"])
+@swag_from(FETCH_BUSINESS_GALLERY)
 @verify_api_key
 def fetch_business_gallery(slug):
     """
@@ -28,6 +35,7 @@ def fetch_business_gallery(slug):
 
 
 @gallery_blueprint.route("/add", methods=["POST"])
+@swag_from(ADD_GALLERY_IMAGE)
 @business_login_required
 @business_verification_required
 def add_gallery_image(business):
@@ -50,6 +58,7 @@ def add_gallery_image(business):
 
 
 @gallery_blueprint.route("/delete/<int:image_id>", methods=["DELETE"])
+@swag_from(DELETE_GALLERY_IMAGE)
 @business_login_required
 def delete_gallery_image(business, image_id):
     """

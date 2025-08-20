@@ -129,7 +129,6 @@ def appointment_confirmation_email(
             "confirmAppointment.html",
             name=client_name if client_name else None,
             appointment_date=date_str,
-            service=service,
             appointment_time=time_str,
             business_name=business_name,
             business_address=business_address,

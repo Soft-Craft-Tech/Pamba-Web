@@ -1,14 +1,17 @@
 from flask import jsonify, request, Blueprint
+from flasgger import swag_from
 
 from API.lib.rating_calculator import calculate_ratings
 from API.models import Rating, Business
 from API import db
 from API.lib.auth import verify_api_key
+from API.swaggerUI.endpoints_definitions.ratings_docs import ADD_RATING
 
 ratings_blueprint = Blueprint("rating", __name__, url_prefix="/API/ratings")
 
 
 @ratings_blueprint.route("/new", methods=["POST"])
+@swag_from(ADD_RATING)
 @verify_api_key
 def add_rating():
     """

@@ -1,16 +1,28 @@
 from API import db
 from API.lib.utils import add_decimal_hours_to_time
 from API.models import Staff, Appointment, StaffAvailability, Business
-from flask import jsonify, Blueprint, request
 from API.lib.auth import business_login_required, verify_api_key, business_verification_required
 from API.lib.data_serializer import serialize_staff
+from flask import jsonify, Blueprint, request
+from flasgger import swag_from
 import secrets
 from datetime import datetime
+from API.swaggerUI.endpoints_definitions.staff_docs import (
+    ADD_STAFF,
+    DELETE_STAFF,
+    UPDATE_STAFF,
+    FETCH_SINGLE_STAFF,
+    FETCH_ALL_STAFF,
+    FETCH_STAFF_UNAVAILABILITY,
+    ADD_STAFF_UNAVAILABILITY
+)
+
 
 staff_blueprint = Blueprint("staff", __name__, url_prefix="/API/staff")
 
 
 @staff_blueprint.route("/create_staff", methods=["POST"])
+@swag_from(ADD_STAFF)
 @business_login_required
 @business_verification_required
 def add_staff(business):
@@ -60,6 +72,7 @@ def add_staff(business):
 
 
 @staff_blueprint.route("/delete-staff/<int:staff_id>", methods=["DELETE"])
+@swag_from(DELETE_STAFF)
 @business_login_required
 @business_verification_required
 def delete_staff(business, staff_id):
@@ -86,6 +99,7 @@ def delete_staff(business, staff_id):
 
 
 @staff_blueprint.route("/update-staff/<int:staff_id>", methods=["PUT"])
+@swag_from(UPDATE_STAFF)
 @business_login_required
 @business_verification_required
 def update_staff(business, staff_id):
@@ -125,6 +139,7 @@ def update_staff(business, staff_id):
 
 
 @staff_blueprint.route("/single/<int:staff_id>", methods=["GET"])
+@swag_from(FETCH_SINGLE_STAFF)
 @business_login_required
 def fetch_single_staff(business, staff_id):
     """
@@ -147,6 +162,7 @@ def fetch_single_staff(business, staff_id):
 
 
 @staff_blueprint.route("/all/<string:slug>", methods=["GET"])
+@swag_from(FETCH_ALL_STAFF)
 @verify_api_key
 def fetch_all_staff(slug):
     """
@@ -166,6 +182,7 @@ def fetch_all_staff(slug):
 
 
 @staff_blueprint.route("/unavailability/<int:staff_id>", methods=["GET"])
+@swag_from(FETCH_STAFF_UNAVAILABILITY)
 @verify_api_key
 def fetch_staff_unavailability(staff_id):
     """
@@ -203,6 +220,7 @@ def fetch_staff_unavailability(staff_id):
 
 
 @staff_blueprint.route("/create-unavailability/<int:staff_id>", methods=["POST"])
+@swag_from(ADD_STAFF_UNAVAILABILITY)
 @business_login_required
 @business_verification_required
 def add_staff_unavailability(business, staff_id):

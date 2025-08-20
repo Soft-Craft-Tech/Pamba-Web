@@ -1,4 +1,5 @@
 from flask import jsonify, request, Blueprint
+from flasgger import swag_from
 from sqlalchemy import func
 
 from API.models import Client, ClientDeleted, Appointment, Gender
@@ -9,12 +10,27 @@ from API import bcrypt, db
 from API.lib.OTP import generate_otp
 from API.lib.send_mail import send_otp, sent_client_reset_token
 from datetime import datetime, timedelta, date, UTC, timezone
+from API.swaggerUI.endpoints_definitions.clients_docs import (
+    CLIENT_SIGNUP,
+    VERIFY_CLIENT_OTP,
+    REQUEST_ACCOUNT_DELETION,
+    CLIENT_LOGIN,
+    REQUEST_PASSWORD_RESET,
+    RESET_PASSWORD,
+    CHANGE_PASSWORD,
+    UPDATE_PROFILE,
+    RESEND_VERIFICATION_OTP,
+    FETCH_BUSINESS_CLIENTS,
+    RETRIEVE_CLIENT
+)
+
 import json
 
 clients_blueprint = Blueprint("clients", __name__, url_prefix="/API/clients")
 
 
 @clients_blueprint.route("/signup", methods=["POST"])
+@swag_from(CLIENT_SIGNUP)
 @verify_api_key
 def client_signup():
     """
@@ -68,11 +84,12 @@ def client_signup():
         return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
     except AttributeError:
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
-    except Exception:
-        return jsonify({"message": "Failed to create business due to an unexpected issue"}), 400
+    except Exception as e:
+        return jsonify({"message": f"Failed to create business: {e.args[0]}"}), 400
 
 
 @clients_blueprint.route("/verify-otp", methods=["POST"])
+@swag_from(VERIFY_CLIENT_OTP)
 @verify_api_key
 def verify_client_otp():
     """
@@ -110,6 +127,7 @@ def verify_client_otp():
 
 
 @clients_blueprint.route("/delete-account", methods=["POST"])
+@swag_from(REQUEST_ACCOUNT_DELETION)
 @verify_api_key
 def request_account_deletion():
     """
@@ -150,6 +168,7 @@ def request_account_deletion():
 
 
 @clients_blueprint.route("/login", methods=["POST"])
+@swag_from(CLIENT_LOGIN)
 @verify_api_key
 def client_login():
     """
@@ -179,6 +198,7 @@ def client_login():
 
 
 @clients_blueprint.route("/request-password-reset", methods=["POST"])
+@swag_from(REQUEST_PASSWORD_RESET)
 @verify_api_key
 def request_password_reset():
     """
@@ -205,6 +225,7 @@ def request_password_reset():
 
 
 @clients_blueprint.route("/reset-password/<string:token>", methods=["POST"])
+@swag_from(RESET_PASSWORD)
 @verify_api_key
 def reset_password(token):
     """
@@ -233,6 +254,7 @@ def reset_password(token):
 
 
 @clients_blueprint.route("/change-password", methods=["POST"])
+@swag_from(CHANGE_PASSWORD)
 @client_login_required
 def change_password(client):
     """
@@ -257,6 +279,7 @@ def change_password(client):
 
 
 @clients_blueprint.route("/update-profile", methods=["POST"])
+@swag_from(UPDATE_PROFILE)
 @client_login_required
 def update_profile(client):
     """
@@ -297,6 +320,7 @@ def update_profile(client):
 
 
 @clients_blueprint.route("/resend-otp", methods=["POST"])
+@swag_from(RESEND_VERIFICATION_OTP)
 @verify_api_key
 def resend_verification_otp():
     """
@@ -326,6 +350,7 @@ def resend_verification_otp():
 
 
 @clients_blueprint.route("/business-clients", methods=["GET"])
+@swag_from(FETCH_BUSINESS_CLIENTS)
 @business_login_required
 def fetch_business_clients(business):
     """
@@ -377,6 +402,7 @@ def fetch_business_clients(business):
 
 
 @clients_blueprint.route("/retrieve", methods=["GET"])
+@swag_from(RETRIEVE_CLIENT)
 @client_login_required
 def retrieve_client(client: Client):
     """

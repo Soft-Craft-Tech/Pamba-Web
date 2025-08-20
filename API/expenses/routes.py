@@ -1,14 +1,23 @@
 from flask import jsonify, request, Blueprint
+from flasgger import swag_from
 from API import db
 from API.lib.auth import business_login_required, business_verification_required
 from API.lib.data_serializer import serialize_expenses
 from API.models import Expense, ExpenseAccount
 from datetime import datetime
+from API.swaggerUI.endpoints_definitions.expenses_docs import (
+    RECORD_EXPENSE,
+    DELETE_EXPENSE,
+    UPDATE_EXPENSE,
+    FETCH_BUSINESS_EXPENSES,
+    FETCH_SINGLE_EXPENSE
+)
 
 expenses_blueprint = Blueprint("expenses", __name__, url_prefix="/API/expenses")
 
 
 @expenses_blueprint.route("/record-expense", methods=["POST"])
+@swag_from(RECORD_EXPENSE)
 @business_login_required
 @business_verification_required
 def record_expenses(business):
@@ -45,6 +54,7 @@ def record_expenses(business):
 
 
 @expenses_blueprint.route("/delete-expense/<int:expense_id>", methods=["DELETE"])
+@swag_from
 @business_login_required
 @business_verification_required
 def delete_expense(business, expense_id):
@@ -66,6 +76,7 @@ def delete_expense(business, expense_id):
 
 
 @expenses_blueprint.route("/update-expense/<int:expense_id>", methods=["PUT"])
+@swag_from(UPDATE_EXPENSE)
 @business_login_required
 @business_verification_required
 def update_expense(business, expense_id):
@@ -96,6 +107,7 @@ def update_expense(business, expense_id):
 
 
 @expenses_blueprint.route("/my-expenses", methods=["GET"])
+@swag_from(FETCH_BUSINESS_EXPENSES)
 @business_login_required
 @business_verification_required
 def fetch_business_expenses(business):
@@ -114,6 +126,7 @@ def fetch_business_expenses(business):
 
 
 @expenses_blueprint.route("/expense/<int:expense_id>", methods=["GET"])
+@swag_from(FETCH_SINGLE_EXPENSE)
 @business_login_required
 @business_verification_required
 def fetch_single_expense(business, expense_id):
