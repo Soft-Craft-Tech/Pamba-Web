@@ -81,11 +81,11 @@ def client_signup():
                         "Client": serialize_client(client)
                         }), 200
     except KeyError as e:
-        return jsonify({"message": f"Invalid payload: "{e.args[0]}" key is required"}), 400
+        return jsonify({"message": f"Invalid payload: '{e.args[0]}' key is required"}), 400
     except AttributeError:
         return jsonify({"message": "Invalid payload: JSON format required"}), 400
     except Exception as e:
-        return jsonify({"messge": f"Failed to create business: '{e.args[0]}"}), 400
+        return jsonify({"message": f"Failed to create business: {e.args[0]}"}), 400
 
 
 @clients_blueprint.route("/verify-otp", methods=["POST"])

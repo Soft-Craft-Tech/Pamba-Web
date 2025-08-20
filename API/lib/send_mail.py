@@ -103,6 +103,7 @@ def appointment_confirmation_email(
     client_name,
     appointment_date,
     appointment_time,
+    service,
     business_name,
     business_address,
     latitude,                 
