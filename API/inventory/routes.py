@@ -1,14 +1,22 @@
 from API import db, bcrypt
 from flask import jsonify, Blueprint, request
+from flasgger import swag_from
 from API.models import Business, Inventory
 from API.lib.auth import business_login_required, business_verification_required
 from API.lib.data_serializer import serialize_inventory
 from datetime import datetime
+from API.swaggerUI.endpoints_definitions.inventory_docs import (
+    RECORD_INVENTORY,
+    DELETE_INVENTORY,
+    UPDATE_INVENTORY_STATUS,
+    FETCH_ALL_RECORDS
+)
 
 inventory_blueprint = Blueprint("inventory", __name__, url_prefix="/API/inventory")
 
 
 @inventory_blueprint.route("/record-inventory", methods=["POST"])
+@swag_from(RECORD_INVENTORY)
 @business_login_required
 @business_verification_required
 def record_inventory(business):
@@ -31,6 +39,7 @@ def record_inventory(business):
 
 
 @inventory_blueprint.route("/delete-inventory/<int:inventory_id>", methods=["DELETE"])
+@swag_from(DELETE_INVENTORY)
 @business_login_required
 @business_verification_required
 def delete_inventory(business, inventory_id):
@@ -54,6 +63,7 @@ def delete_inventory(business, inventory_id):
 
 
 @inventory_blueprint.route("/update-status/<int:inventory_id>", methods=["PUT"])
+@swag_from(UPDATE_INVENTORY_STATUS)
 @business_login_required
 @business_verification_required
 def update_inventory_status(business, inventory_id):
@@ -85,6 +95,7 @@ def update_inventory_status(business, inventory_id):
 
 
 @inventory_blueprint.route("/business-inventory", methods=["GET"])
+@swag_from(FETCH_ALL_RECORDS)
 @business_login_required
 def fetch_all_records(business):
     """

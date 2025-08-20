@@ -1,8 +1,18 @@
 from flask import jsonify, request, Blueprint
+from flasgger import swag_from
 from API.models import ClientNotification, BusinessNotification
 from API.lib.auth import client_login_required, business_login_required
 from API import db
 from API.lib.data_serializer import serialize_notification
+from API.swaggerUI.endpoints_definitions.notifications_docs import (
+    ADD_CLIENT_NOTIFICATION,
+    READ_CLIENT_NOTIFICATION,
+    DELETE_CLIENT_NOTIFICATION,
+    FETCH_ALL_CLIENT_NOTIFICATIONS,
+    ADD_BUSINESS_NOTIFICATION,
+    READ_BUSINESS_NOTIFICATION,
+    DELETE_BUSINESS_NOTIFICATION
+)
 
 notifications_blueprint = Blueprint("notifications", __name__, url_prefix="/API/notifications")
 
@@ -10,6 +20,7 @@ notifications_blueprint = Blueprint("notifications", __name__, url_prefix="/API/
 # ------------------------- CLIENTS ------------------------------------- #
 
 @notifications_blueprint.route("/client/add", methods=["POST"])
+@swag_from(ADD_CLIENT_NOTIFICATION)
 def add_client_notification():
     """
         Create notifications for clients.
@@ -32,6 +43,7 @@ def add_client_notification():
 
 
 @notifications_blueprint.route("/client/read/<int:notification_id>", methods=["PUT"])
+@swag_from(READ_CLIENT_NOTIFICATION)
 @client_login_required
 def read_notification(client, notification_id):
     """
@@ -58,6 +70,7 @@ def read_notification(client, notification_id):
 
 
 @notifications_blueprint.route("/client/delete/<int:notification_id>", methods=["DELETE"])
+@swag_from(DELETE_CLIENT_NOTIFICATION)
 @client_login_required
 def delete_notification(client, notification_id):
     """
@@ -81,6 +94,7 @@ def delete_notification(client, notification_id):
 
 
 @notifications_blueprint.route("/client/all", methods=["GET"])
+@swag_from(FETCH_ALL_CLIENT_NOTIFICATIONS)
 @client_login_required
 def fetch_all(client):
     """
@@ -100,6 +114,7 @@ def fetch_all(client):
 # ------------------------------- BUSINESSES NOTIFICATIONS ---------------------------------------- #
 
 @notifications_blueprint.route("/businesses/create", methods=["POST"])
+@swag_from(ADD_BUSINESS_NOTIFICATION)
 def add_business_notification():
     """
         Create new notification for the Business
@@ -122,6 +137,7 @@ def add_business_notification():
 
 
 @notifications_blueprint.route("/business/read/<int:notification_id>", methods=["PUT"])
+@swag_from(READ_BUSINESS_NOTIFICATION)
 @business_login_required
 def read_business_notification(business, notification_id):
     """
@@ -147,6 +163,7 @@ def read_business_notification(business, notification_id):
 
 
 @notifications_blueprint.route("/business/delete/<int:notification_id>", methods=["DELETE"])
+@swag_from(DELETE_BUSINESS_NOTIFICATION)
 @business_login_required
 def delete_business_notification(business, notification_id):
     """
